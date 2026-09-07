@@ -1,0 +1,14 @@
+[Unit]
+Description=Agentic-OCUDU isolated OAI core
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+PartOf=aoc-stack.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@RELEASE@/bin/core up --wait
+ExecStop=@RELEASE@/bin/core stop
+TimeoutStartSec=240
+TimeoutStopSec=120

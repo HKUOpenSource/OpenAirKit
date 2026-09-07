@@ -1,0 +1,21 @@
+[Unit]
+Description=Agentic-OCUDU gNB with exclusive B210 ownership
+Requires=aoc-core.service
+After=aoc-core.service oai-gnb.service
+Conflicts=oai-gnb.service
+PartOf=aoc-stack.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStartPre=@RELEASE@/bin/radio-preflight
+ExecStart=@RELEASE@/bin/gnb -c @CONFIG@/ocudu/gnb.yml
+ExecStartPost=@RELEASE@/bin/radio-health
+Restart=on-failure
+RestartSec=15
+LimitRTPRIO=99
+LimitMEMLOCK=infinity
+KillMode=control-group
+TimeoutStartSec=180
+TimeoutStopSec=60

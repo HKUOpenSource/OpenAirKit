@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "stage": "scaffold",
+  "host": {
+    "ssh": "defaultuser@100.65.77.20",
+    "architecture": "aarch64",
+    "observed_on": "2026-09-07"
+  },
+  "names": {
+    "compose_project": "aoc-cn5g",
+    "docker_network": "aoc-cn5g-net",
+    "bridge": "aoc-cn5g",
+    "systemd_target": "aoc-stack.target"
+  },
+  "paths": {
+    "install": "/opt/agentic-ocudu",
+    "config": "/etc/agentic-ocudu",
+    "state": "/var/lib/agentic-ocudu",
+    "run": "/run/agentic-ocudu",
+    "logs": "/var/log/agentic-ocudu"
+  },
+  "network": {
+    "subnet": "172.28.80.0/24",
+    "addresses": {
+      "gnb": "172.28.80.1",
+      "mysql": "172.28.80.10",
+      "nrf": "172.28.80.11",
+      "amf": "172.28.80.12",
+      "smf": "172.28.80.13",
+      "upf": "172.28.80.14",
+      "ext_dn": "172.28.80.15",
+      "udr": "172.28.80.16",
+      "udm": "172.28.80.17",
+      "ausf": "172.28.80.18",
+      "ims_reserved": "172.28.80.19"
+    },
+    "ue_pools": {"oai": "10.80.0.0/24", "ims_reserved": "10.80.9.0/24"}
+  },
+  "listeners": [
+    {"name": "amf_n2", "protocol": "sctp", "address": "172.28.80.12", "port": 38412},
+    {"name": "gnb_n3", "protocol": "udp", "address": "172.28.80.1", "port": 2152},
+    {"name": "upf_n3", "protocol": "udp", "address": "172.28.80.14", "port": 2152},
+    {"name": "upf_n4", "protocol": "udp", "address": "172.28.80.14", "port": 8805},
+    {"name": "monitor_web", "protocol": "tcp", "address": "127.0.0.1", "port": 8877},
+    {"name": "ocudu_control", "protocol": "tcp", "address": "127.0.0.1", "port": 8001}
+  ],
+  "radio": {
+    "frontend": "b210",
+    "split": "8",
+    "serial": null,
+    "plmn": "46003",
+    "tac": 1,
+    "sst": 1,
+    "band": 78,
+    "bandwidth_mhz": 20,
+    "common_scs_khz": 30,
+    "dl_arfcn": null,
+    "tx_gain": null,
+    "rx_gain": null,
+    "validated": false
+  },
+  "legacy": {
+    "radio_unit": "oai-gnb.service",
+    "start_script": "/home/defaultuser/.local/bin/oai-spark-services.sh",
+    "reserved_names": ["oai-only-cn5g", "oai-cn5g", "oai-cn5g-public-net", "oai-mt-cn5g", "oai-mt-cn5g-public-net"],
+    "reserved_subnets": ["10.68.0.0/16", "100.64.0.0/10", "172.17.0.0/16", "172.18.0.0/16", "192.168.70.128/26", "192.168.72.128/26", "192.168.240.0/30", "192.168.240.4/30", "10.0.0.0/16"],
+    "reserved_tcp_ports": [22, 443, 3389, 4000, 5201, 5904, 5910, 8780, 8781, 8782, 8783, 8787, 8790],
+    "reserved_udp_ports": [4000, 8792, 8793],
+    "listeners": [
+      {"name": "legacy_gnb_n3", "protocol": "udp", "address": "192.168.70.129", "port": 2152},
+      {"name": "legacy_amf_n2", "protocol": "sctp", "address": "192.168.70.132", "port": 38412},
+      {"name": "legacy_upf_n3", "protocol": "udp", "address": "192.168.70.134", "port": 2152},
+      {"name": "legacy_upf_n4", "protocol": "udp", "address": "192.168.70.134", "port": 8805}
+    ]
+  }
+}
