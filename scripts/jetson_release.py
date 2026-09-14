@@ -23,7 +23,8 @@ def build(output, wheels):
     shutil.copytree(source / "backend/aoc_jetson", output / "backend/aoc_jetson",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(source / "frontend/dist", output / "frontend")
-    shutil.copytree(ROOT / "deploy/jetson", output / "deploy")
+    shutil.copytree(ROOT / "deploy/jetson", output / "deploy",
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copyfile(source / "requirements-jetson.lock", output / "requirements.lock")
     shutil.copyfile(ROOT / "config/jetson.example.json", output / "device.example.json")
     shutil.copytree(wheels, output / "wheels")

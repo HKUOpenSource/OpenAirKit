@@ -24,11 +24,9 @@ jobs:
           - name: Jetson
             python: '3.10'
             app: jetson-console
-            lock: requirements-jetson.lock
           - name: Spark
             python: '3.12'
             app: spark-platform
-            lock: requirements-spark.lock
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -38,7 +36,7 @@ jobs:
         with:
           node-version: 22
       - name: Install backend dependencies
-        run: python -m pip install --disable-pip-version-check -r apps/${{ matrix.app }}/${{ matrix.lock }}
+        run: python -m pip install --disable-pip-version-check -r apps/${{ matrix.app }}/requirements-dev.txt
       - name: Build frontend
         run: |
           npm ci --prefix apps/${{ matrix.app }}/frontend
