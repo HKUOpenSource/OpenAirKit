@@ -1,38 +1,57 @@
 name: CI
+
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  python:
+  platform:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - python: '3.10'
-            tests: apps/jetson-console/tests
-          - python: '3.12'
-            tests: apps/jetson-console/tests
-          - python: '3.12'
-            tests: apps/spark-platform/tests
-    runs-on: ubuntu-latest
+          - name: Jetson
+            python: '3.10'
+            app: jetson-console
+            lock: requirements-jetson.lock
+          - name: Spark
+            python: '3.12'
+            app: spark-platform
+            lock: requirements-spark.lock
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend python -m unittest discover -s ${{ matrix.tests }} -p 'test_*.py'
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci --prefix apps/jetson-console/frontend
-      - run: npm run build --prefix apps/jetson-console/frontend
-      - run: npm ci --prefix apps/spark-platform/frontend
-      - run: npm run build --prefix apps/spark-platform/frontend
-  audits:
+      - name: Install backend dependencies
+        run: python -m pip install --disable-pip-version-check -r apps/${{ matrix.app }}/${{ matrix.lock }}
+      - name: Build frontend
+        run: |
+          npm ci --prefix apps/${{ matrix.app }}/frontend
+          npm run build --prefix apps/${{ matrix.app }}/frontend
+      - name: Test backend
+        env:
+          PYTHONPATH: apps/jetson-console/backend:apps/spark-platform/backend
+        run: python -m unittest discover -s apps/${{ matrix.app }}/tests -p 'test_*.py'
+
+  audit:
+    name: Repository audit
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
