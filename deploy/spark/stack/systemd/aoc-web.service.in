@@ -1,0 +1,22 @@
+[Unit]
+Description=Agentic-OCUDU monitoring API and web
+Wants=aoc-collector.service
+After=aoc-collector.service
+PartOf=aoc-stack.target
+
+[Service]
+Type=simple
+User=aoc-web
+Group=aoc-monitor
+ExecStart=@PYTHON@ -m aoc_spark.web --config @CONFIG@/monitoring.json
+Restart=on-failure
+RestartSec=5
+StateDirectory=agentic-ocudu
+StateDirectoryMode=0750
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost

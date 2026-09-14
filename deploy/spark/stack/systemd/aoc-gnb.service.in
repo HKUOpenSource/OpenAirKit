@@ -1,0 +1,22 @@
+[Unit]
+Description=Agentic-OCUDU gNB with exclusive B210 ownership
+Requires=aoc-core.service
+After=aoc-core.service oai-gnb.service
+Conflicts=oai-gnb.service
+PartOf=aoc-stack.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/python3 -I @RELEASE@/scripts/radio_runtime.py preflight
+ExecStart=@RELEASE@/bin/gnb -c @CONFIG@/ocudu/gnb.json
+ExecStartPost=/usr/bin/python3 -I @RELEASE@/scripts/radio_runtime.py health
+Restart=no
+UMask=0077
+CPUAffinity=0-18
+LimitRTPRIO=99
+LimitMEMLOCK=infinity
+KillMode=control-group
+TimeoutStartSec=180
+TimeoutStopSec=60

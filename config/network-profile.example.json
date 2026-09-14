@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "agentic-ocudu-data-v2",
+  "plmn": "46003",
+  "tac": 1,
+  "slice": {
+    "sst": 1
+  },
+  "data": {
+    "dnn": "oai",
+    "pdu_type": "IPv4",
+    "ue_pool": "10.0.0.0/24",
+    "qos_5qi": 9,
+    "session_ambr": {
+      "uplink": "100Mbps",
+      "downlink": "200Mbps"
+    }
+  },
+  "user_plane": {
+    "n6_endpoint": "site-defined",
+    "probe_endpoint": "site-defined",
+    "dns_servers": ["site-defined"],
+    "probe_port": 5201
+  },
+  "radio": {
+    "band": 78,
+    "channel_bandwidth_mhz": 20,
+    "common_scs_khz": 30,
+    "carrier_arfcn": 643392,
+    "pci": 666,
+    "tdd": {
+      "period_ms": 5,
+      "downlink_slots": 7,
+      "uplink_slots": 2,
+      "special_downlink_symbols": 6,
+      "special_uplink_symbols": 4
+    }
+  }
+}

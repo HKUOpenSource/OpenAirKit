@@ -132,7 +132,7 @@ def main():
             print("ERROR: {}".format(error), file=sys.stderr)
         return 1
     print("Offline isolation checks passed. No host state was inspected or changed.")
-    print("Scaffold only: build, images, RF configuration and switching remain unverified.")
+    print("This check does not verify live services, RF configuration or switching acceptance.")
     if args.plan:
         print("\nCompose: {} | bridge: {} | subnet: {}".format(
             config["names"]["compose_project"], config["names"]["bridge"],

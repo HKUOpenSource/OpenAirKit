@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "name": "agentic-ocudu-jetson-v2",
+  "network": {
+    "plmn": "46003",
+    "tac": 1,
+    "slice": {"sst": 1},
+    "data": {
+      "dnn": "oai",
+      "pdu_type": "IP",
+      "ue_pool": "10.0.0.0/24",
+      "qos_5qi": 9,
+      "cid_min": 1,
+      "cid_max": 16
+    },
+    "user_plane": {
+      "rndis_gateway": "192.168.225.1",
+      "upf_probe": "10.0.0.1",
+      "ext_dn": "172.28.81.15",
+      "public_probe": "8.8.8.8",
+      "iperf_port": 5201
+    },
+    "radio": {
+      "band": 78,
+      "channel_bandwidth_mhz": 20,
+      "common_scs_khz": 30,
+      "carrier_arfcn": 643392,
+      "pci": 666,
+      "ssb_arfcn_policy": "observe_only"
+    }
+  },
+  "device": {
+    "usb_vendor_id": "2c7c",
+    "usb_product_id": "0801",
+    "at_interface_number": "02",
+    "serial_lock": "/var/lib/agentic-ocudu/v2-ue/serial.lock"
+  },
+  "management": {
+    "wifi_interface": "auto",
+    "tailscale_interface": "tailscale0",
+    "spark_address": "192.0.2.20"
+  },
+  "state_dir": "/var/lib/aoc-v2-jetson",
+  "web_state_dir": "/var/lib/aoc-v2-jetson-web",
+  "agent_socket": "/run/aoc-v2-jetson/device.sock",
+  "commissioned": false,
+  "management_verified": false
+}

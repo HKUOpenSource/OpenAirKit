@@ -1,0 +1,25 @@
+[Unit]
+Description=Agentic-OCUDU Jetson V2 web console
+After=network.target
+
+[Service]
+Type=simple
+User=aoc-v2-jetson-web
+Group=aoc-v2-jetson-web
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/web_entry.py --config /etc/aoc-v2-jetson/web.json --port 8878
+KillMode=control-group
+TimeoutStopSec=20
+Restart=no
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ReadWritePaths=/var/lib/aoc-v2-jetson-web
+InaccessiblePaths=/var/lib/aoc-v2-jetson /var/lib/agentic-ocudu/v2-ue -/run/docker.sock
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

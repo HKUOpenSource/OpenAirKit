@@ -1,0 +1,23 @@
+[Unit]
+Description=Agentic-OCUDU independent Spark collector
+After=docker.service
+
+[Service]
+User=root
+Group=aoc-observe
+WorkingDirectory=@RELEASE@/backend
+ExecStart=@RELEASE@/venv/bin/python -m aoc_spark.collector --output /run/aoc-observe/snapshot.json
+RuntimeDirectory=aoc-observe
+RuntimeDirectoryMode=0750
+UMask=0027
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=/run/aoc-observe
+RestrictAddressFamilies=AF_UNIX AF_NETLINK AF_INET
+
+[Install]
+WantedBy=multi-user.target

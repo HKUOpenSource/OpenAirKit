@@ -1,0 +1,27 @@
+[Unit]
+Description=Agentic-OCUDU Jetson V2 device executor
+After=NetworkManager.service network.target
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+User=root
+Group=aoc-v2-jetson-web
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/site_guard.py
+ExecStart=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/device_entry.py --config /etc/aoc-v2-jetson/device.json
+RuntimeDirectory=aoc-v2-jetson
+RuntimeDirectoryMode=0750
+KillMode=control-group
+TimeoutStopSec=60
+Restart=no
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/aoc-v2-jetson /var/lib/agentic-ocudu/v2-ue /run/aoc-v2-jetson
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

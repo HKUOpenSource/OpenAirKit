@@ -1,0 +1,9 @@
+ARG BASE_IMAGE=aoc-open5gs-validation:2.8.0-157f611
+FROM ${BASE_IMAGE}
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nftables=1.0.9-1ubuntu0.1 libnftables1=1.0.9-1ubuntu0.1 \
+    libnftnl11=1.2.6-2build1 libmnl0=1.0.5-2build1 \
+    libbsd0=0.12.1-1build1.1 libedit2=3.1-20230828-1build1 && \
+    dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\n' > /opt/aoc-evidence/n6-packages.tsv && \
+    rm -rf /var/lib/apt/lists/*
+LABEL org.agentic-ocudu.role="open5gs-n6-runtime"

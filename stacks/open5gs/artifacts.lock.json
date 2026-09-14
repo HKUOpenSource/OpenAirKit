@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-09T07:05:23.691138+00:00",
+  "platform": "linux/arm64",
+  "scope": "validation-image-and-empty-core-smoke",
+  "production_deployment_verified": false,
+  "source_lock_sha256": "7cca26ce708e9bfd8dc2b7f6130e131bb9350cb48d2d965ef9b97d141aaf29b2",
+  "open5gs": {
+    "version": "2.8.0",
+    "image_id": "sha256:a045fd68d629b3e2688d7103e3ebfab1a4ac448916d19c274a9324b1f3127d52",
+    "registry_manifest_digest": null,
+    "packages_sha256": "5a713e726486770ac6609e60e06f9f80db428f85e969f21af7078e4abbcf3048",
+    "upstream_test_log_sha256": "db98c51d2065899863400ebb0a99972b38d0e941dbac50f8640330276270671d"
+  },
+  "mongodb": {
+    "version": "8.0.30",
+    "image_id": "sha256:1656dea786dde37f1708fdc7a7c734868648c98803a1d03e9a544aa9e16a1c59",
+    "registry_manifest_digest": "sha256:fa40191bb5b2d063bbdb6fb1d5f980a7c502f7355c11c6bc18812da2cb46ec6f"
+  },
+  "network_runtime": {
+    "image_id": "sha256:ac3924b476953bb9c2dd7de215bfbea5234b145584401dae72fb24b5add074d4",
+    "base_image_id": "sha256:a045fd68d629b3e2688d7103e3ebfab1a4ac448916d19c274a9324b1f3127d52",
+    "platform": "linux/arm64",
+    "nftables_version": "1.0.9-1ubuntu0.1",
+    "scope": "verified UPF-local-source NAT and ext-DN traffic; no UE/GTP proof",
+    "packages_sha256": "5a57e91d9c618fdec62a1458a7e749e336f296f4ae1dc699067947fe8dcda848",
+    "in_original_image_archive": false,
+    "archive": "aoc-open5gs-n6-verified-arm64.tar",
+    "archive_sha256": "0498ed0c1efe6f331e6bed2a798907917631885c0c0d1f6ecf48dbb3ff7c81e4"
+  },
+  "image_archive": {
+    "filename": "aoc-open5gs-v2-verified-arm64.tar",
+    "sha256": "331a3651593294c6a1798bae5444dec182a740c5d7ca04a9451e305f7bf17d91"
+  },
+  "build_context_archive": {
+    "filename": "aoc-open5gs-build-final.tar.gz",
+    "sha256": "04bc393d006c74c1fbaccc89dda0985d670123b5427e95b542b0ca042f8955aa"
+  },
+  "evidence_result_sha256": "f3521fbc65b0806e1fe93d9ffac0cf7ec1f9c4e5b9ec9ede7083107bcd89730a"
+}
