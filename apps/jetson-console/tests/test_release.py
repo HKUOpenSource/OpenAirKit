@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
@@ -12,7 +13,12 @@ ROOT = Path(__file__).resolve().parents[3]
 def load_manage(path):
     specification = importlib.util.spec_from_file_location("v2_jetson_manage_test", path)
     module = importlib.util.module_from_spec(specification)
-    specification.loader.exec_module(module)
+    previous = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        specification.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = previous
     return module
 
 
