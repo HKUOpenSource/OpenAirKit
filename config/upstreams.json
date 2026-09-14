@@ -3,15 +3,24 @@
     "repository": "https://gitlab.com/ocudu/ocudu.git",
     "tag": "release_26_04",
     "commit": "050a2bb72e1d794cd60570d809987c1fcda3e54b",
-    "build_verified_on_spark": false
+    "build_verified_on_spark": true,
+    "rf_verified_on_spark": false
   },
   "oai_core": {
     "candidate_version": "v2.2.1",
     "image_namespace": "oaisoftwarealliance",
     "network_functions": ["oai-nrf", "oai-amf", "oai-smf", "oai-upf", "oai-udr", "oai-udm", "oai-ausf"],
-    "arm64_images_verified": false,
-    "image_digests": {},
-    "reuse_biverge_custom_images": false
+    "arm64_images_verified": true,
+    "image_lock": "config/images.lock.json",
+    "schema_repository": "https://gitlab.eurecom.fr/oai/cn5g/oai-cn5g-fed.git",
+    "schema_commit": "3beb7e3582ada946f230bf4271673733eb1c4818"
+  },
+  "ims": {
+    "candidate_image": "oaisoftwarealliance/ims",
+    "image_lock_key": "ims",
+    "implementation": "Asterisk 20.6.0 SIP service",
+    "arm64_image_verified": true,
+    "sip_registration_verified": false
   },
   "uhd": {
     "existing_spark_version": "4.8.0.HEAD-0-g308126a4",

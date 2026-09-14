@@ -1,0 +1,4 @@
+platform = "jetson"
+listen = "127.0.0.1:8878"
+environment = "ocudu-oai"
+enable_at_boot = false

@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible Agentic-OCUDU problem
+title: "[bug] "
+labels: [bug]
+body:
+  - type: input
+    id: platform
+    attributes:
+      label: Platform and release
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted output and expected behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Data handling
+      options:
+        - label: I removed credentials, subscriber identities, private addresses and logs.
+          required: true

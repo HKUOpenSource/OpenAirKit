@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agentic-ocudu:observation:2",
+  "title": "Agentic-OCUDU metric observation v2",
+  "description": "A metric value and its evidence quality. status never represents business health.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "entity", "name", "value", "unit", "status", "reason", "observed_at", "window_seconds"],
+  "properties": {
+    "source": {"type": "string", "minLength": 1},
+    "entity": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "value": {"type": ["number", "boolean", "string", "array", "null"]},
+    "unit": {"enum": ["state", "bit/s", "byte", "count", "ms", "ratio", "dB", "index", "cores", "C", "seconds"]},
+    "status": {"enum": ["ok", "stale", "unavailable", "unsupported"]},
+    "reason": {"type": ["string", "null"]},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "window_seconds": {"type": ["number", "null"], "minimum": 0}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"enum": ["stale", "unavailable", "unsupported"]}}},
+      "then": {"properties": {"reason": {"type": "string", "minLength": 1}}}
+    }
+  ]
+}

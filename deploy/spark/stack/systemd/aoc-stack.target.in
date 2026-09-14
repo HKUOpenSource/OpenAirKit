@@ -1,0 +1,6 @@
+[Unit]
+Description=Agentic-OCUDU independent 5G stack
+Requires=aoc-core.service aoc-gnb.service
+BindsTo=aoc-gnb.service
+After=aoc-core.service aoc-gnb.service oai-gnb.service
+Conflicts=oai-gnb.service

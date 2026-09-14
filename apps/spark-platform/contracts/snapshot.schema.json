@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agentic-ocudu:snapshot:4",
+  "title": "Agentic-OCUDU Spark snapshot v4",
+  "description": "Single-stack OCUDU/Open5GS evidence model. Evidence quality and business state are independent.",
+  "type": "object",
+  "required": ["schema_version", "observed_at", "collector_status", "active_stack", "observations", "services", "events", "components", "links", "devices", "health"],
+  "properties": {
+    "schema_version": {"const": 4},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "collector_status": {"enum": ["ok", "stale", "unavailable"]},
+    "active_stack": {"enum": ["ocudu", "none", "unknown"]},
+    "last_active_stack": {"enum": ["ocudu", "none", "unknown"]},
+    "observations": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+    "components": {"type": "array", "items": {"$ref": "#/$defs/component"}},
+    "links": {"type": "array", "items": {"$ref": "#/$defs/component"}},
+    "devices": {"type": "array", "items": {"$ref": "#/$defs/device"}},
+    "services": {"type": "array", "items": {"$ref": "#/$defs/service"}},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+    "health": {
+      "type": "object",
+      "properties": {
+        "ocudu": {
+          "type": "object",
+          "required": ["host", "b210", "ran", "core"],
+          "properties": {
+            "host": {"$ref": "#/$defs/business_state"},
+            "b210": {"$ref": "#/$defs/business_state"},
+            "ran": {"$ref": "#/$defs/business_state"},
+            "core": {"$ref": "#/$defs/business_state"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "quality": {"enum": ["ok", "stale", "unavailable", "unsupported"]},
+    "business_state": {"enum": ["healthy", "degraded", "failed", "inactive", "registered", "deregistered", "radio_observed", "idle", "released", "unknown"]},
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "entity", "name", "value", "unit", "status", "reason", "observed_at", "window_seconds"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "entity": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "value": {"type": ["number", "boolean", "string", "array", "null"]},
+        "unit": {"enum": ["state", "bit/s", "byte", "count", "ms", "ratio", "dB", "index", "cores", "C", "seconds"]},
+        "status": {"$ref": "#/$defs/quality"},
+        "reason": {"type": ["string", "null"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "window_seconds": {"type": ["number", "null"], "minimum": 0}
+      },
+      "allOf": [{
+        "if": {"properties": {"status": {"enum": ["stale", "unavailable", "unsupported"]}}},
+        "then": {"properties": {"reason": {"type": "string", "minLength": 1}}}
+      }]
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "dnn", "address", "state", "status", "source", "observed_at"],
+      "properties": {
+        "id": {"type": "string"},
+        "dnn": {"const": "oai"},
+        "address": {"type": ["string", "null"]},
+        "state": {"enum": ["active", "inactive", "released", "reported", "unknown"]},
+        "status": {"$ref": "#/$defs/quality"},
+        "source": {"type": "string", "minLength": 1},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "sst": {"type": ["integer", "null"]},
+        "sd": {"type": ["string", "null"]},
+        "five_qi": {"type": ["integer", "null"]},
+        "qfi": {"type": ["integer", "null"]}
+      }
+    },
+    "device": {
+      "type": "object",
+      "required": ["id", "stack", "identity", "identifiers", "registration", "state", "status", "observed_at", "source", "sessions", "metrics", "connection"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "stack": {"const": "ocudu"},
+        "identity": {"type": "string"},
+        "identifiers": {"type": "object"},
+        "registration": {"enum": ["registered", "deregistered", "unknown"]},
+        "state": {"$ref": "#/$defs/business_state"},
+        "status": {"$ref": "#/$defs/quality"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "source": {"type": "string", "minLength": 1},
+        "correlation": {"enum": ["amf_supi", "smf_supi_only", "amf_smf_supi", "ambiguous_ngap_identifiers", "radio_only"]},
+        "sessions": {"type": "array", "items": {"$ref": "#/$defs/session"}},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "connection": {
+          "type": "object",
+          "required": ["state", "reason", "layers"],
+          "properties": {
+            "state": {"$ref": "#/$defs/business_state"},
+            "reason": {"type": "string", "minLength": 1},
+            "layers": {
+              "type": "object",
+              "required": ["registration", "radio", "data_pdu"],
+              "properties": {
+                "registration": {"type": "string"},
+                "radio": {"type": "string"},
+                "data_pdu": {"type": "string"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "reachability": {"type": "object"},
+        "first_seen": {"type": "string", "format": "date-time"},
+        "last_registration": {"type": "string"},
+        "session_counts": {"type": "object"}
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": ["id", "stack", "name", "kind", "state", "observed_at", "details", "metrics"],
+      "properties": {
+        "id": {"type": "string"},
+        "stack": {"enum": ["host", "ocudu"]},
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "state": {"type": "string"},
+        "health": {"$ref": "#/$defs/business_state"},
+        "business_health": {"$ref": "#/$defs/business_state"},
+        "status": {"$ref": "#/$defs/quality"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "details": {"type": "object"},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/observation"}}
+      }
+    },
+    "service": {
+      "type": "object",
+      "required": ["stack", "name", "role", "state", "health", "status"],
+      "properties": {
+        "stack": {"const": "ocudu"},
+        "name": {"type": "string"},
+        "role": {"type": "string"},
+        "state": {"type": "string"},
+        "health": {"type": "string"},
+        "status": {"$ref": "#/$defs/quality"},
+        "exit_code": {"type": ["integer", "null"]},
+        "restarts": {"type": ["integer", "null"]}
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "at", "stack", "kind", "message"],
+      "properties": {
+        "id": {"type": "string"},
+        "at": {"type": "string", "format": "date-time"},
+        "stack": {"const": "ocudu"},
+        "entity": {"type": "string"},
+        "level": {"enum": ["info", "warning", "error"]},
+        "kind": {"type": "string"},
+        "message": {"type": "string"}
+      }
+    }
+  }
+}

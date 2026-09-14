@@ -1,0 +1,2 @@
+# Development tools are installed separately from the locked Spark runtime.
+-r requirements-spark.lock

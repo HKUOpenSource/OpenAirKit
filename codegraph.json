@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "include": ["apps", "stacks", "deploy", "packages", "scripts"],
+  "exclude": ["archive", "local", "build", "artifacts", ".venv", "node_modules"],
+  "language": ["python", "typescript", "javascript"]
+}

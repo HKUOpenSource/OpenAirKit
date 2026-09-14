@@ -1,0 +1,41 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  python:
+    strategy:
+      matrix:
+        include:
+          - python: '3.10'
+            tests: apps/jetson-console/tests
+          - python: '3.12'
+            tests: apps/jetson-console/tests
+          - python: '3.12'
+            tests: apps/spark-platform/tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend python -m unittest discover -s ${{ matrix.tests }} -p 'test_*.py'
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix apps/jetson-console/frontend
+      - run: npm run build --prefix apps/jetson-console/frontend
+      - run: npm ci --prefix apps/spark-platform/frontend
+      - run: npm run build --prefix apps/spark-platform/frontend
+  audits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: make docs-audit release-audit license-audit shell-check

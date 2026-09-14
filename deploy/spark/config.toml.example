@@ -1,0 +1,4 @@
+platform = "spark"
+listen = "127.0.0.1:8877"
+stack = "ocudu-open5gs"
+enable_at_boot = false
