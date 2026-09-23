@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/../../.." && pwd)
-exec python3 "$repo/scripts/monitor_release.py" "$@"
+exec "${PYTHON:-python3}" "$repo/scripts/build_release.py" spark "$@"

@@ -81,7 +81,9 @@ class ApiTests(unittest.TestCase):
         headers = self.login()
         bad = self.client.post("/api/v1/jobs", headers=headers,
                                json={"kind": "shell", "revision": self.config["revision"]})
-        self.assertEqual(bad.status_code, 400)
+        self.assertEqual(bad.status_code, 422)
+        retired = self.client.post("/api/v1/jobs", headers=headers, json={"kind": "speed", "revision": self.config["revision"]})
+        self.assertEqual(retired.status_code, 422)
         self.agent.sample(True)
         report = self.client.get("/api/v1/diagnostics").json()
         encoded = json.dumps(report)

@@ -1,6 +1,5 @@
 """Explicit offline fixture. Hardware failures never select this simulator."""
 import copy
-import threading
 import time
 
 
@@ -88,7 +87,7 @@ class SimNetwork:
         return {"mode": self.mode, "management_protected": True, "mutations": 0}
 
     def snapshot(self):
-        return {"at": time.time(), "quality": "ok", "data_interface": "usb-rndis",
+        return {"at": time.time(), "quality": "ok", "management_protected": True, "data_interface": "usb-rndis",
                 "data_address": "192.168.225.88", "wifi_interface": "wifi0",
                 "wifi_address": "192.0.2.10", "tailscale_interface": "tailscale0",
                 "ipv4_egress": "usb-rndis", "rx_bps": 19e6, "tx_bps": 5e6,
@@ -99,15 +98,3 @@ class SimNetwork:
                 "state": "failed" if self.failure == "probe" else "ok",
                 "latency_ms": 12.5, "jitter_ms": 1.2, "loss_pct": 0,
                 "interface": "usb-rndis", "source": "192.168.225.88"}
-
-    def speed(self, direction, duration, parallel, cancel, on_sample):
-        cancel = cancel or threading.Event()
-        for _ in range(duration):
-            if cancel.wait(.01):
-                raise InterruptedError("Operation cancelled")
-            on_sample({"at": time.time(), "bps": (38 if direction == "download" else 8) * 1e6,
-                       "final": False})
-        if self.failure == direction:
-            raise ValueError("Simulated iperf failure")
-        return {"bps": (38 if direction == "download" else 8) * 1e6, "bytes": 1000000,
-                "receiver_verified": True, "interface": "usb-rndis", "source": "192.168.225.88"}

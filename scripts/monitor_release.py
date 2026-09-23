@@ -5,6 +5,7 @@ import getpass
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import pwd
 import grp
@@ -34,6 +35,8 @@ def files(root):
 
 
 def stage(destination):
+    sys.path.insert(0, str(ROOT))
+    from scripts.release_tools import source_metadata
     if destination.exists():
         raise ValueError("Stage destination must be new")
     if not (MODULE / "frontend/dist/index.html").exists():
@@ -56,7 +59,7 @@ def stage(destination):
     shutil.copyfile(Path(__file__), destination / "install.py")
     manifest = files(destination)
     release_id = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
-    (destination / "manifest.json").write_text(json.dumps({"release_id": release_id, "files": manifest}, indent=2) + "\n")
+    (destination / "manifest.json").write_text(json.dumps({"release_id": release_id, "files": manifest, **source_metadata("spark")}, indent=2) + "\n")
     print("Staged V2 single-stack monitor release " + release_id)
 
 
@@ -70,17 +73,29 @@ def verify(stage):
     expected = hashlib.sha256(json.dumps(actual, sort_keys=True).encode()).hexdigest()[:16]
     if manifest["release_id"] != expected:
         raise ValueError("Release ID differs")
+    if (stage / "wheels").exists() or (stage / "wheels.json").exists():
+        if not (stage / "wheels").is_dir() or not (stage / "wheels.json").is_file():
+            raise ValueError("Incomplete offline wheelhouse")
+        if files(stage / "wheels") != json.loads((stage / "wheels.json").read_text()):
+            raise ValueError("Offline wheel checksums differ")
     return manifest
 
 
 def download(stage):
+    sys.path.insert(0, str(ROOT))
+    from scripts.release_tools import download_wheels
     verify(stage)
-    (stage / "wheels").mkdir(exist_ok=True)
-    subprocess.run([sys.executable, "-m", "pip", "download", "--only-binary=:all:", "-r", str(stage / "requirements.lock"), "-d", str(stage / "wheels")], check=True)
-    (stage / "wheels.json").write_text(json.dumps(files(stage / "wheels"), indent=2) + "\n")
+    checksums = download_wheels(stage / "wheels", stage / "requirements.lock", "spark")
+    (stage / "wheels.json").write_text(json.dumps(checksums, indent=2) + "\n")
+
+
+def require_target_host():
+    if platform.system() != "Linux" or platform.machine() != "aarch64" or sys.version_info[:2] != (3, 12):
+        raise ValueError("Spark installation requires Linux ARM64 Python 3.12")
 
 
 def check_host(stage):
+    require_target_host()
     verify(stage)
     with tempfile.TemporaryDirectory(prefix="aoc-monitor-check-") as temporary:
         root = Path(temporary)
@@ -166,6 +181,7 @@ def write_json(path, data, group=0, mode=0o640):
 
 
 def install(stage):
+    require_target_host()
     manifest = verify(stage)
     if os.geteuid() != 0:
         raise ValueError("Run install in your sudo terminal")

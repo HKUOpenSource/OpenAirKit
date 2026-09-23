@@ -12,7 +12,7 @@ from .hardware import discover
 
 
 KINDS = frozenset({"gateway", "upf", "ext_dn", "public"})
-ACTIONS = frozenset({"prepare", "promote", "fallback", "restore"})
+ACTIONS = frozenset({"protect", "prepare", "promote", "fallback", "restore"})
 HELPER_ENTRY = "/opt/agentic-ocudu/jetson/current/deploy/network_entry.py"
 
 
@@ -63,12 +63,23 @@ def route_to(address, source=None):
     return routes[0]
 
 
-def inspect(config):
+def inspect(config, require_management=True):
     found = discover(config)
     data_interface = found["data_interface"]
     data_addresses = global_addresses(data_interface)
     if len(data_addresses) != 1 or ipaddress.ip_address(data_addresses[0]) not in ipaddress.ip_network("192.168.224.0/22"):
         raise ValueError("A unique RNDIS DHCP address was not found")
+    state = {"data_interface": data_interface, "data_address": data_addresses[0]}
+    if not require_management:
+        try:
+            protected = {**state, **inspect_management(config)}
+            return {**protected, "management_protected": True}
+        except (OSError, ValueError, RuntimeError) as error:
+            return {**state, "management_protected": False, "management_reason": str(error)[:240]}
+    return {**state, **inspect_management(config)}
+
+
+def inspect_management(config):
     configured_wifi = config["management"]["wifi_interface"]
     if configured_wifi == "auto":
         candidates = sorted(path.name for path in Path("/sys/class/net").iterdir()
@@ -84,13 +95,12 @@ def inspect(config):
     tailscale = config["management"]["tailscale_interface"]
     if route_to(config["management"]["spark_address"]).get("dev") != tailscale:
         raise ValueError("Spark management route is not protected by Tailscale")
-    return {"data_interface": data_interface, "data_address": data_addresses[0],
-            "wifi_interface": wifi, "wifi_address": wifi_addresses[0],
-            "tailscale_interface": tailscale}
+    return {"wifi_interface": wifi, "wifi_address": wifi_addresses[0],
+            "tailscale_interface": tailscale, "management_protected": True}
 
 
 def targets(config):
-    plane = config["network"]["user_plane"]
+    plane = config["diagnostics"]
     return {"gateway": plane["rndis_gateway"], "upf": plane["upf_probe"],
             "ext_dn": plane["ext_dn"], "public": plane["public_probe"]}
 
@@ -120,7 +130,7 @@ class Network:
     def snapshot(self):
         at = time.time()
         try:
-            state = inspect(self.config)
+            state = inspect(self.config, require_management=False)
             interface = state["data_interface"]
             counters = [int((Path("/sys/class/net") / interface / "statistics" / name).read_text())
                         for name in ("rx_bytes", "tx_bytes")]
@@ -130,19 +140,26 @@ class Network:
                 if at > previous_at and all(new >= old for new, old in zip(counters, previous)):
                     rates = [(new - old) * 8 / (at - previous_at) for new, old in zip(counters, previous)]
             self.previous = (at, counters)
-            public_route = route_to(targets(self.config)["public"], state["data_address"])
+            try:
+                public_route = route_to(targets(self.config)["public"], state["data_address"])
+            except (OSError, ValueError, RuntimeError):
+                public_route = {}
             return {"at": at, "quality": "ok", **state, "ipv4_egress": public_route.get("dev"),
                     "rx_bps": rates[0], "tx_bps": rates[1],
                     "ipv6": {"quality": "unavailable", "reason": "IPv6 data path is not verified"}}
         except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as error:
-            return {"at": at, "quality": "unavailable", "reason": str(error)[:300],
+            try:
+                management = inspect_management(self.config)
+            except (OSError, ValueError, RuntimeError) as guard:
+                management = {"management_protected": False, "management_reason": str(guard)[:240]}
+            return {"at": at, "quality": "unavailable", **management, "reason": str(error)[:300],
                     "rx_bps": None, "tx_bps": None,
                     "ipv6": {"quality": "unavailable", "reason": "IPv6 data path is not verified"}}
 
     def probe(self, kind, cancel=None):
         if kind not in KINDS:
             raise ValueError("Probe kind is not allow-listed")
-        state = inspect(self.config)
+        state = inspect(self.config, require_management=False)
         target = targets(self.config)[kind]
         path = route_to(target, state["data_address"])
         if path.get("dev") != state["data_interface"]:
@@ -162,54 +179,15 @@ class Network:
                     "interface": state["data_interface"], "source": state["data_address"],
                     "reason": "No valid ICMP reply; PDU release is not inferred"}
 
-    def speed(self, direction, duration, parallel, cancel, on_sample):
-        if direction not in {"download", "upload"} or type(duration) is not int or not 5 <= duration <= 30 \
-                or type(parallel) is not int or not 1 <= parallel <= 4:
-            raise ValueError("Invalid fixed speed-test parameters")
-        state = inspect(self.config)
-        target = targets(self.config)["ext_dn"]
-        if route_to(target, state["data_address"]).get("dev") != state["data_interface"]:
-            raise ValueError("Speed-test route is not bound to the RM520N data interface")
-        plane = self.config["network"]["user_plane"]
-        argv = ["iperf3", "-4", "-c", target, "-p", str(plane["iperf_port"]),
-                "-B", state["data_address"], "-t", str(duration), "-P", str(parallel), "-J"]
-        if direction == "download":
-            argv.append("-R")
-        started = time.time()
-        counter = Path("/sys/class/net") / state["data_interface"] / "statistics" / (
-            "rx_bytes" if direction == "download" else "tx_bytes")
-        previous = [time.monotonic(), int(counter.read_text())]
-
-        def tick():
-            current = time.monotonic()
-            if current - previous[0] < 1:
-                return
-            if route_to(target, state["data_address"]).get("dev") != state["data_interface"]:
-                raise ValueError("Route changed during speed test")
-            count = int(counter.read_text())
-            rate = (count - previous[1]) * 8 / (current - previous[0]) if count >= previous[1] else None
-            on_sample({"at": time.time(), "bps": rate, "elapsed": time.time() - started, "final": False})
-            previous[:] = [current, count]
-
-        output = run(argv, timeout=duration + 20, cancel=cancel, tick=tick)
-        if route_to(target, state["data_address"]).get("dev") != state["data_interface"]:
-            raise ValueError("Final route is not bound to the RM520N data interface")
-        value = json.loads(output)
-        if value.get("error"):
-            raise ValueError(str(value["error"])[:250])
-        received = value.get("end", {}).get("sum_received", {})
-        bps = received.get("bits_per_second")
-        if not isinstance(bps, (int, float)) or not 0 < bps < 1e12 or received.get("bytes", 0) <= 0:
-            raise ValueError("No valid receiver throughput")
-        return {"bps": bps, "bytes": received["bytes"], "receiver_verified": True,
-                "interface": state["data_interface"], "source": state["data_address"]}
-
 
 def helper(config, action):
     if os.geteuid() != 0 or not config.get("commissioned") or not config.get("management_verified"):
         raise ValueError("Commissioning, management verification and root execution are required")
     if action not in ACTIONS:
         raise ValueError("Network action is not allow-listed")
+    if action == "protect":
+        inspect_management(config)
+        return {"management_protected": True, "mutations": 0}
     state = inspect(config)
     journal = Path(config["state_dir"]) / "network-state.json"
     owned = json.loads(journal.read_text()) if journal.exists() else {"routes": []}

@@ -1,11 +1,12 @@
 import json
+from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
 import time
 import uuid
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class Store:
@@ -19,8 +20,8 @@ class Store:
             version = db.execute("PRAGMA user_version").fetchone()[0]
             if version > SCHEMA_VERSION:
                 raise ValueError("Unsupported Jetson database version")
-            if existed and version == 0:
-                backup = self.path.with_name(self.path.name + ".before-schema-1-" + str(time.time_ns()))
+            if existed and version < SCHEMA_VERSION:
+                backup = self.path.with_name(self.path.name + ".before-schema-" + str(SCHEMA_VERSION) + "-" + str(time.time_ns()))
                 with sqlite3.connect(backup) as target:
                     db.backup(target)
                 backup.chmod(0o600)
@@ -31,13 +32,28 @@ class Store:
                 CREATE TABLE IF NOT EXISTS metrics (id INTEGER PRIMARY KEY, at REAL NOT NULL, payload TEXT NOT NULL);
                 CREATE INDEX IF NOT EXISTS jetson_metrics_at ON metrics(at);
                 CREATE INDEX IF NOT EXISTS jetson_events_at ON events(at);
-                PRAGMA user_version=1;
+                PRAGMA user_version=2;
             """)
 
+        if version < SCHEMA_VERSION:
+            with self.connect() as db:
+                for identifier, payload in db.execute("SELECT id,payload FROM jobs").fetchall():
+                    job = json.loads(payload)
+                    if job["kind"] == "speed":
+                        job["retired"] = True
+                        if job["state"] in {"queued", "ready", "running", "paused", "cancelling"}:
+                            job.update(state="interrupted", error="Task retired during upgrade")
+                        db.execute("UPDATE jobs SET payload=? WHERE id=?", (json.dumps(job), identifier))
+
+    @contextmanager
     def connect(self):
         database = sqlite3.connect(self.path, timeout=10)
-        database.execute("PRAGMA journal_mode=WAL")
-        return database
+        try:
+            database.execute("PRAGMA journal_mode=WAL")
+            with database:
+                yield database
+        finally:
+            database.close()
 
     def setting(self, key, default=None):
         with self.connect() as db:
@@ -101,7 +117,9 @@ class Store:
 
     def interrupt(self):
         changed = False
-        for job in self.jobs():
+        with self.connect() as db:
+            jobs = [json.loads(row[0]) for row in db.execute("SELECT payload FROM jobs")]
+        for job in jobs:
             if job["state"] in {"queued", "running", "cancelling", "ready", "paused"}:
                 job.update(state="interrupted", error="Device executor restarted; inspect current state before writing")
                 self.save_job(job)

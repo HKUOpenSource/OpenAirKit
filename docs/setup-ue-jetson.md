@@ -31,7 +31,7 @@ boot. Review the preflight management-interface result before starting them.
 Start the platform with the installed manager and open the UI through an SSH
 tunnel to `127.0.0.1:8878`. Verify login, health, SSE updates, modem discovery,
 registration, the data PDU and the bound data path separately. Run a short
-speed test only after the route view names the modem interface.
+bound connectivity check only after the route view names the modem interface.
 
 Use [Jetson operations](jetson-operations.md) for maintenance and rollback, and
 [Jetson troubleshooting](troubleshooting-ue-jetson.md) if discovery or data

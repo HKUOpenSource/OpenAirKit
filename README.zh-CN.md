@@ -5,7 +5,7 @@ Agentic-OCUDU 是一个独立的实验室 5G 系统，由 OCUDU 无线接入网�
 
 | 应用 | 职责 | 监听地址 | 版本 |
 | --- | --- | --- | --- |
-| Jetson Console | 模组发现、数据会话验证、恢复与测速 | `127.0.0.1:8878` | 0.3.0 |
+| Jetson Console | 模组发现、数据会话验证与有界恢复 | `127.0.0.1:8878` | 0.4.0 |
 | Spark Platform | 主机、无线与核心网监测及受限栈操作 | `127.0.0.1:8877` | 0.1.0 |
 
 当前产品范围是一套 5G SA 数据网络。只有注册、配置地址池中的活动 PDU、
@@ -14,10 +14,20 @@ IMS、SIP 和语音服务不在当前范围内。
 
 ## 开发
 
+使用 Python 3.10–3.12 和 Node.js 22。Jetson 目标版本为 Python 3.10，Spark 为
+Python 3.12，CI 覆盖两者。初始化会创建 `.venv`，安装两个后端的开发依赖，并为
+两个前端执行 `npm ci` 和构建。
+
 ```sh
-make install-dev
+make install-dev BOOTSTRAP_PYTHON=python3.12
 make check
 ```
+
+不会覆盖已有环境。若 `.venv` 使用旧 Python，在两条命令中都指定
+`VENV=local/dev-venv` 使用新目录。`make check` 包含应用和根目录协议栈测试。
+Spark 浏览器验证需先构建前端，执行
+`npm --prefix apps/spark-platform/frontend exec -- playwright install chromium`，再执行
+`make e2e-spark`；测试会自行启动和停止使用模拟数据的回环服务。
 
 两个应用分别维护后端、前端、依赖锁、发布包和回滚路径。安装器默认不启用
 开机自启，也不会操作另一个应用。

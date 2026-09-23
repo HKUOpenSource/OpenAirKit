@@ -1,5 +1,6 @@
 """Offline V2 install, explicit serial takeover, bounded stop and rollback."""
 import argparse
+from contextlib import closing
 import getpass
 import hashlib
 import json
@@ -11,6 +12,7 @@ import re
 import shutil
 import socket
 import sqlite3
+import stat
 import subprocess
 import sys
 import time
@@ -64,7 +66,7 @@ def verify(stage):
 def preflight(check_listener=True):
     if platform.machine() != "aarch64" or sys.version_info[:2] != (3, 10):
         raise ValueError("This release requires ARM64 Python 3.10")
-    for name in ("ip", "nmcli", "iperf3", "systemctl", "fuser"):
+    for name in ("ip", "nmcli", "systemctl", "fuser"):
         if not shutil.which(name):
             raise ValueError("Missing required command: " + name)
     if not Path("/sys/class/net/tailscale0").exists():
@@ -83,6 +85,40 @@ def preflight(check_listener=True):
             "wifi": wifi[0], "tailscale": "tailscale0", "listener": "available" if check_listener else "not-tested"}
 
 
+def verify_installed(release, manifest):
+    """Reuse only intact packaged code and a protected, root-owned runtime."""
+    def protected(path):
+        for entry in (path, *path.parents):
+            info = entry.lstat()
+            if stat.S_ISLNK(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+                raise ValueError("Unprotected installed release: " + str(entry))
+    protected(release)
+    actual = set()
+    for path in release.rglob("*"):
+        relative = path.relative_to(release)
+        runtime = relative.parts[0] == "venv"
+        if path.is_symlink():
+            if not runtime or path.lstat().st_uid != 0:
+                raise ValueError("Unexpected installed symlink")
+            protected(path.resolve(strict=True))
+            continue
+        protected(path)
+        if not path.is_file() and not path.is_dir():
+            raise ValueError("Unexpected installed file type")
+        if path.is_file() and not runtime and not (
+                "__pycache__" in relative.parts and path.suffix == ".pyc"):
+            actual.add(str(relative))
+    if actual != set(manifest["files"]) | {"manifest.json"}:
+        raise ValueError("Unexpected installed package contents")
+    if json.loads((release / "manifest.json").read_text()) != manifest:
+        raise ValueError("Installed manifest differs from the reviewed release")
+    for name, expected in manifest["files"].items():
+        if hashlib.sha256((release / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Installed checksum mismatch: " + name)
+    if not (release / "venv/bin/python").is_file():
+        raise ValueError("Installed virtual environment is missing")
+
+
 def private_write(path, value, uid=0, gid=0, mode=0o600):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name("." + path.name + "." + str(time.time_ns()))
@@ -99,7 +135,7 @@ def private_write(path, value, uid=0, gid=0, mode=0o600):
 
 
 def database_backup(source, destination):
-    with sqlite3.connect(source) as current, sqlite3.connect(destination) as saved:
+    with closing(sqlite3.connect(source)) as current, closing(sqlite3.connect(destination)) as saved:
         current.backup(saved)
 
 
@@ -123,8 +159,9 @@ def install(stage):
         raise ValueError("Stop the V2 Jetson platform before upgrading")
     inventory = preflight(True)
     release = BASE / "releases" / manifest["release"]
-    if release.exists():
-        raise ValueError("Release already exists; use start or select a rollback")
+    existing = release.exists() or release.is_symlink()
+    if existing:
+        verify_installed(release, manifest)
     password_hash = None
     if not (ETC / "web.json").exists():
         password = getpass.getpass("New Jetson V2 console password (12+ characters): ")
@@ -134,18 +171,22 @@ def install(stage):
         salt = os.urandom(16).hex()
         password_hash = salt + ":" + hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 600000).hex()
     backup_record = backup()
-    shutil.copytree(stage, release)
-    verify(release)
-    for path in (release, *release.rglob("*")):
-        os.chown(path, 0, 0)
-        path.chmod(0o755 if path.is_dir() else 0o644)
+    if not existing:
+        shutil.copytree(stage, release)
+        verify(release)
+        for path in (release, *release.rglob("*")):
+            os.chown(path, 0, 0)
+            path.chmod(0o755 if path.is_dir() else 0o644)
     try:
-        output([sys.executable, "-m", "venv", str(release / "venv")])
-        output([str(release / "venv/bin/python"), "-m", "pip", "install", "--no-index",
-                "--find-links", str(release / "wheels"), "-r", str(release / "requirements.lock")], 180)
+        if not existing:
+            output([sys.executable, "-m", "venv", str(release / "venv")])
+            output([str(release / "venv/bin/python"), "-m", "pip", "install", "--no-index",
+                    "--find-links", str(release / "wheels"), "-r", str(release / "requirements.lock")], 180)
+        output([str(release / "venv/bin/python"), "-m", "pip", "check"])
         output([str(release / "venv/bin/python"), "-I", "-c", "import fastapi,serial,uvicorn"])
     except Exception:
-        shutil.rmtree(release)
+        if not existing:
+            shutil.rmtree(release)
         raise
     try:
         user = pwd.getpwnam("aoc-v2-jetson-web")
@@ -164,8 +205,8 @@ def install(stage):
         else json.loads((stage / "device.example.json").read_text())
     device["release"] = manifest["release"]
     sys.path.insert(0, str(release / "backend"))
-    from aoc_jetson.config import validate
-    device = validate(device)
+    from aoc_jetson.config import migrate, validate
+    device = validate(migrate(device))
     private_write(ETC / "device.json", device)
     web = json.loads((ETC / "web.json").read_text()) if (ETC / "web.json").exists() else {
         "web_state_dir": str(WEB_STATE), "agent_socket": "/run/aoc-v2-jetson/device.sock",

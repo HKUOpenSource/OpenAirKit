@@ -1,3 +1,4 @@
+from typing import Literal
 """Unprivileged HTTP API for the independent V2 Jetson console."""
 import argparse
 import asyncio
@@ -44,7 +45,7 @@ class Login(BaseModel):
 
 class Task(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    kind: str
+    kind: Literal["setup", "recover"]
     revision: str
     params: dict = Field(default_factory=dict)
 

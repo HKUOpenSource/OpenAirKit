@@ -6,7 +6,7 @@ operations applications.
 
 | Application | Responsibility | Listener | Version |
 | --- | --- | --- | --- |
-| Jetson Console | Modem discovery, verified data sessions, recovery and throughput tests | `127.0.0.1:8878` | 0.3.0 |
+| Jetson Console | Modem discovery, verified data sessions and bounded recovery | `127.0.0.1:8878` | 0.4.0 |
 | Spark Platform | Host, radio and core observation with bounded stack operations | `127.0.0.1:8877` | 0.1.0 |
 
 The current product scope is one 5G SA data network. A connected UE requires
@@ -16,10 +16,20 @@ outside the current scope.
 
 ## Develop
 
+Use Python 3.10–3.12 and Node.js 22. The device targets are Python 3.10 for
+Jetson and Python 3.12 for Spark; CI tests both. Bootstrap creates `.venv`,
+installs both backend development dependencies, runs `npm ci` and builds both UIs.
+
 ```sh
-make install-dev
+make install-dev BOOTSTRAP_PYTHON=python3.12
 make check
 ```
+
+An existing environment is never replaced. If `.venv` uses an older Python,
+select a fresh path with `VENV=local/dev-venv` on both commands. `make check`
+includes application and root stack tests. For Spark browser checks, build the
+frontend, run `npm --prefix apps/spark-platform/frontend exec -- playwright install chromium`,
+then `make e2e-spark`; it starts and stops its own synthetic loopback service.
 
 The two applications have separate backends, frontends, dependency locks,
 release packages and rollback paths. Installers leave services disabled at

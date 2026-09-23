@@ -7,7 +7,7 @@ import signal
 import socket
 import subprocess
 import sys
-import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 N6_RULES = '''add table ip aoc_v2
 add chain ip aoc_v2 postrouting { type nat hook postrouting priority srcnat; policy accept; }
@@ -17,7 +17,13 @@ import urllib.request
 
 
 def health(nf, address):
-    exe = 'iperf3' if nf == 'ext-dn' else 'open5gs-' + nf + 'd'
+    if nf == 'ext-dn':
+        http = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with http.open('http://' + address + ':8080/health', timeout=2) as response:
+            if response.status != 200 or response.read(128) != b'aoc-data-network-ok\n':
+                raise RuntimeError('Data network endpoint not ready')
+        return
+    exe = 'open5gs-' + nf + 'd'
     found = False
     for path in Path('/proc').glob('[0-9]*/exe'):
         try:
@@ -35,8 +41,7 @@ def health(nf, address):
                 raise RuntimeError('Metrics not ready')
     ports = {'upf': [('udp', 8805), ('udp', 2152)],
              'smf': [('tcp', 7777), ('udp', 8805)],
-             'amf': [('tcp', 7777), ('sctp', 38412)],
-             'ext-dn': [('tcp', 5201)]}.get(nf, [('tcp', 7777)])
+             'amf': [('tcp', 7777), ('sctp', 38412)]}.get(nf, [('tcp', 7777)])
     for proto, port in ports:
         output = subprocess.check_output(['ss', '-H', '-ln', '-' + {'tcp': 't', 'udp': 'u', 'sctp': 'S'}[proto]], text=True)
         if not any(address + ':' + str(port) in line.split() for line in output.splitlines()):
@@ -47,38 +52,42 @@ def health(nf, address):
             raise RuntimeError('N6 NAT rule missing')
 
 
-def iperf_exit_code(code, stop_requested, forced):
-    # iperf3 returns 1 on SIGINT; record it, normalize only an orderly requested stop.
-    return 0 if stop_requested and not forced and code in (0, 1) else (code or 1)
+class ConnectivityHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = b'aoc-data-network-ok\n' if self.path == '/health' else b'not found\n'
+        self.send_response(200 if self.path == '/health' else 404)
+        self.send_header('Content-Type', 'text/plain')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def setup(self):
+        self.request.settimeout(2)
+        super().setup()
+
+    def log_message(self, _format, *_args):
+        pass
 
 
-def iperf_server(address):
-    state = {'stopping': False}
-    child = subprocess.Popen(['iperf3', '-s', '-B', address, '-p', '5201'], start_new_session=True)
+def connectivity_server(address):
+    stopping = False
 
     def stop(_signum, _frame):
-        if child.poll() is None and not state['stopping']:
-            state['stopping'] = True
-            child.send_signal(signal.SIGINT)
+        nonlocal stopping
+        stopping = True
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    while child.poll() is None and not state['stopping']:
-        time.sleep(0.1)
-    forced = False
-    try:
-        code = child.wait(timeout=10)
-    except subprocess.TimeoutExpired:
-        forced = True
-        child.kill()
-        code = child.wait(timeout=3)
-    print(json.dumps({'iperf_exit_code': code, 'stop_requested': state['stopping'], 'forced': forced}), flush=True)
-    raise SystemExit(iperf_exit_code(code, state['stopping'], forced))
+    with HTTPServer((address, 8080), ConnectivityHandler) as server:
+        server.timeout = .5
+        while not stopping:
+            server.handle_request()
 
 
 def run(nf, address):
     if nf == 'ext-dn':
-        iperf_server(address)
+        return connectivity_server(address)
     if nf == 'upf':
         subprocess.run(['ip', 'tuntap', 'add', 'dev', 'ogstun', 'mode', 'tun'], check=True)
         subprocess.run(['ip', 'addr', 'add', '10.0.0.1/24', 'dev', 'ogstun'], check=True)

@@ -26,5 +26,5 @@ export async function download(path: string, filename: string) {
 
 export const terminal = (job: Obj | null) => !job || ["complete", "failed", "cancelled", "interrupted"].includes(job.state);
 export const number = (value: unknown, digits = 1) => typeof value === "number" && Number.isFinite(value) ? value.toFixed(digits) : "--";
-export const speed = (value: unknown) => typeof value === "number" ? number(value / 1e6) : "--";
+export const bitrate = (value: unknown) => typeof value === "number" ? number(value / 1e6) : "--";
 export const when = (value: number) => value ? new Date(value * 1000).toLocaleString() : "Not observed";

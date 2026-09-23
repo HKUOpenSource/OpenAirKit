@@ -16,7 +16,7 @@ try {
     await page.getByLabel("Password", { exact: true }).fill("Jetson-Local-Preview-2026");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await page.getByRole("heading", { name: "Network overview", exact: true, level: 1 }).waitFor();
-    for (const [path, label, heading] of [["/", "Overview", "Network overview"], ["/setup", "Device Setup", "Device Setup"], ["/speed", "Speed Test", "Speed Test"], ["/history", "History", "History"], ["/settings", "Settings", "Settings"]]) {
+    for (const [path, label, heading] of [["/", "Overview", "Network overview"], ["/setup", "Device Setup", "Device Setup"], ["/history", "History", "History"], ["/settings", "Settings", "Settings"]]) {
       await page.goto(base + path);
       await page.getByRole("heading", { name: heading, exact: true, level: 1 }).waitFor();
       await page.screenshot({ path: `${output}${viewport.width}-${label.toLowerCase().replaceAll(" ", "-")}.png`, fullPage: true });
@@ -33,13 +33,11 @@ try {
       await page.getByRole("button", { name: "Run next step", exact: true }).waitFor();
       await page.getByRole("button", { name: "Cancel", exact: true }).click();
       await page.getByText("cancelled", { exact: true }).first().waitFor();
-      await page.goto(base + "/speed");
-      await page.getByRole("button", { name: "GO", exact: true }).click();
+      await page.goto(base + "/");
+      await page.getByRole("button", { name: "Recover", exact: true }).click();
       await page.getByRole("button", { name: "Confirm", exact: true }).click();
-      const currentResult = page.locator(".speed-result");
-      await currentResult.getByText("38.0", { exact: true }).waitFor({ timeout: 10000 });
-      await currentResult.getByText("8.0", { exact: true }).waitFor();
-      await page.screenshot({ path: output + "speed-complete.png", fullPage: true });
+      await page.locator(".job-panel .badge.complete").waitFor({ timeout: 15000 });
+      if (await page.locator('a[href="/speed"]').count()) failures.push("Retired navigation remains");
       const denied = await page.evaluate(async () => (await fetch("/api/v1/maintenance", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"enabled":true}' })).status);
       if (denied !== 403) failures.push("Write without CSRF was accepted");
       await page.route("**/api/v1/events/stream", route => route.fulfill({ status: 200, contentType: "text/event-stream", body: "event: unavailable\ndata: {}\n\n" }));
@@ -49,9 +47,11 @@ try {
       await page.screenshot({ path: output + "stream-stale.png", fullPage: true });
     } else {
       await page.getByRole("button", { name: "Open navigation", exact: true }).click();
-      await page.getByRole("link", { name: "Speed Test", exact: true }).click();
+      await page.getByRole("link", { name: "History", exact: true }).click();
       if (await page.locator("aside").evaluate(element => element.classList.contains("open"))) failures.push("Mobile drawer remained open");
     }
+    await page.route("**/api/v1/jobs", route => route.fulfill({status: 401, contentType: "application/json", body: '{"detail":"Session expired"}'}));
+    await page.getByRole("button", {name: "Sign in", exact: true}).waitFor({timeout: 10000});
     await context.close();
   }
 } finally {

@@ -20,7 +20,7 @@
     "n6_endpoint": "site-defined",
     "probe_endpoint": "site-defined",
     "dns_servers": ["site-defined"],
-    "probe_port": 5201
+    "probe_port": 8080
   },
   "radio": {
     "band": 78,

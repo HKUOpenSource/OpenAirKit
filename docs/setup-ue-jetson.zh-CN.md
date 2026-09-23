@@ -28,7 +28,7 @@ sudo /opt/agentic-ocudu/jetson/current/venv/bin/python -I \
 
 通过已安装的管理器启动平台，并用 SSH 隧道访问 `127.0.0.1:8878`。分别验证
 登录、健康、SSE、模组发现、注册、数据 PDU 和绑定的数据路径。只有路由视图明确
-使用模组接口后才运行短时测速。
+使用模组接口后才运行小流量连通性检查。
 
 维护和回滚见 [Jetson 运维](jetson-operations.zh-CN.md)，发现或数据验证失败见
 [Jetson 故障排查](troubleshooting-ue-jetson.zh-CN.md)。

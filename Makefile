@@ -1,11 +1,21 @@
 .PHONY: check-python install-dev test-jetson-backend test-spark-backend typecheck build-jetson-frontend build-spark-frontend build-jetson-release build-spark-release e2e-jetson e2e-spark docs-audit release-audit license-audit shell-check check
-PYTHON ?= python3
+VENV ?= .venv
+PYTHON ?= $(VENV)/bin/python
+BOOTSTRAP_PYTHON ?= python3
 RELEASE_OUT ?= /tmp/agentic-ocudu-release
-WHEELS ?= /tmp/agentic-ocudu-wheels
 check-python:
-	$(PYTHON) --version
+	$(PYTHON) -c 'import sys; assert (3, 10) <= sys.version_info[:2] <= (3, 12), "Use Python 3.10-3.12 (Jetson: 3.10; Spark: 3.12)"; print(sys.version)'
 install-dev:
-	$(PYTHON) -m pip install -r requirements-tools.txt
+	$(BOOTSTRAP_PYTHON) -c 'import sys; assert (3, 10) <= sys.version_info[:2] <= (3, 12), "BOOTSTRAP_PYTHON must be Python 3.10-3.12"'
+	@test -x $(PYTHON) || $(BOOTSTRAP_PYTHON) -m venv $(VENV)
+	$(MAKE) check-python
+	$(PYTHON) -m pip install -r requirements-tools.txt -r apps/jetson-console/requirements-dev.txt -r apps/spark-platform/requirements-dev.txt
+	npm --prefix apps/jetson-console/frontend ci
+	npm --prefix apps/jetson-console/frontend run build
+	npm --prefix apps/spark-platform/frontend ci
+	npm --prefix apps/spark-platform/frontend run build
+test-stack:
+	$(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 test-jetson-backend:
 	PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend $(PYTHON) -m unittest discover -s apps/jetson-console/tests -p 'test_*.py'
 test-spark-backend:
@@ -20,14 +30,13 @@ build-spark-frontend:
 	npm --prefix apps/spark-platform/frontend ci
 	npm --prefix apps/spark-platform/frontend run build
 build-jetson-release:
-	deploy/jetson/build-release.sh --output $(RELEASE_OUT) --wheels $(WHEELS)
+	$(PYTHON) scripts/build_release.py jetson --output $(RELEASE_OUT)
 build-spark-release:
-	deploy/spark/platform/build-release.sh stage --path $(RELEASE_OUT)
-	deploy/spark/platform/build-release.sh download --path $(RELEASE_OUT)
+	$(PYTHON) scripts/build_release.py spark --output $(RELEASE_OUT)
 e2e-jetson:
-	node apps/jetson-console/frontend/check-browser.mjs
+	$(PYTHON) scripts/e2e_jetson.py
 e2e-spark:
-	@if [ -x scripts/e2e/spark.sh ]; then scripts/e2e/spark.sh; else echo 'Spark E2E requires a running local preview'; fi
+	$(PYTHON) scripts/e2e_spark.py
 docs-audit:
 	$(PYTHON) scripts/audit/docs_audit.py
 release-audit:
@@ -36,4 +45,6 @@ license-audit:
 	$(PYTHON) scripts/audit/license_audit.py
 shell-check:
 	find deploy scripts -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
-check: check-python test-jetson-backend test-spark-backend typecheck docs-audit release-audit license-audit shell-check
+check: check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
+
+.PHONY: test-stack

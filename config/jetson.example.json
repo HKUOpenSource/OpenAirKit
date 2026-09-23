@@ -1,10 +1,11 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "name": "agentic-ocudu-jetson-v2",
   "network": {
     "plmn": "46003",
-    "tac": 1,
-    "slice": {"sst": 1},
+    "slice": {
+      "sst": 1
+    },
     "data": {
       "dnn": "oai",
       "pdu_type": "IP",
@@ -12,21 +13,6 @@
       "qos_5qi": 9,
       "cid_min": 1,
       "cid_max": 16
-    },
-    "user_plane": {
-      "rndis_gateway": "192.168.225.1",
-      "upf_probe": "10.0.0.1",
-      "ext_dn": "172.28.81.15",
-      "public_probe": "8.8.8.8",
-      "iperf_port": 5201
-    },
-    "radio": {
-      "band": 78,
-      "channel_bandwidth_mhz": 20,
-      "common_scs_khz": 30,
-      "carrier_arfcn": 643392,
-      "pci": 666,
-      "ssb_arfcn_policy": "observe_only"
     }
   },
   "device": {
@@ -44,5 +30,37 @@
   "web_state_dir": "/var/lib/aoc-v2-jetson-web",
   "agent_socket": "/run/aoc-v2-jetson/device.sock",
   "commissioned": false,
-  "management_verified": false
+  "management_verified": false,
+  "diagnostics": {
+    "rndis_gateway": "192.168.225.1",
+    "upf_probe": "10.0.0.1",
+    "ext_dn": "172.28.81.15",
+    "public_probe": "8.8.8.8",
+    "required": [
+      "gateway",
+      "upf",
+      "ext_dn"
+    ]
+  },
+  "selection": {
+    "rat": "NR5G-SA",
+    "band": 78,
+    "pci": 666,
+    "ssb_arfcn": null,
+    "mode": "observe_only"
+  },
+  "radio_reference": {
+    "band": 78,
+    "channel_bandwidth_mhz": 20,
+    "common_scs_khz": 30,
+    "carrier_arfcn": 643392,
+    "pci": 666,
+    "ssb_arfcn_policy": "observe_only",
+    "tac": 1
+  },
+  "recovery": {
+    "natural_wait_seconds": 120,
+    "cooldown_seconds": 300,
+    "max_attempts": 2
+  }
 }
