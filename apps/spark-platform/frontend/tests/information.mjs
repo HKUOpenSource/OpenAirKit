@@ -159,11 +159,11 @@ try {
       await chart.locator(".chart-axis > span").nth(1).innerText(),
       "%",
     );
-    assert.ok(
-      (await chart.locator("svg text").count()) > 0,
-      "Standard chart axes are rendered",
-    );
+    // Astryx measures its chart before rendering SVG axes. The summary above
+    // can be ready before that layout pass, especially on a CI runner.
+    await chart.locator("svg text").first().waitFor({ state: "visible" });
     const circle = chart.locator("circle");
+    await circle.waitFor({ state: "visible" });
     const plotWidth = await chart
       .locator("svg")
       .first()
