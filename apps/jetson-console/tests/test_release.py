@@ -39,17 +39,23 @@ class ReleaseTests(unittest.TestCase):
         (release / "venv/bin/python").write_text("runtime fixture")
         return release, manifest
 
-    def root_metadata(self):
+    def root_metadata(self, root):
         lstat = Path.lstat
+        outside_parents = set(root.parents)
         def owned(path):
             values = list(lstat(path))
             values[4] = values[5] = 0
+            # Model /opt's protected ancestors without depending on the host's
+            # temporary directory permissions (Linux /tmp is world-writable).
+            # Keep every mode inside the fixture intact for rejection tests.
+            if path in outside_parents:
+                values[0] &= ~0o022
             return os.stat_result(values)
         return patch.object(Path, "lstat", owned)
 
     def test_existing_release_reuse_checks_code_and_generated_runtime(self):
         manage = load_manage(ROOT / "deploy/jetson/manage.py")
-        with tempfile.TemporaryDirectory() as temporary, self.root_metadata():
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
             release, manifest = self.installed_fixture(Path(temporary).resolve())
             (release / "__pycache__").mkdir()
             (release / "__pycache__/module.cpython-310.pyc").write_bytes(b"generated cache")
@@ -60,7 +66,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_existing_release_rejects_injected_code_and_writable_runtime(self):
         manage = load_manage(ROOT / "deploy/jetson/manage.py")
-        with tempfile.TemporaryDirectory() as temporary, self.root_metadata():
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
             release, manifest = self.installed_fixture(Path(temporary).resolve())
             extra = release / "injected.py"
             extra.write_text("unexpected")
@@ -71,9 +77,20 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Unprotected"):
                 manage.verify_installed(release, manifest)
 
+    def test_existing_release_rejects_writable_parent(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
+            release, manifest = self.installed_fixture(Path(temporary).resolve())
+            for mode in (0o775, 0o777):
+                with self.subTest(mode=oct(mode)):
+                    release.parent.chmod(mode)
+                    with self.assertRaisesRegex(ValueError, "Unprotected installed release") as failure:
+                        manage.verify_installed(release, manifest)
+                    self.assertIn(str(release.parent), str(failure.exception))
+
     def test_reinstall_runtime_failure_preserves_existing_release(self):
         manage = load_manage(ROOT / "deploy/jetson/manage.py")
-        with tempfile.TemporaryDirectory() as temporary, self.root_metadata():
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
             root = Path(temporary).resolve()
             release, manifest = self.installed_fixture(root)
             manifest["release"] = release.name
