@@ -10,8 +10,13 @@
     "scs_khz": 30,
     "carrier_arfcn": 643392,
     "pci": 666,
-    "tdd": {"period_ms": 5, "downlink_slots": 7, "uplink_slots": 2,
-            "special_downlink_symbols": 6, "special_uplink_symbols": 4}
+    "tdd": {
+      "period_ms": 5,
+      "downlink_slots": 7,
+      "uplink_slots": 2,
+      "special_downlink_symbols": 6,
+      "special_uplink_symbols": 4
+    }
   },
   "data_pdu": {
     "dnn": "oai",
@@ -23,13 +28,11 @@
     "principle": "endpoints are explicit site inputs; never infer from another stack",
     "legacy_reference": {
       "upf": "10.0.0.1",
-      "speed_server": "192.168.70.135",
       "public_probe": "8.8.8.8",
       "rndis_gateway": "192.168.225.1"
     },
     "agentic_ocudu": {
       "upf": "pending-deployment",
-      "speed_server": "pending-deployment",
       "public_probe": "8.8.8.8",
       "rndis_gateway": "pending-jetson-deployment"
     }

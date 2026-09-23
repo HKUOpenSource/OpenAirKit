@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 ca-certificates netbase libsctp-dev libgnutls28-dev libgcrypt-dev \
     libssl-dev libidn-dev libmongoc-dev libbson-dev libyaml-dev libnghttp2-dev \
     libmicrohttpd-dev libcurl4-gnutls-dev libtins-dev libtalloc-dev \
-    iproute2 iputils-ping iperf3 && \
+    iproute2 iputils-ping && \
     mkdir -p /opt/aoc-evidence && \
     dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\n' > /opt/aoc-evidence/packages.tsv && \
     rm -rf /var/lib/apt/lists/*

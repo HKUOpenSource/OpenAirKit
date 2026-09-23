@@ -16,5 +16,8 @@
 | 使用仓库代码图 | [CodeGraph 指南](coding-agent-codegraph.zh-CN.md) |
 | 查看交付状态 | [路线图](roadmap.md) |
 | 查看真实验收依据 | [验收记录](acceptance/README.md) |
+| 查看下一轮开发起点 | [2026-09-23 开发准备审阅](acceptance/2026-09-23-development-readiness.zh-CN.md) |
 
 命令和界面名称以英文文档为准，`.zh-CN.md` 文件提供对应的简体中文说明。
+
+- [UE 接入与实验室策略](ue-access-policy.zh-CN.md)

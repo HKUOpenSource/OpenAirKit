@@ -36,5 +36,14 @@
     "filename": "aoc-open5gs-build-final.tar.gz",
     "sha256": "04bc393d006c74c1fbaccc89dda0985d670123b5427e95b542b0ca042f8955aa"
   },
-  "evidence_result_sha256": "f3521fbc65b0806e1fe93d9ffac0cf7ec1f9c4e5b9ec9ede7083107bcd89730a"
+  "evidence_result_sha256": "f3521fbc65b0806e1fe93d9ffac0cf7ec1f9c4e5b9ec9ede7083107bcd89730a",
+  "connectivity_runtime": {
+    "image_id": "sha256:45fc43f140364eab399b351d5672e9501279669acf2d9420360f8d28a2f87d31",
+    "platform": "linux/arm64",
+    "scope": "offline image smoke; no radio or core changes",
+    "base_image_id": "sha256:a045fd68d629b3e2688d7103e3ebfab1a4ac448916d19c274a9324b1f3127d52",
+    "dockerfile_sha256": "541fbd3d8ce6a27b81d66f52946f62ccad8160e9bc8f551b4cd7ad9f565f9a4e",
+    "endpoint": "HTTP /health on TCP 8080",
+    "host_port_published": false
+  }
 }

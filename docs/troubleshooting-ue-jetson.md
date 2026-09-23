@@ -26,8 +26,9 @@ Confirm the current modem interface, its IPv4 address, route to the configured
 probe target and the protected management route. Run the probe bound to that
 interface. A successful unbound ping may have used Wi-Fi and is insufficient.
 
-## Speed-test failure
+## Diagnostic target failure
 
-Keep uplink and downlink errors separate. Wait for the previous iperf3 control
-session to close, verify the target service and confirm no child process remains
-after cancellation. Retain partial results and the task identifier.
+Read registration, PDU, lab policy and management protection independently. A failed
+UPF or ext-DN ping does not mean registration was lost. Verify target and bound route
+before recovery. The ext-DN container serves a fixed small `/health` response on
+TCP 8080; it has no throughput listener.

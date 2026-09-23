@@ -6,7 +6,8 @@ node_modules/
 /local/
 /build/
 /artifacts/
-/archive/
+/archive/*
+!/archive/development-baseline-tests/
 /secrets/
 .env
 .env.*

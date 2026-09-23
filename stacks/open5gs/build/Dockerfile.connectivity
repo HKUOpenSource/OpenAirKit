@@ -1,0 +1,5 @@
+# Minimal offline derivative of the verified runtime. No host packages are changed.
+ARG BASE_IMAGE=aoc-open5gs-validation:2.8.0-157f611
+FROM ${BASE_IMAGE}
+RUN apt-get purge -y iperf3 libiperf0 && rm -rf /var/lib/apt/lists/*
+LABEL org.agentic-ocudu.role="data-network-connectivity"

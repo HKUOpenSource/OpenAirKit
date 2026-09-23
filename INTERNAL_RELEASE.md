@@ -1,6 +1,6 @@
 # Internal release policy
 
-Jetson and Spark are released independently. Jetson uses version `0.3.0` and
+Jetson and Spark are released independently. Jetson uses version `0.4.0` and
 Spark uses version `0.1.0`; each release records source revision, manifest
 checksum, locked dependencies, wheelhouse and rollback point.
 

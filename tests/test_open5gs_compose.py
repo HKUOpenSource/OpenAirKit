@@ -46,11 +46,19 @@ class BundleTests(unittest.TestCase):
             self.assertIn(password, (out / 'config/udr.json').read_text())
             self.assertEqual(out.stat().st_mode & 0o777, 0o700)
 
-    def test_only_requested_clean_iperf_stop_is_normalized(self):
-        self.assertEqual(runtime.iperf_exit_code(1, True, False), 0)
-        for code, requested, forced in ((1, False, False), (0, False, False),
-                                        (-9, True, True), (2, True, False)):
-            self.assertNotEqual(runtime.iperf_exit_code(code, requested, forced), 0)
+    def test_connectivity_endpoint_serves_only_small_health_response(self):
+        import http.client
+        import threading
+        with runtime.HTTPServer(('127.0.0.1', 0), runtime.ConnectivityHandler) as server:
+            worker = threading.Thread(target=server.handle_request)
+            worker.start()
+            connection = http.client.HTTPConnection(*server.server_address, timeout=3)
+            connection.request('GET', '/health')
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.read(), b'aoc-data-network-ok\n')
+            connection.close()
+            worker.join(3)
 
     def bundle(self, base):
         out = Path(base) / 'bundle'

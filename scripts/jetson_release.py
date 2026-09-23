@@ -5,9 +5,12 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.release_tools import validate_wheels
 
 
 def build(output, wheels):
@@ -18,6 +21,7 @@ def build(output, wheels):
         raise ValueError("Build the V2 frontend first")
     if not wheels.is_dir() or not list(wheels.glob("*.whl")):
         raise ValueError("Offline ARM64 CPython 3.10 wheels are required")
+    validate_wheels(wheels, source / "requirements-jetson.lock", "jetson")
     output.mkdir(parents=True)
     (output / "backend").mkdir()
     shutil.copytree(source / "backend/aoc_jetson", output / "backend/aoc_jetson",
@@ -28,7 +32,7 @@ def build(output, wheels):
     shutil.copyfile(source / "requirements-jetson.lock", output / "requirements.lock")
     shutil.copyfile(ROOT / "config/jetson.example.json", output / "device.example.json")
     shutil.copytree(wheels, output / "wheels")
-    (output / "RELEASE-VERSION").write_text("0.3.0\n")
+    (output / "RELEASE-VERSION").write_text("0.4.0\n")
     (output / "THIRD_PARTY_NOTICES.md").write_text("Dependencies are supplied from the locked offline wheelhouse.\n")
     (output / "THIRD_PARTY_DEPENDENCIES.json").write_text(json.dumps({"platform":"jetson","lock":"requirements.lock","wheelhouse":True}, indent=2) + "\n")
     (output / "THIRD_PARTY_LICENSES").mkdir()

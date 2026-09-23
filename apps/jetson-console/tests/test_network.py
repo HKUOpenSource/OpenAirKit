@@ -6,13 +6,14 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from aoc_jetson.config import DEVICE, REFERENCE, validate
+from aoc_jetson.config import DEVICE, REFERENCE, SELECTION, DIAGNOSTICS, RECOVERY, migrate, validate
 from aoc_jetson.network import HELPER_ENTRY, Network, helper
 
 
 def configuration(root):
-    return validate({"schema_version": 2, "name": "agentic-ocudu-jetson-v2",
-                     "network": copy.deepcopy(REFERENCE), "device": copy.deepcopy(DEVICE),
+    return validate({"schema_version": 3, "name": "agentic-ocudu-jetson-v2",
+                     "selection": copy.deepcopy(SELECTION), "diagnostics": copy.deepcopy(DIAGNOSTICS),
+            "recovery": copy.deepcopy(RECOVERY), "network": copy.deepcopy(REFERENCE), "device": copy.deepcopy(DEVICE),
                      "management": {"wifi_interface": "wifi0", "tailscale_interface": "tailscale0",
                                     "spark_address": "192.0.2.20"},
                      "state_dir": str(root), "web_state_dir": str(root / "web"),

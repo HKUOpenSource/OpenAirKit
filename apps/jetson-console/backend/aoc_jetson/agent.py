@@ -29,9 +29,7 @@ STEPS = {
     "setup": ["Inspect device", "Protect management", "Save baseline",
               "Configure radio", "Register", "Data PDU", "Verify data path", "Prefer 5G"],
     "recover": ["Inspect device", "Protect management", "Verify data path",
-                "Repair route", "Restore data PDU", "Reconnect once", "Verify recovery"],
-    "speed": ["Inspect device", "Protect management", "Preflight", "Download",
-              "Direction settle", "Upload"],
+                "Reconnect once", "Restore data PDU", "Repair route", "Verify recovery"],
 }
 
 
@@ -59,7 +57,8 @@ def fresh(snapshot, maximum_age=20):
     evidence_at = result.get("evidence_at", result.get("at", 0))
     if time.time() - evidence_at > maximum_age:
         result.update(quality="stale", health="unknown", connected=False,
-                      connection_reason="Evidence expired")
+                      registered=None, data_session_active=None, lab_policy_match=None,
+                      management_protected=None, connection_reason="Evidence expired")
         for layer in result.get("layers", []):
             layer.update(state="unknown", quality="stale", reason="Evidence expired")
     return result
@@ -86,6 +85,8 @@ class Agent:
         self.last_poll = self.last_sample = self.last_probe = 0
         self.last_probe_evidence = 0
         self.route_good = self.route_bad = 0
+        self.evidence_generation = None
+        self.outage_since = None
 
     def status(self):
         value = fresh(self.cached)
@@ -121,6 +122,15 @@ class Agent:
             try:
                 modem = self.modem.snapshot()
                 network = self.network.snapshot()
+                generation = (modem.get("registered_5gs"), modem.get("sim_matches"),
+                              tuple(modem.get("radio", {}).get(key) for key in
+                                    ("plmn", "rat", "band", "pci", "ssb_arfcn")),
+                              modem.get("data_session", {}).get("active"),
+                              modem.get("data_session", {}).get("address"),
+                              network.get("data_interface"), network.get("data_address"))
+                if generation != self.evidence_generation:
+                    self.probes.clear()
+                    self.evidence_generation = generation
                 if probe and network.get("quality") == "ok":
                     for kind in ("gateway", "upf", "ext_dn", "public"):
                         self.check_cancel()
@@ -132,13 +142,15 @@ class Agent:
                 now = time.time()
                 probes = copy.deepcopy(self.probes)
                 for value in probes.values():
-                    if now - value.get("at", 0) > 30:
+                    if (now - value.get("at", 0) > 20
+                            or value.get("interface") != network.get("data_interface")
+                            or value.get("source") != network.get("data_address")):
                         value.update(state="unknown", quality="stale", reason="Probe evidence expired")
+                registered = modem.get("registered_5gs") if modem.get("c5greg") is not None else None
                 radio = modem.get("radio", {})
                 expected = self.config["network"]
-                radio_ok = (radio.get("rat") == "NR5G-SA" and radio.get("plmn") == expected["plmn"]
-                            and radio.get("band") == expected["radio"]["band"]
-                            and radio.get("pci") == expected["radio"]["pci"])
+                radio_ok = radio.get("rat") == "NR5G-SA" and radio.get("plmn") == expected["plmn"]
+                policy_ok = self.policy_matches(radio)
                 session = modem.get("data_session", {})
                 session_ok = all((session.get("configured"), session.get("active"),
                                   session.get("pool_valid")))
@@ -148,8 +160,8 @@ class Agent:
                                modem.get("identity") or "SIM evidence unavailable", modem["at"]),
                     self.layer("radio", "5G radio", "ok" if radio_ok else "failed",
                                "NR5G-SA / n{} / PCI {}".format(radio.get("band", "--"), radio.get("pci", "--")), modem["at"]),
-                    self.layer("registration", "5GS registration", "ok" if modem.get("registered_5gs") else "failed",
-                               "C5GREG registered" if modem.get("registered_5gs") else "C5GREG not registered", modem["at"]),
+                    self.layer("registration", "5GS registration", "unknown" if registered is None else "ok" if registered else "failed",
+                               "C5GREG unavailable" if registered is None else "C5GREG registered" if registered else "C5GREG not registered", modem["at"]),
                     self.layer("data_pdu", "Data PDU", "ok" if session_ok else "failed",
                                session.get("address") or "No valid data address", session.get("at", modem["at"])),
                     self.layer("rndis", "RNDIS", "ok" if network_ok else "unknown",
@@ -163,7 +175,15 @@ class Agent:
                                                         if evidence.get("latency_ms") is not None else "Not measured")
                     layers.append(self.layer(identifier, name, evidence.get("state", "unknown"), detail,
                                              evidence.get("at", 0), evidence.get("quality", "ok")))
-                required = {"sim", "radio", "registration", "data_pdu", "rndis", "gateway", "upf", "ext_dn"}
+                layers.extend([
+                    self.layer("lab_policy", "Lab selection policy", "ok" if policy_ok else "failed",
+                               "Observed match; no modem lock programmed" if policy_ok else "Serving cell does not match lab policy", modem["at"]),
+                    self.layer("management", "Protected management", "ok" if network.get("management_protected") else "failed",
+                               network.get("management_reason", "Management route verified"), network.get("at", now))])
+                required = {"sim", "radio", "registration", "data_pdu", "rndis", *self.config["diagnostics"]["required"]}
+                for item in layers:
+                    if now - item["at"] > 20:
+                        item.update(state="unknown", quality="stale", reason="Evidence expired")
                 connected = all(item["state"] == "ok" for item in layers if item["id"] in required)
                 failed = [item["name"] for item in layers if item["id"] in required and item["state"] == "failed"]
                 unknown = [item["name"] for item in layers if item["id"] in required and item["state"] == "unknown"]
@@ -173,6 +193,9 @@ class Agent:
                 self.cached = {"at": now, "evidence_at": min(modem["at"], network.get("at", now)),
                                "quality": "ok", "health": health, "connected": connected,
                                "connection_reason": reason, "layers": layers,
+                               "registered": registered,
+                               "data_session_active": session_ok, "lab_policy_match": policy_ok,
+                               "management_protected": bool(network.get("management_protected")),
                                "identity": modem.get("identity"), "firmware": modem.get("firmware"),
                                "radio": radio, "data_session": session,
                                "other_contexts": modem.get("other_contexts", []),
@@ -195,6 +218,12 @@ class Agent:
     def write(self, operation, cid=None):
         self.check_cancel()
         with self.hardware:
+            if not self.network.snapshot().get("management_protected"):
+                raise Conflict("Current management protection is required for modem writes")
+            radio = self.cached.get("radio", {})
+            if radio.get("plmn") and not self.policy_matches(radio):
+                raise Conflict("Observed serving cell differs from lab policy")
+            self.probes.clear()
             return self.modem.write(operation, cid)
 
     def baseline(self):
@@ -258,18 +287,11 @@ class Agent:
             if self.maintenance:
                 raise Conflict("Exit maintenance before starting an operation")
             params = params or {}
-            allowed = {"direction", "duration", "parallel"} if kind == "speed" else \
-                {"mode"} if kind == "setup" else set()
+            allowed = {"mode"} if kind == "setup" else set()
             if set(params) - allowed:
                 raise ValueError("Unknown task parameter")
-            if params.get("direction", "both") not in {"both", "download", "upload"}:
-                raise ValueError("Invalid speed-test direction")
             if params.get("mode", "automatic") not in {"automatic", "manual"}:
                 raise ValueError("Invalid setup mode")
-            if type(params.get("duration", 10)) is not int or not 5 <= params.get("duration", 10) <= 30:
-                raise ValueError("Invalid speed-test duration")
-            if type(params.get("parallel", 4)) is not int or not 1 <= params.get("parallel", 4) <= 4:
-                raise ValueError("Invalid speed-test stream count")
             job = self.store.new_job(kind, revision, STEPS[kind], params)
             self.current = job["id"]
             self.cancel.clear()
@@ -281,6 +303,8 @@ class Agent:
             if identifier != self.current or self.worker and self.worker.is_alive():
                 raise Conflict("Task is not ready")
             job = self.store.get_job(identifier)
+            if job["kind"] not in STEPS:
+                raise ValueError("Retired task cannot be executed")
             if job["revision"] != self.config["revision"]:
                 raise Conflict("Configuration changed")
             if confirmed is not True:
@@ -312,6 +336,8 @@ class Agent:
         self.store.set("recovery_paused", True)
         reconnect_used = False
         try:
+            if job["kind"] not in STEPS or [step["id"] for step in job["steps"]] != STEPS[job["kind"]]:
+                raise ValueError("Retired or invalid task cannot be executed")
             pending = [step for step in job["steps"] if step["state"] == "pending"]
             if job["kind"] == "setup" and job["params"].get("mode") == "manual":
                 pending = pending[:1]
@@ -326,21 +352,14 @@ class Agent:
                     if value["quality"] != "ok" or not value.get("identity"):
                         raise ValueError("Current device evidence is unavailable")
                 elif name == "Protect management":
-                    job["result"]["management"] = self.network.action("prepare", self.cancel)
+                    job["result"]["management"] = self.network.action("protect", self.cancel)
                 elif name == "Save baseline":
                     self.baseline()
                 elif name == "Configure radio":
                     value = self.sample(False)
                     radio = value.get("radio", {})
-                    expected = self.config["network"]
-                    matched = (radio.get("rat") == "NR5G-SA"
-                               and radio.get("plmn") == expected["plmn"]
-                               and radio.get("band") == expected["radio"]["band"]
-                               and radio.get("pci") == expected["radio"]["pci"])
-                    if not matched:
-                        raise ValueError(
-                            "Current radio does not match the commissioned target; "
-                            "automatic QNWPREFCFG mutation is disabled without complete readback evidence")
+                    if radio and radio.get("plmn") and not self.policy_matches(radio):
+                        raise ValueError("Serving cell differs from lab policy; observation does not program a modem lock")
                     job["result"]["radio_configuration"] = {
                         "state": "preserved", "mutations": 0,
                         "evidence": {key: radio.get(key) for key in
@@ -359,8 +378,10 @@ class Agent:
                         reconnect_used = True
                         self.wait_for(lambda item: item.get("registration", {}).get("registered_5gs"), 120)
                 elif name in {"Data PDU", "Restore data PDU"}:
-                    self.ensure_data()
-                elif name in {"Verify data path", "Preflight", "Verify recovery"}:
+                    value = self.sample(False)
+                    if value.get("registered"):
+                        self.ensure_data()
+                elif name in {"Verify data path", "Verify recovery"}:
                     if name == "Verify data path" and job["kind"] == "recover":
                         value = self.sample(True)
                         job["result"]["initial_verification"] = {
@@ -374,7 +395,8 @@ class Agent:
                 elif name == "Repair route":
                     job["result"]["route_repair"] = self.network.action("prepare", self.cancel)
                 elif name == "Reconnect once":
-                    if not self.sample(True).get("connected"):
+                    value = self.sample(True)
+                    if not value.get("registered") or not value.get("data_session_active"):
                         last = self.store.setting("last_reset", 0)
                         if reconnect_used or time.time() - last < 300:
                             raise Conflict("One reconnect per task and the 300-second cooldown are enforced")
@@ -383,24 +405,8 @@ class Agent:
                         with self.hardware:
                             self.modem.write("cfun1")
                         reconnect_used = True
-                elif name in {"Download", "Upload"}:
-                    direction = name.lower()
-                    requested = job["params"].get("direction", "both")
-                    if requested != "both" and requested != direction:
-                        step.update(state="skipped", finished_at=time.time())
-                        self.store.save_job(job)
-                        continue
-                    def sample_callback(value):
-                        job["live_sample"] = {"direction": direction, **value}
-                        self.store.save_job(job)
-                    job["result"][direction] = self.network.speed(
-                        direction, job["params"].get("duration", 10),
-                        job["params"].get("parallel", 4), self.cancel, sample_callback)
-                    job.pop("live_sample", None)
-                elif name == "Direction settle":
-                    if job["params"].get("direction", "both") == "both" and self.cancel.wait(
-                            .03 if self.config.get("simulation") else 3):
-                        self.check_cancel()
+                        self.wait_for(lambda item: item.get("registered"), 120)
+                        self.ensure_data()
                 self.complete_step(job, step)
             complete = all(step["state"] in {"complete", "skipped"} for step in job["steps"])
             job.update(state="complete" if complete else "paused",
@@ -408,10 +414,6 @@ class Agent:
             if complete:
                 job["progress"] = 100
                 self.store.set("recovery_paused", False)
-            if complete and job["kind"] == "speed":
-                requested = job["params"].get("direction", "both")
-                job["result"]["bidirectional_passed"] = requested == "both" and all(
-                    key in job["result"] for key in ("download", "upload"))
         except Exception as error:
             state = "cancelled" if self.cancel.is_set() else "failed"
             job.update(state=state, error=str(error)[:500])
@@ -422,7 +424,7 @@ class Agent:
                 job["cleanup"] = self.network.action("fallback")
             except Exception as cleanup:
                 job["cleanup"] = {"state": "unknown", "error": str(cleanup)[:300]}
-            self.store.set("recovery_paused", True)
+            self.store.set("recovery_paused", self.cancel.is_set() or not job.get("automatic", False))
         finally:
             with self.control:
                 self.store.save_job(job)
@@ -441,6 +443,7 @@ class Agent:
             if identifier != self.current:
                 return job
             self.cancel.set()
+            self.store.set("recovery_paused", True)
             if self.worker and self.worker.is_alive():
                 job.update(state="cancelling")
             else:
@@ -463,27 +466,51 @@ class Agent:
                 self.store.event("maintenance", "AT port released" if enabled else "Serial ownership resumed")
             return {"enabled": enabled}
 
+    def policy_matches(self, radio):
+        policy = self.config["selection"]
+        return (radio.get("rat") == policy["rat"]
+                and radio.get("plmn") == self.config["network"]["plmn"]
+                and all(policy[key] is None or radio.get(key) == policy[key]
+                        for key in ("band", "pci", "ssb_arfcn")))
+
     def auto_reconcile(self):
         if self.current or self.maintenance or self.store.setting("recovery_paused", True):
             return
         value = self.status()
-        evidence = value.get("probes", {}).get("upf", {})
-        if evidence.get("at", 0) == self.last_probe_evidence:
+        if value.get("quality") != "ok" or value.get("registered") is None:
             return
-        self.last_probe_evidence = evidence.get("at", 0)
-        session_ok = all(item["state"] == "ok" for item in value.get("layers", [])
-                         if item["id"] in {"sim", "radio", "registration", "data_pdu", "rndis"})
-        good = evidence.get("state") == "ok" and session_ok
-        bad = evidence.get("state") == "failed"
-        self.route_good = self.route_good + 1 if good else 0
-        self.route_bad = self.route_bad + 1 if bad else 0
-        if max(self.route_good, self.route_bad) < 2:
+        now = time.time()
+        if value.get("registered") and value.get("data_session_active"):
+            self.outage_since = None
+            # Reset a bounded outage budget only after sustained healthy data evidence.
+            if value.get("connected"):
+                healthy = self.store.setting("healthy_since", now)
+                self.store.set("healthy_since", healthy)
+                if now - healthy >= self.config["recovery"]["cooldown_seconds"]:
+                    self.store.set("auto_attempts", 0)
+            else:
+                self.store.set("healthy_since", now)
             return
-        last = self.store.setting("last_route_reconcile", 0)
-        if time.time() - last < 30:
+        self.store.set("healthy_since", now)
+        self.outage_since = self.outage_since or now
+        policy = self.config["recovery"]
+        if now - self.outage_since < policy["natural_wait_seconds"]:
             return
-        self.store.set("last_route_reconcile", time.time())
-        self.network.action("promote" if good else "fallback")
+        if not value.get("management_protected") or not self.config.get("commissioned"):
+            return
+        if now - self.store.setting("last_auto_attempt", 0) < policy["cooldown_seconds"]:
+            return
+        attempts = self.store.setting("auto_attempts", 0)
+        if attempts >= policy["max_attempts"]:
+            self.store.set("recovery_paused", True)
+            self.store.event("recover", "Automatic recovery limit reached; inspect the network", "warning")
+            return
+        self.store.set("auto_attempts", attempts + 1)
+        self.store.set("last_auto_attempt", now)
+        job = self.create("recover", self.config["revision"])
+        job["automatic"] = True
+        self.store.save_job(job)
+        self.launch(job["id"], True)
 
     def dispatch(self, request):
         if not isinstance(request, dict):
@@ -587,6 +614,7 @@ class Agent:
                         pass
         finally:
             self.cancel.set()
+            self.store.set("recovery_paused", True)
             if self.worker:
                 await asyncio.to_thread(self.worker.join, 50)
             self.modem.close()

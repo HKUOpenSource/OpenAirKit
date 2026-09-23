@@ -1,8 +1,14 @@
 import importlib.util
+import hashlib
+import json
+import os
+import sqlite3
+from types import SimpleNamespace
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts.jetson_release import build
 
@@ -23,6 +29,86 @@ def load_manage(path):
 
 
 class ReleaseTests(unittest.TestCase):
+    def installed_fixture(self, root):
+        release = root / "releases/reviewed"
+        release.mkdir(parents=True)
+        (release / "module.py").write_text("reviewed source")
+        manifest = {"files": {"module.py": hashlib.sha256(b"reviewed source").hexdigest()}}
+        (release / "manifest.json").write_text(json.dumps(manifest))
+        (release / "venv/bin").mkdir(parents=True)
+        (release / "venv/bin/python").write_text("runtime fixture")
+        return release, manifest
+
+    def root_metadata(self, root):
+        lstat = Path.lstat
+        outside_parents = set(root.parents)
+        def owned(path):
+            values = list(lstat(path))
+            values[4] = values[5] = 0
+            # Model /opt's protected ancestors without depending on the host's
+            # temporary directory permissions (Linux /tmp is world-writable).
+            # Keep every mode inside the fixture intact for rejection tests.
+            if path in outside_parents:
+                values[0] &= ~0o022
+            return os.stat_result(values)
+        return patch.object(Path, "lstat", owned)
+
+    def test_existing_release_reuse_checks_code_and_generated_runtime(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
+            release, manifest = self.installed_fixture(Path(temporary).resolve())
+            (release / "__pycache__").mkdir()
+            (release / "__pycache__/module.cpython-310.pyc").write_bytes(b"generated cache")
+            manage.verify_installed(release, manifest)
+            (release / "module.py").write_text("modified source")
+            with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                manage.verify_installed(release, manifest)
+
+    def test_existing_release_rejects_injected_code_and_writable_runtime(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
+            release, manifest = self.installed_fixture(Path(temporary).resolve())
+            extra = release / "injected.py"
+            extra.write_text("unexpected")
+            with self.assertRaisesRegex(ValueError, "package contents"):
+                manage.verify_installed(release, manifest)
+            extra.unlink()
+            (release / "venv/bin/python").chmod(0o666)
+            with self.assertRaisesRegex(ValueError, "Unprotected"):
+                manage.verify_installed(release, manifest)
+
+    def test_existing_release_rejects_writable_parent(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
+            release, manifest = self.installed_fixture(Path(temporary).resolve())
+            for mode in (0o775, 0o777):
+                with self.subTest(mode=oct(mode)):
+                    release.parent.chmod(mode)
+                    with self.assertRaisesRegex(ValueError, "Unprotected installed release") as failure:
+                        manage.verify_installed(release, manifest)
+                    self.assertIn(str(release.parent), str(failure.exception))
+
+    def test_reinstall_runtime_failure_preserves_existing_release(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary, self.root_metadata(Path(temporary).resolve()):
+            root = Path(temporary).resolve()
+            release, manifest = self.installed_fixture(root)
+            manifest["release"] = release.name
+            (release / "manifest.json").write_text(json.dumps(manifest))
+            etc = root / "etc"
+            etc.mkdir()
+            (etc / "web.json").write_text("{}")
+            with patch.multiple(manage, BASE=root, ETC=etc), \
+                    patch.object(manage, "verify", return_value=manifest), \
+                    patch.object(manage, "unit_state", return_value="inactive"), \
+                    patch.object(manage, "preflight", return_value={}), \
+                    patch.object(manage, "backup", return_value=root / "checkpoint"), \
+                    patch.object(manage, "output", side_effect=RuntimeError("broken dependencies")):
+                with self.assertRaisesRegex(RuntimeError, "broken dependencies"):
+                    manage.install(root / "stage")
+            self.assertTrue((release / "module.py").is_file())
+            self.assertTrue((release / "venv/bin/python").is_file())
+
     def test_release_contains_only_v2_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -30,13 +116,46 @@ class ReleaseTests(unittest.TestCase):
             wheels.mkdir()
             (wheels / "fixture.whl").write_bytes(b"fixture")
             release = root / "release"
-            build(release, wheels)
+            # Boundary fixture; real wheel tags, completeness and metadata have
+            # separate behavioral coverage in tests/test_release_tools.py.
+            with patch('scripts.jetson_release.validate_wheels'):
+                build(release, wheels)
             manifest = load_manage(release / "deploy/manage.py").verify(release)
             names = set(manifest["files"])
             self.assertIn("backend/aoc_jetson/agent.py", names)
             self.assertIn("frontend/index.html", names)
             self.assertNotIn("backend/aoc_jetson_v1/agent.py", names)
             self.assertFalse(any("retired-integration" in name.lower() for name in names))
+
+    def test_rollback_restores_pre_migration_config_and_database(self):
+        from aoc_jetson.store import Store
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            paths = {name: root / name.lower() for name in ("BASE", "ETC", "STATE", "WEB_STATE")}
+            with patch.multiple(manage, **paths), patch.object(manage, "stop"), \
+                    patch.object(manage, "output"), patch.object(manage.os, "chown"), \
+                    patch.object(manage.pwd, "getpwnam", return_value=SimpleNamespace(pw_uid=1, pw_gid=1)):
+                for path in paths.values():
+                    path.mkdir()
+                old = paths["BASE"] / "releases/old"
+                old.mkdir(parents=True)
+                (paths["BASE"] / "current").symlink_to(old)
+                (paths["ETC"] / "device.json").write_text(json.dumps({"schema_version": 2}))
+                store = Store(paths["STATE"] / "device.db")
+                job = store.new_job("speed", "old", ["Download"], {})
+                with store.connect() as db:
+                    db.execute("PRAGMA user_version=1")
+                record = manage.backup()
+                Store(store.path)
+                (paths["ETC"] / "device.json").write_text(json.dumps({"schema_version": 3}))
+                manage.rollback(record.name)
+                self.assertEqual(json.loads((paths["ETC"] / "device.json").read_text())["schema_version"], 2)
+                with sqlite3.connect(store.path) as db:
+                    self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 1)
+                    restored = json.loads(db.execute("SELECT payload FROM jobs WHERE id=?", (job["id"],)).fetchone()[0])
+                self.assertNotIn("retired", restored)
+                self.assertEqual((paths["BASE"] / "current").resolve(), old)
 
     def test_units_are_v2_named_bounded_and_disabled_by_default(self):
         device = (ROOT / "deploy/jetson/aoc-v2-jetson-device.service").read_text()

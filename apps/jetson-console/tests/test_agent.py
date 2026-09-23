@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from aoc_jetson.agent import Agent, Conflict, fresh
 from aoc_jetson.config import validate
@@ -76,14 +77,63 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result["result"]["radio_configuration"]["mutations"], 0)
         self.assertTrue(self.agent.status()["connected"])
 
-    def test_speed_keeps_direction_results_separate(self):
-        job = self.agent.create("speed", self.config["revision"],
-                                {"direction": "both", "duration": 5, "parallel": 1})
-        result = self.wait(job)
-        self.assertEqual(result["state"], "complete")
-        self.assertTrue(result["result"]["bidirectional_passed"])
-        self.assertEqual(result["result"]["download"]["bps"], 38e6)
-        self.assertEqual(result["result"]["upload"]["bps"], 8e6)
+    def test_speed_is_rejected_at_create_launch_and_execution(self):
+        with self.assertRaises(ValueError):
+            self.agent.create("speed", self.config["revision"])
+        job = self.agent.store.new_job("speed", self.config["revision"], ["Download"], {})
+        self.agent.current = job["id"]
+        with self.assertRaises(ValueError):
+            self.agent.launch(job["id"], True)
+        self.agent.execute(job)
+        self.assertEqual(self.agent.store.get_job(job["id"])["state"], "failed")
+        self.assertFalse(hasattr(self.network, "speed"))
+
+    def test_registration_independent_of_management_policy_and_diagnostics(self):
+        self.config["selection"]["pci"] = 123
+        self.network.failure = "probe"
+        with patch.object(self.network, "snapshot", return_value={**self.network.snapshot(), "management_protected": False}):
+            value = self.agent.sample(True)
+        self.assertTrue(value["registered"])
+        self.assertTrue(value["data_session_active"])
+        self.assertFalse(value["connected"])
+        self.assertFalse(value["lab_policy_match"])
+        self.assertFalse(value["management_protected"])
+
+    def test_registration_transition_invalidates_old_probes(self):
+        self.assertTrue(self.agent.sample(True)["connected"])
+        self.modem.registered = False
+        self.agent.sample(False)
+        self.modem.registered = True
+        self.assertFalse(self.agent.sample(False)["connected"])
+        self.assertTrue(self.agent.sample(True)["connected"])
+
+    def test_auto_recovery_waits_then_reconnects_once_with_a_budget(self):
+        self.agent.store.set("recovery_paused", False)
+        self.modem.registered = False
+        self.agent.sample(True)
+        self.agent.auto_reconcile()
+        self.assertIsNone(self.agent.current)
+        self.agent.outage_since = time.time() - 121
+        self.agent.auto_reconcile()
+        self.agent.worker.join(3)
+        self.assertTrue(self.agent.sample(True)["connected"])
+        self.assertEqual(sum(call[0] == "cfun0" for call in self.modem.calls), 1)
+        self.assertEqual(self.agent.store.setting("auto_attempts"), 1)
+        self.agent.store.set("auto_attempts", 2)
+        self.agent.store.set("last_auto_attempt", 0)
+        self.modem.registered = False
+        self.agent.sample(True)
+        self.agent.outage_since = time.time() - 121
+        self.agent.auto_reconcile()
+        self.assertTrue(self.agent.store.setting("recovery_paused"))
+
+    def test_probe_failure_does_not_trigger_automatic_reset(self):
+        self.agent.store.set("recovery_paused", False)
+        self.network.failure = "probe"
+        self.agent.sample(True)
+        self.agent.outage_since = time.time() - 1000
+        self.agent.auto_reconcile()
+        self.assertFalse(self.modem.calls)
 
     def test_manual_setup_advances_one_persisted_step_at_a_time(self):
         job = self.agent.create("setup", self.config["revision"], {"mode": "manual"})
@@ -94,26 +144,11 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(second["state"], "paused")
         self.assertEqual(sum(step["state"] == "complete" for step in second["steps"]), 2)
 
-    def test_failed_direction_does_not_claim_combined_success(self):
-        self.network.failure = "upload"
-        job = self.agent.create("speed", self.config["revision"],
-                                {"direction": "both", "duration": 5, "parallel": 1})
-        result = self.wait(job)
-        self.assertEqual(result["state"], "failed")
-        self.assertIn("download", result["result"])
-        self.assertNotIn("bidirectional_passed", result["result"])
-
-    def test_cancelled_speed_clears_task_signal_and_sampling_recovers(self):
-        job = self.agent.create("speed", self.config["revision"],
-                                {"direction": "both", "duration": 30, "parallel": 4})
-        self.agent.launch(job["id"], True)
-        deadline = time.monotonic() + 1
-        while self.agent.store.get_job(job["id"])["state"] == "ready" and time.monotonic() < deadline:
-            time.sleep(.005)
-        self.agent.cancel_job(job["id"])
-        self.agent.worker.join(3)
-        result = self.agent.store.get_job(job["id"])
-        self.assertEqual(result["state"], "cancelled")
+    def test_cancelled_recovery_clears_task_signal_and_sampling_recovers(self):
+        job = self.agent.create("recover", self.config["revision"])
+        self.agent.cancel.set()
+        self.agent.execute(job)
+        self.assertEqual(self.agent.store.get_job(job["id"])["state"], "cancelled")
         self.assertFalse(self.agent.cancel.is_set())
         self.assertEqual(self.agent.sample(True)["quality"], "ok")
 

@@ -12,6 +12,34 @@ from scripts import monitor_release
 
 
 class MonitorRadioReleaseTests(unittest.TestCase):
+    def test_install_rejects_wrong_host_before_inspecting_or_mutating_release(self):
+        for system, machine, version in (("Darwin", "arm64", (3, 12)),
+                                         ("Linux", "x86_64", (3, 12)),
+                                         ("Linux", "aarch64", (3, 10))):
+            with self.subTest(system=system, machine=machine, version=version), \
+                 patch.object(monitor_release.platform, "system", return_value=system), \
+                 patch.object(monitor_release.platform, "machine", return_value=machine), \
+                 patch.object(monitor_release.sys, "version_info", version), \
+                 patch.object(monitor_release, "verify") as verify:
+                with self.assertRaisesRegex(ValueError, "Linux ARM64 Python 3.12"):
+                    monitor_release.install(Path('/unused'))
+                verify.assert_not_called()
+
+    def test_verify_detects_modified_or_incomplete_offline_wheels(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            stage = Path(temporary) / 'release'
+            monitor_release.stage(stage)
+            (stage / 'wheels').mkdir()
+            with self.assertRaisesRegex(ValueError, 'Incomplete'):
+                monitor_release.verify(stage)
+            wheel = stage / 'wheels/fixture.whl'
+            wheel.write_bytes(b'fixture')
+            (stage / 'wheels.json').write_text(json.dumps(monitor_release.files(stage / 'wheels')))
+            monitor_release.verify(stage)
+            wheel.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError, 'checksums differ'):
+                monitor_release.verify(stage)
+
     def test_staged_renderer_import_and_opt_in_configuration(self):
         root=Path(__file__).resolve().parents[3]
         config=json.loads((root/'config/spark.example.json').read_text())

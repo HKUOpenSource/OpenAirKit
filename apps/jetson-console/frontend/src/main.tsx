@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { Activity, Cpu, Gauge, History as HistoryIcon, LayoutDashboard, LogOut, Menu, Radio, Settings as SettingsIcon, SlidersHorizontal, X } from "lucide-react";
+import { Activity, Cpu, History as HistoryIcon, LayoutDashboard, LogOut, Menu, Radio, Settings as SettingsIcon, SlidersHorizontal, X } from "lucide-react";
 import { api, Obj } from "./api";
 import { Badge } from "./components";
-import { Context, DeviceSetup, History, Overview, Settings, SpeedTest } from "./pages";
+import { Context, DeviceSetup, History, Overview, Settings } from "./pages";
 import "./style.css";
 
 const navigation = [
   ["/", "Overview", LayoutDashboard], ["/setup", "Device Setup", SlidersHorizontal],
-  ["/speed", "Speed Test", Gauge], ["/history", "History", HistoryIcon],
+  ["/history", "History", HistoryIcon],
   ["/settings", "Settings", SettingsIcon],
 ] as const;
-const pageTitles: Record<string, string> = { "/": "Network overview", "/setup": "Device Setup", "/speed": "Speed Test", "/history": "History", "/settings": "Settings" };
+const pageTitles: Record<string, string> = { "/": "Network overview", "/setup": "Device Setup", "/history": "History", "/settings": "Settings" };
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -59,6 +59,7 @@ function App() {
 
   const stale = received === 0 || clock - received > 10000 || clock / 1000 - (status.evidence_at || 0) > 20;
   const current = stale ? { ...status, quality: "stale", health: "unknown", connected: false,
+    registered: null, data_session_active: null, lab_policy_match: null, management_protected: null,
     connection_reason: "Live device evidence is stale", radio: {}, data_session: {}, network: {}, probes: {},
     layers: (status.layers || []).map((layer: Obj) => ({ ...layer, state: "unknown", quality: "stale", reason: "Evidence expired" })) } : status;
 
@@ -100,11 +101,11 @@ function App() {
       <div className="header-device"><Cpu size={19} /><span>Jetson Orin<small>RM520N-GL</small></span></div><Badge state={streamConnected && !stale ? "live" : "stale"} /><button className="icon" aria-label="Sign out" title="Sign out" onClick={() => api("auth/logout", {}).then(() => setAuthenticated(false))}><LogOut size={18} /></button></header>
       <main>{status.simulation ? <div className="banner">Simulator · hardware operations are disabled</div> : null}{stale ? <div className="banner warning" role="status">Live stream unavailable. Current values are marked stale until new evidence arrives.</div> : null}
         {error ? <div className="banner error" role="alert"><span>{error}</span><button className="icon" aria-label="Dismiss error" onClick={() => setError("")}><X size={15} /></button></div> : null}
-        <Routes><Route path="/" element={<Overview {...context} />} /><Route path="/setup" element={<DeviceSetup {...context} />} /><Route path="/speed" element={<SpeedTest {...context} />} /><Route path="/history" element={<History {...context} />} /><Route path="/settings" element={<Settings {...context} />} /><Route path="*" element={<Overview {...context} />} /></Routes>
+        <Routes><Route path="/" element={<Overview {...context} />} /><Route path="/setup" element={<DeviceSetup {...context} />} /><Route path="/history" element={<History {...context} />} /><Route path="/settings" element={<Settings {...context} />} /><Route path="*" element={<Overview {...context} />} /></Routes>
       </main></div>
-    {pending ? <div className="modal-backdrop"><div className="modal" role="dialog" aria-modal="true" aria-labelledby="confirmation-title"><h2 id="confirmation-title">{pending.kind === "speed" ? "Start speed test?" : pending.kind === "recover" ? "Start recovery?" : "Create setup plan?"}</h2>
-      <p>{pending.kind === "speed" ? "The test runs only through the detected RM520N RNDIS route." : "Device operations can briefly interrupt the active data connection."}</p>
-      <div className="confirmation"><b>V2 data network</b><span>{config.network?.plmn} · n{config.network?.radio?.band} · {config.network?.data?.dnn} · {config.network?.data?.ue_pool}</span></div>
+    {pending ? <div className="modal-backdrop"><div className="modal" role="dialog" aria-modal="true" aria-labelledby="confirmation-title"><h2 id="confirmation-title">{pending.kind === "recover" ? "Start recovery?" : "Create setup plan?"}</h2>
+      <p>Device operations can briefly interrupt the active data connection.</p>
+      <div className="confirmation"><b>V2 data network</b><span>{config.network?.plmn} · n{config.selection?.band} · {config.network?.data?.dnn} · {config.network?.data?.ue_pool}</span></div>
       <div className="actions"><button disabled={busy} onClick={() => setPending(null)}>Back</button><button className="primary" disabled={busy} onClick={confirm}>{busy ? "Preparing…" : "Confirm"}</button></div></div></div> : null}
   </div>;
 }

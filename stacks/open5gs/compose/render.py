@@ -66,6 +66,7 @@ def render(output, subnet='172.28.81.0/24', project='aoc-v2-open5gs', database_a
     if hashlib.sha256(sources.read_bytes()).hexdigest() != lock['source_lock_sha256']:
         raise ValueError('Source lock differs from verified artifacts')
     images = {key: lock[key]['image_id'] for key in ('open5gs', 'mongodb')}
+    images['connectivity'] = lock['connectivity_runtime']['image_id']
     if n6:
         images['n6'] = lock['network_runtime']['image_id']
     if any(not re.fullmatch(r'sha256:[a-f0-9]{64}', value) for value in images.values()):
@@ -98,7 +99,7 @@ def render(output, subnet='172.28.81.0/24', project='aoc-v2-open5gs', database_a
         (output / 'config' / (nf + '.json')).chmod(0o644)
     services = {}
     for nf in ADDRESSES:
-        service = {'image': images['mongodb' if nf == 'mongo' else 'open5gs'],
+        service = {'image': images['mongodb' if nf == 'mongo' else 'connectivity' if nf == 'ext-dn' else 'open5gs'],
                    'pull_policy': 'never', 'platform': 'linux/arm64', 'restart': 'no',
                    'stop_grace_period': '20s', 'networks': {'core': {'ipv4_address': addr[nf]}},
                    'security_opt': ['no-new-privileges:true'], 'cap_drop': ['ALL'],

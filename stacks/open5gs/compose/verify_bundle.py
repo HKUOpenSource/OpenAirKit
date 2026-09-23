@@ -90,20 +90,14 @@ def verify(bundle, output):
         if not all(v['nrf_registered'] for v in result['associations'].values()) or not result['pfcp_associated']:
             raise ValueError('NRF registration or PFCP association not confirmed')
         if manifest.get('n6'):
-            result['n6_probe'] = {'scope': 'UPF-local-source-NAT-not-UE-or-GTP', 'directions': {}}
+            result['n6_probe'] = {'scope': 'UPF-local-source-NAT-not-UE-or-GTP', 'connectivity': False}
             target = manifest['addresses']['ext-dn']
             run([*compose, 'exec', '-T', 'upf', 'ping', '-I', '10.0.0.1', '-c', '3', '-W', '2', target], timeout=15)
-            for direction, extra in (('uplink', []), ('downlink', ['-R'])):
-                measured = json.loads(run([*compose, 'exec', '-T', 'upf', 'iperf3', '-c', target,
-                    '-B', '10.0.0.1', '-t', '3', '-b', '10M', '--json', *extra], timeout=20))
-                if measured.get('error'):
-                    raise ValueError('N6 traffic test returned an error')
-                value = measured['end']['sum_received']['bits_per_second']
-                if value <= 0:
-                    raise ValueError('N6 traffic test received no data')
-                result['n6_probe']['directions'][direction] = value
-                if direction == 'uplink':
-                    time.sleep(3)
+            code = ("import http.client; c=http.client.HTTPConnection('" + target + "',8080,timeout=3,"
+                    "source_address=('10.0.0.1',0)); c.request('GET','/health'); r=c.getresponse(); "
+                    "assert r.status==200 and r.read(128)==b'aoc-data-network-ok\\n'; c.close()")
+            run([*compose, 'exec', '-T', 'upf', 'python3', '-c', code], timeout=10)
+            result['n6_probe']['connectivity'] = True
             nat = json.loads(run([*compose, 'exec', '-T', 'upf', 'nft', '-j', 'list', 'table', 'ip', 'aoc_v2']))
             counters = [expr['counter']['packets'] for item in nat['nftables'] if 'rule' in item
                         for expr in item['rule']['expr'] if 'counter' in expr]
