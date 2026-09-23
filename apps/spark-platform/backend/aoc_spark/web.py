@@ -24,7 +24,7 @@ from .storage import Store
 
 REDACTED_DIAGNOSTIC_KEYS = frozenset({
     "address", "b210_holder_pids", "b210_serial", "data_ip", "gateway",
-    "imei", "imsi", "invocation_id", "local_address", "n3_local",
+    "identity", "imei", "imsi", "invocation_id", "local_address", "n3_local",
     "n3_remote", "pei", "pid", "radio_pid", "remote_address",
     "source_address", "suci", "supi", "teid",
 })

@@ -1,7 +1,11 @@
+import asyncio
 import json
 from pathlib import Path
 import tempfile
+import time
+from types import SimpleNamespace
 import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -100,6 +104,86 @@ class ApiTests(unittest.TestCase):
     def test_redaction_is_recursive(self):
         value = redacted({"source": "secret", "nested": [{"address": "secret", "state": "ok"}]})
         self.assertEqual(value, {"nested": [{"state": "ok"}]})
+
+    def stream_request(self):
+        endpoint = next(route.endpoint for route in self.client.app.routes
+                        if getattr(route, "path", None) == "/api/v1/events/stream")
+        request = SimpleNamespace(cookies=dict(self.client.cookies),
+                                  is_disconnected=AsyncMock(return_value=False))
+        return endpoint, request
+
+    def test_stream_survives_multiple_old_lifetimes_and_recovers_executor_errors(self):
+        self.login()
+        self.agent.sample(True)
+        endpoint, request = self.stream_request()
+        elapsed = 0
+
+        async def sleep(seconds):
+            nonlocal elapsed
+            elapsed += seconds
+
+        async def check():
+            response = await endpoint(request)
+            self.assertEqual(response.headers["cache-control"], "no-cache")
+            iterator = response.body_iterator
+            self.assertEqual(await anext(iterator), "retry: 1000\n\n")
+            try:
+                for _ in range(25):
+                    self.assertIn("event: status", await anext(iterator))
+                self.assertGreaterEqual(elapsed, 48)
+                with patch.object(self.agent, "dispatch", side_effect=HTTPException(503, "Unavailable")):
+                    self.assertIn("event: unavailable", await anext(iterator))
+                self.assertIn("event: status", await anext(iterator))
+                request.is_disconnected.return_value = True
+                with self.assertRaises(StopAsyncIteration):
+                    await anext(iterator)
+            finally:
+                await iterator.aclose()
+
+        clock = Mock(wraps=time)
+        clock.monotonic.side_effect = lambda: elapsed
+        with patch("aoc_jetson.api.asyncio.sleep", side_effect=sleep), patch("aoc_jetson.api.time", clock):
+            asyncio.run(check())
+
+    def test_live_stream_stops_after_logout(self):
+        headers = self.login()
+        endpoint, request = self.stream_request()
+
+        async def check():
+            iterator = (await endpoint(request)).body_iterator
+            try:
+                await anext(iterator)  # retry interval
+                self.assertIn("event: status", await anext(iterator))
+                self.client.post("/api/v1/auth/logout", headers=headers)
+                self.assertIn("event: expired", await anext(iterator))
+                with self.assertRaises(StopAsyncIteration):
+                    await anext(iterator)
+            finally:
+                await iterator.aclose()
+
+        with patch("aoc_jetson.api.asyncio.sleep", new=AsyncMock()):
+            asyncio.run(check())
+
+    def test_expiry_during_executor_call_does_not_publish_status(self):
+        headers = self.login()
+        endpoint, request = self.stream_request()
+
+        def expired_call(payload):
+            self.client.post("/api/v1/auth/logout", headers=headers)
+            return {"connected": True}
+
+        async def check():
+            iterator = (await endpoint(request)).body_iterator
+            try:
+                await anext(iterator)
+                with patch.object(self.agent, "dispatch", side_effect=expired_call):
+                    self.assertIn("event: expired", await anext(iterator))
+                with self.assertRaises(StopAsyncIteration):
+                    await anext(iterator)
+            finally:
+                await iterator.aclose()
+
+        asyncio.run(check())
 
 
 if __name__ == "__main__":

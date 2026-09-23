@@ -1,4 +1,4 @@
-"""Fixed-source collector; raw Docker metadata, subscriber IDs and logs never leave here."""
+"""Fixed-source collector; only allowlisted device and service evidence leaves here."""
 import argparse
 import hashlib
 import json
@@ -222,7 +222,7 @@ class Collector:
                     at = utc()
                     self.events.append(dict(id=hashlib.sha256((device['id'] + at).encode()).hexdigest()[:24], at=at,
                                             stack=device['stack'], entity=device['id'], level='info', kind='device_change',
-                                            message=device['identity'] + ': registration/session evidence changed'))
+                                            message=('Subscriber ****' + device['identity'][-4:] if device['identity'].isdecimal() else device['identity']) + ': registration/session evidence changed'))
                 old_probe = previous.get('reachability', {}).get('state', 'unknown')
                 new_probe = device.get('reachability', {}).get('state', 'unknown')
                 if old_probe != new_probe:

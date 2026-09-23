@@ -51,7 +51,7 @@ def stage(destination):
     shutil.copytree(MODULE / "contracts", destination / "contracts")
     shutil.copyfile(MODULE / "requirements-spark.lock", destination / "requirements.lock")
     shutil.copyfile(ROOT / "scripts/spark/enable_radio_json_metrics.py", destination / "radio-metrics.py")
-    (destination / "RELEASE-VERSION").write_text("0.1.0\n")
+    (destination / "RELEASE-VERSION").write_text("0.2.0\n")
     (destination / "THIRD_PARTY_NOTICES.md").write_text("Dependencies are supplied from the locked offline wheelhouse.\n")
     (destination / "THIRD_PARTY_DEPENDENCIES.json").write_text(json.dumps({"platform":"spark","lock":"requirements.lock","wheelhouse":True}, indent=2) + "\n")
     (destination / "THIRD_PARTY_LICENSES").mkdir()

@@ -1,18 +1,60 @@
+import {
+  AppShell,
+  Banner,
+  Button,
+  Card,
+  DropdownMenu,
+  Heading,
+  SideNav,
+  SideNavItem,
+  Spinner,
+  Stack,
+  Text,
+  TextInput,
+  TopNav,
+} from "@astryxdesign/core";
+import {
+  Activity,
+  Layers,
+  Radio,
+  RefreshCw,
+  ScrollText,
+  Server,
+  UserRound,
+} from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { Activity, ChevronDown, Clock, Cpu, Layers, LockKeyhole, LogOut, Menu, Radio, RefreshCw, ScrollText, Server, Settings, ShieldCheck, UserRound, Wrench, X } from "lucide-react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { api } from "./api";
-import { Badge, CollectionAvailable, CurrentSnapshot, systemHealth, text } from "./components";
+import {
+  Badge,
+  CollectionAvailable,
+  CurrentSnapshot,
+  systemHealth,
+  text,
+} from "./components";
 import { freshView } from "./freshness";
 import { CoreNetworkPage } from "./pages/CoreNetworkPage";
 import { DeviceDetailPage, DevicesPage } from "./pages/DevicesPage";
 import { EventsPage } from "./pages/EventsPage";
 import { GnbPage } from "./pages/GnbPage";
 import { OverviewPage } from "./pages/OverviewPage";
-import { ComponentDetailPage, DiagnosticsPage, HistoryPage, OperationsPage } from "./pages/SecondaryPages";
-import type { Snapshot } from "./types";
+import {
+  ComponentDetailPage,
+  DiagnosticsPage,
+  HistoryPage,
+  OperationsPage,
+} from "./pages/SecondaryPages";
 import "./style.css";
+import type { Snapshot } from "./types";
+import { UIProvider } from "./ui-provider";
 
 const navigation = [
   ["/", "Overview", Activity],
@@ -28,7 +70,13 @@ function pageTitle(path: string) {
   if (path === "/history") return "History";
   if (path === "/diagnostics") return "Diagnostics";
   if (path === "/operations") return "Operations";
-  return navigation.find(([route]) => route === "/" ? path === "/" || path === "/overview" : path.startsWith(route))?.[1] || "Overview";
+  return (
+    navigation.find(([route]) =>
+      route === "/"
+        ? path === "/" || path === "/overview"
+        : path.startsWith(route),
+    )?.[1] || "Overview"
+  );
 }
 
 function App() {
@@ -44,71 +92,308 @@ function App() {
   const [now, setNow] = useState(Date.now());
   const received = useRef(0);
   const location = useLocation();
+  const navigate = useNavigate();
   const stack = "ocudu";
   const snapshot = freshView(rawSnapshot, connected, received.current, now);
-  const acceptSnapshot = (next: Snapshot) => { received.current = Date.now(); setNow(received.current); setConnected(true); setRawSnapshot(next); };
+  const acceptSnapshot = (next: Snapshot) => {
+    received.current = Date.now();
+    setNow(received.current);
+    setConnected(true);
+    setRawSnapshot(next);
+  };
 
-  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => setMenu(false), [location.pathname]);
   useEffect(() => {
-    const expired = () => { setCsrf(""); setRawSnapshot(null); setConnected(false); setError("Session expired. Sign in again."); };
+    const expired = () => {
+      setCsrf("");
+      setRawSnapshot(null);
+      setConnected(false);
+      setError("Session expired. Sign in again.");
+    };
     window.addEventListener("aoc-auth-expired", expired);
-    api<{csrf: string}>("session").then(result => setCsrf(result.csrf)).catch(() => {}).finally(() => setReady(true));
+    api<{ csrf: string }>("session")
+      .then((result) => setCsrf(result.csrf))
+      .catch(() => {})
+      .finally(() => setReady(true));
     return () => window.removeEventListener("aoc-auth-expired", expired);
   }, []);
   useEffect(() => {
     if (!csrf) return;
-    const controller = new AbortController(); let alive = true;
-    api<Snapshot>("snapshot", {signal: controller.signal}).then(next => { if (alive) acceptSnapshot(next); }).catch(() => {});
+    const controller = new AbortController();
+    let alive = true;
+    api<Snapshot>("snapshot", { signal: controller.signal })
+      .then((next) => {
+        if (alive) acceptSnapshot(next);
+      })
+      .catch(() => {});
     const stream = new EventSource("/api/v1/stream");
-    stream.addEventListener("snapshot", event => { if (alive) { acceptSnapshot(JSON.parse((event as MessageEvent).data)); setError(""); } });
-    stream.addEventListener("auth_expired", () => { stream.close(); setCsrf(""); setRawSnapshot(null); setConnected(false); });
-    stream.onerror = () => { if (alive) { setConnected(false); setError("Live connection lost. Reconnecting…"); } };
-    const history = window.setInterval(() => setRevision(value => value + 1), 30000);
-    return () => { alive = false; controller.abort(); stream.close(); window.clearInterval(history); };
+    stream.addEventListener("snapshot", (event) => {
+      if (alive) {
+        acceptSnapshot(JSON.parse((event as MessageEvent).data));
+        setError("");
+      }
+    });
+    stream.addEventListener("auth_expired", () => {
+      stream.close();
+      setCsrf("");
+      setRawSnapshot(null);
+      setConnected(false);
+    });
+    stream.onerror = () => {
+      if (alive) {
+        setConnected(false);
+        setError("Live connection lost. Reconnecting…");
+      }
+    };
+    const history = window.setInterval(
+      () => setRevision((value) => value + 1),
+      30000,
+    );
+    return () => {
+      alive = false;
+      controller.abort();
+      stream.close();
+      window.clearInterval(history);
+    };
   }, [csrf]);
 
   async function login(event: FormEvent) {
-    event.preventDefault(); setBusy(true);
-    try { const result = await api<{csrf: string}>("login", {method: "POST", body: JSON.stringify({password})}); setCsrf(result.csrf); setPassword(""); setError(""); }
-    catch (exc) { setError((exc as Error).message === "invalid_credentials" ? "Incorrect password" : (exc as Error).message); }
-    finally { setBusy(false); }
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const result = await api<{ csrf: string }>("login", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      setCsrf(result.csrf);
+      setPassword("");
+      setError("");
+    } catch (exc) {
+      setError(
+        (exc as Error).message === "invalid_credentials"
+          ? "Incorrect password"
+          : (exc as Error).message,
+      );
+    } finally {
+      setBusy(false);
+    }
   }
   async function refresh() {
-    try { acceptSnapshot(await api<Snapshot>("snapshot")); setRevision(value => value + 1); setError(""); }
-    catch (exc) { setError((exc as Error).message); }
+    try {
+      acceptSnapshot(await api<Snapshot>("snapshot"));
+      setRevision((value) => value + 1);
+      setError("");
+    } catch (exc) {
+      setError((exc as Error).message);
+    }
   }
   async function logout() {
-    try { await api("logout", {method: "POST", headers: {"X-CSRF-Token": csrf}}); setCsrf(""); setRawSnapshot(null); setConnected(false); }
-    catch (exc) { setError((exc as Error).message); }
+    try {
+      await api("logout", {
+        method: "POST",
+        headers: { "X-CSRF-Token": csrf },
+      });
+      setCsrf("");
+      setRawSnapshot(null);
+      setConnected(false);
+    } catch (exc) {
+      setError((exc as Error).message);
+    }
   }
 
-  if (!ready) return <div className="boot-screen"><div className="signal-loader" />Loading Agentic-OCUDU</div>;
-  if (!csrf) return <div className="login-page">
-    <header><div className="brand"><Radio /><span><strong>Agentic-OCUDU</strong><small>Spark Operations</small></span></div><span><ShieldCheck />Independent lab network</span></header>
-    <main><form className="login-panel" onSubmit={login}><h1>Sign in to Spark</h1><p>Use the administrator password configured for this Agentic-OCUDU Spark.</p><label htmlFor="password">Administrator password</label><div className="password-field"><LockKeyhole /><input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required autoFocus /></div>{error && <div className="form-error" role="alert">{text(error)}</div>}<button className="primary-button" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button></form></main>
-    <footer>OCUDU 5G SA · Spark monitoring</footer>
-  </div>;
+  if (!ready)
+    return (
+      <Stack className="login-screen" align="center" justify="center">
+        <Spinner label="Loading Agentic-OCUDU" />
+      </Stack>
+    );
+  if (!csrf)
+    return (
+      <Stack
+        className="login-screen"
+        align="center"
+        justify="center"
+        padding={6}
+      >
+        <Card width="100%" maxWidth={440}>
+          <form onSubmit={login}>
+            <Stack gap={6}>
+              <Text type="label">Agentic-OCUDU · Spark Operations</Text>
+              <Heading level={1}>Sign in to Spark</Heading>
+              <Text color="secondary">
+                Use the administrator password configured for this Agentic-OCUDU
+                Spark.
+              </Text>
+              <TextInput
+                label="Administrator password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete="current-password"
+                isRequired
+                hasAutoFocus
+              />
+              {error && <Banner status="error" title={text(error)} />}
+              <Button
+                label="Sign in"
+                type="submit"
+                variant="primary"
+                isLoading={busy}
+                width="100%"
+              />
+            </Stack>
+          </form>
+        </Card>
+      </Stack>
+    );
 
   const health = systemHealth(snapshot, snapshot?.active_stack || stack);
-  const props = snapshot ? {snapshot, stack, refresh: revision, csrf} : null;
-  return <div className="app-shell">
-    <aside className={`sidebar ${menu ? "is-open" : ""}`}><div className="sidebar-head"><div className="brand"><Radio /><span><strong>Agentic-OCUDU</strong><small>Spark Operations</small></span></div><button className="icon-button mobile-only" aria-label="Close menu" onClick={() => setMenu(false)}><X /></button></div>
-      <nav aria-label="Primary navigation">{navigation.map(([path, label, Icon]) => <NavLink key={path} to={path} end={path === "/"} className={({isActive}) => isActive ? "active" : ""}><Icon />{label}</NavLink>)}</nav>
-      <div className="system-state"><span className={`status-dot ${health.state}`} /><span><b>System</b><small title={health.reason}>{health.state === "healthy" ? "All systems normal" : "Attention required"}</small></span></div>
-    </aside>
-    {menu && <button className="sidebar-scrim" aria-label="Close menu overlay" onClick={() => setMenu(false)} />}
-    <div className="workspace"><header className="topbar"><button className="icon-button menu-button mobile-only" aria-label="Open menu" onClick={() => setMenu(true)}><Menu /></button><h1>{pageTitle(location.pathname)}</h1>
-      <div className="topbar-actions"><div className="device-mark"><Cpu /><span><b>Spark</b><small>Radio &amp; core</small></span></div><span className="collection-status" title="Collector freshness">Collection <Badge state={snapshot?.collector_status || "unavailable"} /></span><button className="icon-button" aria-label="Refresh" onClick={refresh}><RefreshCw /></button>
-        <details className="account-menu"><summary className="account-button" aria-label="Account"><UserRound /><span>ops_engineer</span><ChevronDown /></summary><div className="account-options"><small>Local administrator</small><Link to="/operations"><Settings />Operations</Link><Link to="/diagnostics"><Wrench />Diagnostics</Link><Link to="/history"><Clock />Metric history</Link><button onClick={logout}><LogOut />Sign out</button></div></details>
-      </div></header>
-      <main>{error && <div className="connection-banner" role="alert">{text(error)}</div>}{props ? <CollectionAvailable.Provider value={snapshot?.collector_status === "ok"}><CurrentSnapshot.Provider value={snapshot}><Routes>
-        <Route path="/" element={<OverviewPage {...props} />} /><Route path="/overview" element={<Navigate to="/" replace />} /><Route path="/gnb" element={<GnbPage {...props} />} /><Route path="/ran" element={<Navigate to="/gnb" replace />} />
-        <Route path="/core" element={<CoreNetworkPage {...props} />} /><Route path="/components/:id" element={<ComponentDetailPage {...props} />} /><Route path="/devices" element={<DevicesPage {...props} />} /><Route path="/devices/:id" element={<DeviceDetailPage {...props} />} />
-        <Route path="/events" element={<EventsPage {...props} />} /><Route path="/history" element={<HistoryPage {...props} />} /><Route path="/diagnostics" element={<DiagnosticsPage {...props} />} /><Route path="/operations" element={<OperationsPage {...props} />} /><Route path="*" element={<Navigate to="/" replace />} />
-      </Routes></CurrentSnapshot.Provider></CollectionAvailable.Provider> : <div className="page-loading"><div className="signal-loader" />Loading Spark status</div>}<footer className="app-footer"><ShieldCheck />Spark / ARM64</footer></main>
-    </div>
-  </div>;
+  const props = snapshot ? { snapshot, stack, refresh: revision, csrf } : null;
+  return (
+    <AppShell
+      height="auto"
+      variant="section"
+      contentPadding={0}
+      mobileNav={{ isOpen: menu, onOpenChange: setMenu }}
+      sideNav={
+        <SideNav
+          aria-label="Primary navigation"
+          header={
+            <Stack padding={4} gap={1}>
+              <Text weight="semibold">Agentic-OCUDU</Text>
+              <Text type="supporting" color="secondary">
+                Spark Operations
+              </Text>
+            </Stack>
+          }
+          footer={
+            <Stack className="system-state" padding={4} gap={2}>
+              <Badge state={health.state} />
+              <Text type="supporting" color="secondary">
+                {health.state === "healthy"
+                  ? "All systems normal"
+                  : "Attention required"}
+              </Text>
+            </Stack>
+          }
+        >
+          {navigation.map(([path, label, Icon]) => (
+            <SideNavItem
+              key={path}
+              href={path}
+              label={label}
+              icon={<Icon size={18} />}
+              isSelected={
+                path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(path)
+              }
+              onClick={() => setMenu(false)}
+            />
+          ))}
+        </SideNav>
+      }
+      topNav={
+        <TopNav
+          label="Spark toolbar"
+          heading={<Heading level={1}>{pageTitle(location.pathname)}</Heading>}
+          endContent={
+            <Stack direction="horizontal" align="center" gap={3}>
+              <span className="collection-status">
+                <Badge state={snapshot?.collector_status || "unavailable"} />
+              </span>
+              <Button
+                label="Refresh"
+                variant="ghost"
+                isIconOnly
+                icon={<RefreshCw size={18} />}
+                onClick={refresh}
+              />
+              <DropdownMenu
+                button={{
+                  label: "Account",
+                  variant: "ghost",
+                  icon: <UserRound size={18} />,
+                  isIconOnly: true,
+                }}
+                alignment="end"
+                items={[
+                  {
+                    label: "Operations",
+                    onClick: () => navigate("/operations"),
+                  },
+                  {
+                    label: "Diagnostics",
+                    onClick: () => navigate("/diagnostics"),
+                  },
+                  {
+                    label: "Metric history",
+                    onClick: () => navigate("/history"),
+                  },
+                  { type: "divider" },
+                  { label: "Sign out", onClick: logout },
+                ]}
+              />
+            </Stack>
+          }
+        />
+      }
+    >
+      <Stack className="page-content" gap={6}>
+        {error && <Banner status="warning" title={text(error)} />}
+        {props ? (
+          <CollectionAvailable.Provider
+            value={snapshot?.collector_status === "ok"}
+          >
+            <CurrentSnapshot.Provider value={snapshot}>
+              <Routes>
+                <Route path="/" element={<OverviewPage {...props} />} />
+                <Route path="/overview" element={<Navigate to="/" replace />} />
+                <Route path="/gnb" element={<GnbPage {...props} />} />
+                <Route path="/ran" element={<Navigate to="/gnb" replace />} />
+                <Route path="/core" element={<CoreNetworkPage {...props} />} />
+                <Route
+                  path="/components/:id"
+                  element={<ComponentDetailPage {...props} />}
+                />
+                <Route path="/devices" element={<DevicesPage {...props} />} />
+                <Route
+                  path="/devices/:id"
+                  element={<DeviceDetailPage {...props} />}
+                />
+                <Route path="/events" element={<EventsPage {...props} />} />
+                <Route path="/history" element={<HistoryPage {...props} />} />
+                <Route
+                  path="/diagnostics"
+                  element={<DiagnosticsPage {...props} />}
+                />
+                <Route
+                  path="/operations"
+                  element={<OperationsPage {...props} />}
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </CurrentSnapshot.Provider>
+          </CollectionAvailable.Provider>
+        ) : (
+          <Spinner label="Loading Spark status" />
+        )}
+        <Text type="supporting" color="secondary">
+          Spark / ARM64 · OCUDU + Open5GS
+        </Text>
+      </Stack>
+    </AppShell>
+  );
 }
 
-createRoot(document.getElementById("root")!).render(<BrowserRouter><App /></BrowserRouter>);
+createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <UIProvider>
+      <App />
+    </UIProvider>
+  </BrowserRouter>,
+);

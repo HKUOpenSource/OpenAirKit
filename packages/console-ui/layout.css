@@ -1,0 +1,48 @@
+/* Application sizing only. Components and visual tokens come from Astryx Neutral. */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-family-body);
+  color: var(--color-text-primary);
+  background: var(--color-background-body);
+}
+.login-screen {
+  min-height: 100dvh;
+}
+.page-content {
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding: var(--spacing-6);
+  min-width: 0;
+}
+.page-content > *,
+.spark-page,
+.chart,
+.chart-panel,
+.trend-section {
+  min-width: 0;
+}
+.filter-bar > *,
+.filters > * {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.table-scroll,
+.table-wrap {
+  max-width: 100%;
+  min-width: 0;
+}
+.mono {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .page-content {
+    padding: var(--spacing-3);
+  }
+}

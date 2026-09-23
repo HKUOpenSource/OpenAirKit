@@ -19,12 +19,12 @@ GNB = {"items": [{"gnb_id": 411, "plmn": "46003", "ng": {"setup_success": True},
 
 
 class Open5GSTests(unittest.TestCase):
-    def test_info_is_correlated_in_process_and_redacted(self):
+    def test_info_exposes_numeric_identity_and_retains_allowlist(self):
         devices, observations, gnb = parse_info(AMF, PDU, GNB, '2026-09-12T12:00:00+00:00', 'amf-smf-run-a')
         self.assertEqual(len(devices), 1)
         device = devices[0]
         self.assertEqual(device['id'], subscriber_id('imsi-460030000000001'))
-        self.assertEqual(device['identity'], 'Subscriber ****0001')
+        self.assertEqual(device['identity'], AMF['items'][0]['supi'].removeprefix('imsi-'))
         self.assertEqual(device['registration'], 'registered')
         self.assertEqual(device['state'], 'registered')
         self.assertEqual(device['epoch'], 'amf-smf-run-a')
@@ -34,13 +34,21 @@ class Open5GSTests(unittest.TestCase):
         self.assertEqual(device['sessions'][0]['qfi'], 1)
         self.assertTrue(device['sessions'][0]['n3_verified'])
         encoded = json.dumps([devices, observations, gnb])
-        for secret in ('460030000000001', 'private-suci', 'private-imei', 'private-guti', '1437', 'pdr_id'):
+        for secret in ('private-suci', 'private-imei', 'private-guti', '1437', 'pdr_id'):
             self.assertNotIn(secret, encoded)
         metrics = {(item['entity'], item['name']): item['value'] for item in observations}
         self.assertEqual(metrics[('ocudu:oai', 'active_pdu_count')], 1)
         self.assertEqual(metrics[('ocudu:oai', 'observed_5qi')], 9)
         self.assertEqual(metrics[('ocudu:n3', 'active_session_paths')], 1)
         self.assertEqual(metrics[('ocudu', 'amf_connected_ue_count')], 1)
+
+    def test_smf_only_identity_preserves_leading_zeroes(self):
+        pdu = json.loads(json.dumps(PDU))
+        pdu['items'][0]['supi'] = 'imsi-' + '00101' + '0' * 9 + '1'
+        devices, _, _ = parse_info({'items': []}, pdu, GNB)
+        self.assertEqual(devices[0]['identity'], pdu['items'][0]['supi'][5:])
+        self.assertEqual(devices[0]['correlation'], 'smf_supi_only')
+        self.assertEqual(devices[0]['registration'], 'unknown')
 
     def test_invalid_pool_other_dnn_and_unknown_identity_do_not_leak(self):
         pdu = json.loads(json.dumps(PDU))

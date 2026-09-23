@@ -38,6 +38,85 @@ class NetworkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             network.action("shell")
 
+    def snapshot(self, network, tick, counters, interface="rndis0", ifindex=7,
+                 error=None, wall_time=None):
+        indices = iter(ifindex if isinstance(ifindex, tuple) else (ifindex, ifindex))
+
+        def read(path):
+            if path.name == "ifindex":
+                return str(next(indices))
+            if error and path.name == "rx_bytes":
+                raise error
+            return str({"rx_bytes": counters[0], "tx_bytes": counters[1]}[path.name])
+
+        with patch("aoc_jetson.network.inspect", return_value={**self.state, "data_interface": interface}), \
+                patch("aoc_jetson.network.inspect_management", return_value={"management_protected": True}), \
+                patch("aoc_jetson.network.route_to", return_value={"dev": interface}), \
+                patch("aoc_jetson.network.Path.read_text", autospec=True, side_effect=read), \
+                patch("aoc_jetson.network.time.time", return_value=tick if wall_time is None else wall_time), \
+                patch("aoc_jetson.network.time.monotonic", return_value=tick):
+            return network.snapshot()
+
+    def assert_rates(self, value, rx, tx):
+        self.assertEqual((value["rx_bps"], value["tx_bps"]), (rx, tx))
+
+    def test_rates_require_two_samples_of_the_same_interface(self):
+        network = Network(self.config, "config")
+        self.assert_rates(self.snapshot(network, 100, (1000, 2000)), None, None)
+        self.assert_rates(self.snapshot(network, 102, (1500, 3000)), 2000, 4000)
+
+    def test_interface_rename_or_replacement_starts_a_new_rate_interval(self):
+        for interface, ifindex in (("rndis1", 7), ("rndis0", 8), ("rndis1", 8)):
+            with self.subTest(interface=interface, ifindex=ifindex):
+                network = Network(self.config, "config")
+                self.snapshot(network, 100, (1000, 2000))
+                changed = self.snapshot(network, 101, (1000000, 2000000), interface, ifindex)
+                self.assertEqual(changed["quality"], "ok")
+                self.assert_rates(changed, None, None)
+                self.assert_rates(self.snapshot(network, 103, (1000500, 2001000), interface, ifindex),
+                                  2000, 4000)
+
+    def test_discovery_failure_clears_rate_baseline(self):
+        network = Network(self.config, "config")
+        self.snapshot(network, 100, (1000, 2000))
+        with patch("aoc_jetson.network.inspect", side_effect=ValueError("Device disappeared")), \
+                patch("aoc_jetson.network.inspect_management", return_value={"management_protected": True}):
+            unavailable = network.snapshot()
+        self.assertEqual(unavailable["quality"], "unavailable")
+        self.assert_rates(unavailable, None, None)
+        self.assert_rates(self.snapshot(network, 102, (1000000, 2000000)), None, None)
+        self.assert_rates(self.snapshot(network, 104, (1000500, 2001000)), 2000, 4000)
+
+    def test_counter_read_failure_clears_rate_baseline(self):
+        network = Network(self.config, "config")
+        self.snapshot(network, 100, (1000, 2000))
+        unavailable = self.snapshot(network, 101, (0, 0), error=FileNotFoundError("Interface disappeared"))
+        self.assertEqual(unavailable["quality"], "unavailable")
+        self.assert_rates(unavailable, None, None)
+        self.assert_rates(self.snapshot(network, 102, (1000000, 2000000)), None, None)
+
+    def test_counter_reset_starts_a_new_rate_interval(self):
+        network = Network(self.config, "config")
+        self.snapshot(network, 100, (1000, 2000))
+        self.assert_rates(self.snapshot(network, 101, (100, 3000)), None, None)
+        self.assert_rates(self.snapshot(network, 103, (600, 4000)), 2000, 4000)
+
+    def test_replacement_during_counter_read_discards_sample(self):
+        network = Network(self.config, "config")
+        self.snapshot(network, 100, (1000, 2000))
+        value = self.snapshot(network, 101, (1000000, 2000000), ifindex=(7, 8))
+        self.assertEqual(value["quality"], "unavailable")
+        self.assert_rates(value, None, None)
+        self.assert_rates(self.snapshot(network, 102, (1000000, 2000000), ifindex=8), None, None)
+        self.assert_rates(self.snapshot(network, 104, (1000500, 2001000), ifindex=8), 2000, 4000)
+
+    def test_rates_use_elapsed_time_despite_wall_clock_changes(self):
+        network = Network(self.config, "config")
+        self.snapshot(network, 100, (1000, 2000), wall_time=1000)
+        value = self.snapshot(network, 102, (1500, 3000), wall_time=900)
+        self.assertEqual(value["at"], 900)
+        self.assert_rates(value, 2000, 4000)
+
     @patch("aoc_jetson.network.os.geteuid", return_value=0)
     @patch("aoc_jetson.network.inspect")
     @patch("aoc_jetson.network.route_to")

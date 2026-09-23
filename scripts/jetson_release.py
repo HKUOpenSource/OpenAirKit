@@ -32,7 +32,7 @@ def build(output, wheels):
     shutil.copyfile(source / "requirements-jetson.lock", output / "requirements.lock")
     shutil.copyfile(ROOT / "config/jetson.example.json", output / "device.example.json")
     shutil.copytree(wheels, output / "wheels")
-    (output / "RELEASE-VERSION").write_text("0.4.0\n")
+    (output / "RELEASE-VERSION").write_text("0.5.1\n")
     (output / "THIRD_PARTY_NOTICES.md").write_text("Dependencies are supplied from the locked offline wheelhouse.\n")
     (output / "THIRD_PARTY_DEPENDENCIES.json").write_text(json.dumps({"platform":"jetson","lock":"requirements.lock","wheelhouse":True}, indent=2) + "\n")
     (output / "THIRD_PARTY_LICENSES").mkdir()

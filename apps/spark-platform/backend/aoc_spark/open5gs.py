@@ -77,7 +77,7 @@ def parse_info(amf_payload, pdu_payload, gnb_payload, observed_at=None, epoch='o
         identifiers = {key: gnb[key] for key in ('amf_ue_ngap_id', 'ran_ue_ngap_id', 'gnb_id', 'cell_id')
                        if isinstance(gnb.get(key), int)}
         amf[supi] = dict(id=subscriber_id(supi), stack='ocudu', epoch=epoch,
-                          identity='Subscriber ****' + supi[-4:], identifiers=identifiers,
+                          identity=supi.removeprefix('imsi-'), identifiers=identifiers,
                           registration=registration, state=registration, status='ok', observed_at=at,
                           source='open5gs_info', correlation='amf_supi', metrics=[
                               {**observation('open5gs_info', subscriber_id(supi), 'cm_state', row.get('cm_state'), 'state',
@@ -100,7 +100,7 @@ def parse_info(amf_payload, pdu_payload, gnb_payload, observed_at=None, epoch='o
         device = amf.get(supi)
         if device is None:
             device = dict(id=subscriber_id(supi), stack='ocudu', epoch=epoch,
-                          identity='Subscriber ****' + supi[-4:], identifiers={}, registration='unknown',
+                          identity=supi.removeprefix('imsi-'), identifiers={}, registration='unknown',
                           state='unknown', status='ok', observed_at=at, source='open5gs_info',
                           correlation='smf_supi_only', metrics=[], sessions=[])
             amf[supi] = device

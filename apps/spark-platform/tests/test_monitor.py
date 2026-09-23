@@ -94,6 +94,23 @@ class ApiTests(unittest.TestCase):
         result = redacted_diagnostics({"nested": [{"supi": "imsi-secret", "state": "active"}]})
         self.assertEqual(result, {"nested": [{"supi": "<redacted>", "state": "active"}]})
 
+    def test_device_identity_visible_after_login_but_redacted_in_diagnostics(self):
+        identity = '00101' + '0' * 9 + '1'  # Synthetic test-network subscriber.
+        device = dict(id='ocudu:ue:test', identity=identity, identifiers={}, stack='ocudu',
+                      source='open5gs_info', observed_at=utc(), registration='registered',
+                      state='registered', status='ok', sessions=[], metrics=[])
+        sample = json.loads(self.snapshot.read_text())
+        sample['devices'] = [device]
+        self.snapshot.write_text(json.dumps(sample))
+        self.assertEqual(self.client.get('/api/v1/devices').status_code, 401)
+        self.login()
+        self.assertEqual(self.client.get('/api/v1/snapshot').json()['devices'][0]['identity'], identity)
+        self.assertEqual(self.client.get('/api/v1/devices', params={'query': identity}).json()['items'][0]['identity'], identity)
+        self.assertEqual(self.client.get('/api/v1/devices/ocudu:ue:test').json()['identity'], identity)
+        export = self.client.get('/api/v1/diagnostics')
+        self.assertEqual(export.json()['devices'][0]['identity'], '<redacted>')
+        self.assertNotIn(identity, export.text)
+
     def test_no_cross_stack_switch_or_ims_surface(self):
         self.login()
         self.assertIn(self.client.get("/api/v1/switch").status_code, (404, 405))
