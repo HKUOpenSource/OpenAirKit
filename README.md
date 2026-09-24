@@ -6,8 +6,8 @@ operations applications.
 
 | Application | Responsibility | Listener | Version |
 | --- | --- | --- | --- |
-| Jetson Console | Modem discovery, verified data sessions and bounded recovery | `127.0.0.1:8878` | 0.4.0 |
-| Spark Platform | Host, radio and core observation with bounded stack operations | `127.0.0.1:8877` | 0.1.0 |
+| Jetson Console | Modem discovery, verified data sessions and bounded recovery | `127.0.0.1:8878` | 0.5.1 |
+| Spark Platform | Host, radio and core observation with bounded stack operations | `127.0.0.1:8877` | 0.2.0 |
 
 The current product scope is one 5G SA data network. A connected UE requires
 fresh registration, an active PDU session in the configured pool, a current

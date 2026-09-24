@@ -1,9 +1,50 @@
 # Spark Platform 运维
 
+## 整套系统一键启停
+
+使用已完成配置的 SSH 用户在设备本地执行：
+
+```sh
+~/aoc-ops/spark/start.sh
+~/aoc-ops/spark/stop.sh
+/usr/bin/python3 -I ~/aoc-ops/spark/platformctl.py status
+```
+
+这些入口同时控制 Open5GS、OCUDU gNB 和三个监测服务。启动顺序为核心网、无线、监测；
+停止顺序为无线、核心网、监测，以保留停止过程的观测。只检查固定的 `aoc-v2-*` 栈服务
+和 `aoc-v2-open5gs` 项目预期的 12 个容器服务。所有变更均调用既有非交互
+`aoc-maintain` 动作，不直接执行 Docker 写操作；保留其他容器和持久化数据。
+
+启动要求 12 个核心网容器健康、gNB 通过现有 systemd 启动检查后 active，以及监测／
+采集器健康；这些条件不证明 UE 已接入。已运行组件只检查、不重启，缺失阶段按依赖顺序
+补齐。已运行但不健康的核心网，或部分运行的核心网容器会报错，不隐式重启修复。启动
+失败保留已完成阶段；停止失败不再关闭其依赖或监测平台，残留容器或进程不能报告为
+成功停止。
+
+每次 helper 调用最多 330 秒，每次健康等待最多 60 秒。不自动重试写操作或回滚。超时或
+中断后先查询状态，因为 systemd 任务可能仍在运行。同一用户的脚本副本共用操作锁，
+但不能锁住全部网页／管理员入口，因此操作期间不要混用；维护工具自身检查继续生效。
+退出码：成功 0、执行／验证失败 1、参数错误 2、脚本忙 3。成功的 `status` 查询返回 0，
+即使整套系统已停止。运行输出使用英文。
+
+脚本依赖系统 Python、systemd 工具、`ss`、Docker 只读访问能力和既有受限维护权限。
+先备份已有目标目录，再从仓库安装或通过 SSH 传输相同文件：
+
+```sh
+mkdir -p ~/aoc-ops/spark
+install -m 0755 deploy/spark/operations/start.sh deploy/spark/operations/stop.sh \
+  deploy/spark/operations/platformctl.py ~/aoc-ops/spark/
+```
+
+执行前核对传输哈希。设备不需要完整仓库或虚拟环境。脚本独立于应用发布包交付，撤回
+时恢复其备份，不回滚应用；不开启开机自启，不包含设备连接地址。
+停止／启动及重复调用实测见
+[2026-09-24 启停验收](acceptance/2026-09-24-platform-lifecycle.zh-CN.md)。
+
 ## 平台生命周期
 
-监测应用由 `aoc-observe.service`、`aoc-monitor-web.service` 和
-`aoc-control.service` 组成。停止平台不得改变无线栈和核心网服务。健康检查：
+仅维护监测应用时，操作 `aoc-observe.service`、`aoc-monitor-web.service` 和
+`aoc-control.service` 这三个服务。停止监测应用不得改变无线栈和核心网服务。健康检查：
 
 ```sh
 curl -fsS http://127.0.0.1:8877/api/v1/health

@@ -20,7 +20,7 @@ the product.
 | Use the repository graph | [CodeGraph guide](coding-agent-codegraph.md) |
 | Check delivery status | [Roadmap](roadmap.md) |
 | Review real validation evidence | [Acceptance records](acceptance/README.md) |
-| Review the next development starting point | [2026-09-23 readiness review](acceptance/2026-09-23-development-readiness.md) |
+| Review the next development starting point | [2026-09-24 readiness review](acceptance/2026-09-24-development-readiness.md) |
 
 English is the normative documentation language for commands and interface
 names. The matching `.zh-CN.md` files provide Simplified Chinese guidance.

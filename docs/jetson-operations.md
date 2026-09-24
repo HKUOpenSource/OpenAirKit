@@ -2,7 +2,52 @@
 
 ## Service lifecycle
 
-Use the installed manager for all lifecycle actions:
+For normal local operation, use the separately deployed shortcuts:
+
+```sh
+~/aoc-ops/jetson/start.sh
+~/aoc-ops/jetson/stop.sh
+/usr/bin/python3 -I ~/aoc-ops/jetson/platformctl.py status
+```
+
+Run these as the commissioned SSH user. They use system Python and the existing
+`sudo -n /usr/local/sbin/aoc-maintain` permission, with no interactive password
+prompt. Both V2 services are started and checked; registration, PDU, data connection,
+maintenance and recovery pause are reported separately. A disconnected UE produces
+a warning, not an automatic reconnect. These scripts never request takeover,
+maintenance exit or modem recovery. Existing executor shutdown/recovery policy still
+applies; stopping the executor can persist its recovery pause.
+
+Repeated start checks the running services without restarting them. Repeated stop
+confirms both services, the device socket and web listener are stopped. Startup
+requires prior commissioning; the scripts do not initialize a new installation.
+Failures preserve current state and stop subsequent steps. Helper calls time out
+after 330 seconds; each health wait is bounded to 60 seconds. An interrupted or timed
+out command can leave a systemd job running: query status before retrying.
+
+One user-level lock serializes these scripts across copies. Do not run lifecycle
+actions through the UI or another entrypoint concurrently. The lock does not replace
+the helper's own access/locking checks. Exit codes are 0 for success, 1 for execution
+or verification failure, 2 for invalid arguments and 3 for a busy script. A successful
+`status` query returns 0 even when services are stopped. Runtime output is English.
+
+To install from a checkout on the device, first back up any existing destination,
+then copy only the three standalone scripts:
+
+```sh
+mkdir -p ~/aoc-ops/jetson
+install -m 0755 deploy/jetson/start.sh deploy/jetson/stop.sh \
+  deploy/jetson/platformctl.py ~/aoc-ops/jetson/
+```
+
+Verify transfer hashes before execution. The same files can be copied over SSH;
+no checkout is needed on the device. They are excluded from application releases,
+do not enable boot startup, and can be reverted by restoring their saved copies
+without rolling back the application. Do not put site addresses in these scripts.
+See the [2026-09-24 lifecycle acceptance](acceptance/2026-09-24-platform-lifecycle.md)
+for the completed device checks.
+
+The underlying installed manager remains available to administrators:
 
 ```sh
 sudo /opt/agentic-ocudu/jetson/current/venv/bin/python -I \

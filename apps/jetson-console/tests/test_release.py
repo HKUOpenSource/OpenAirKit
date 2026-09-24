@@ -124,6 +124,8 @@ class ReleaseTests(unittest.TestCase):
             names = set(manifest["files"])
             self.assertIn("backend/aoc_jetson/agent.py", names)
             self.assertIn("frontend/index.html", names)
+            for script in ("platformctl.py", "start.sh", "stop.sh"):
+                self.assertNotIn("deploy/" + script, names)
             self.assertNotIn("backend/aoc_jetson_v1/agent.py", names)
             self.assertFalse(any("retired-integration" in name.lower() for name in names))
 
