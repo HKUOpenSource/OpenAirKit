@@ -1,0 +1,54 @@
+name: Extended checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extended-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  platform:
+    name: ${{ matrix.name }} extended
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Jetson
+            python: '3.10'
+            app: jetson-console
+            target: e2e-jetson
+          - name: Spark
+            python: '3.12'
+            app: spark-platform
+            target: e2e-spark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/frontend/package-lock.json
+      - name: Install backend dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-tools.txt -r apps/${{ matrix.app }}/requirements-dev.txt
+      - name: Build frontend
+        run: |
+          npm ci --prefix apps/${{ matrix.app }}/frontend
+          npm run build --prefix apps/${{ matrix.app }}/frontend
+      - name: Test target Python version
+        env:
+          PYTHONPATH: apps/jetson-console/backend:apps/spark-platform/backend
+        run: python -m unittest discover -s apps/${{ matrix.app }}/tests -p 'test_*.py'
+      - name: Install browser
+        working-directory: apps/${{ matrix.app }}/frontend
+        run: npx playwright install --with-deps chromium
+      - name: Browser checks
+        run: make ${{ matrix.target }} PYTHON=python
