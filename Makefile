@@ -48,6 +48,8 @@ shell-check:
 check: check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
 
 # One local/CI entry point; production builds already include TypeScript checks.
-ci: check-python test-jetson-backend test-spark-backend test-stack build-jetson-frontend build-spark-frontend docs-audit release-audit license-audit shell-check
+# Release tests consume frontend artifacts, so finish builds before testing.
+ci: check-python build-jetson-frontend build-spark-frontend
+	$(MAKE) test-jetson-backend test-spark-backend test-stack docs-audit release-audit license-audit shell-check
 
 .PHONY: test-stack
