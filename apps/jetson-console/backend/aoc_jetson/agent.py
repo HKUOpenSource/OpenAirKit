@@ -7,6 +7,7 @@ names from the web process.
 """
 import argparse
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import copy
 import json
 import os
@@ -132,13 +133,20 @@ class Agent:
                     self.probes.clear()
                     self.evidence_generation = generation
                 if probe and network.get("quality") == "ok":
-                    for kind in ("gateway", "upf", "ext_dn", "public"):
-                        self.check_cancel()
-                        try:
-                            self.probes[kind] = self.network.probe(kind, self.cancel if self.current else None)
-                        except Exception as error:
-                            self.probes[kind] = {"at": time.time(), "kind": kind,
-                                                 "state": "unknown", "reason": str(error)[:240]}
+                    self.check_cancel()
+                    # Independent, interface-bound read-only probes share a sampling
+                    # window; serial timeouts must not accumulate before publication.
+                    with ThreadPoolExecutor(max_workers=4) as executor:
+                        pending = {kind: executor.submit(self.network.probe, kind,
+                                                        self.cancel if self.current else None)
+                                   for kind in ("gateway", "upf", "ext_dn", "public")}
+                        for kind, result in pending.items():
+                            self.check_cancel()
+                            try:
+                                self.probes[kind] = result.result()
+                            except Exception as error:
+                                self.probes[kind] = {"at": time.time(), "kind": kind,
+                                                     "state": "unknown", "reason": str(error)[:240]}
                 now = time.time()
                 probes = copy.deepcopy(self.probes)
                 for value in probes.values():

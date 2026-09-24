@@ -249,23 +249,24 @@ def create_app(config, transport=None):
 
     @app.get("/api/v1/events/stream")
     async def stream(request: Request):
-        started = time.monotonic()
-
         async def events():
-            while not await request.is_disconnected() and time.monotonic() - started < 15:
+            yield "retry: 1000\n\n"
+            while not await request.is_disconnected():
                 try:
                     session(request)
-                    yield "event: status\ndata: " + json.dumps(await call("status")) + "\n\n"
+                    status = await call("status")
+                    # A slow executor call must not outlive logout/session expiry.
+                    session(request)
+                    yield "event: status\ndata: " + json.dumps(status) + "\n\n"
                 except HTTPException as error:
                     event = "expired" if error.status_code == 401 else "unavailable"
                     yield "event: " + event + "\ndata: {}\n\n"
                     if error.status_code == 401:
                         return
                 await asyncio.sleep(2)
-            yield "event: reconnect\ndata: {}\n\n"
 
         return StreamingResponse(events(), media_type="text/event-stream",
-                                 headers={"X-Accel-Buffering": "no"})
+                                 headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
 
     frontend = Path(config["frontend_dir"]).resolve()
     if (frontend / "assets").exists():
@@ -287,7 +288,8 @@ def main():
     parser.add_argument("--port", type=int, default=8878)
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text())
-    uvicorn.run(create_app(config), host="127.0.0.1", port=args.port, proxy_headers=False)
+    uvicorn.run(create_app(config), host="127.0.0.1", port=args.port, proxy_headers=False,
+                timeout_graceful_shutdown=5)
 
 
 if __name__ == "__main__":

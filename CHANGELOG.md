@@ -1,5 +1,18 @@
 # Changelog
 
+## Jetson Console 0.5.1
+
+- Keep authenticated status streams open, recheck sessions for each update and bound graceful shutdown.
+- Run independent read-only network probes concurrently to reduce status age without relaxing freshness limits.
+- Distinguish stale device evidence from lost live updates in the Astryx UI.
+
+## Jetson Console 0.5.0 / Spark Platform 0.2.0
+
+- Use official Astryx Core, Neutral and Charts across both consoles, with responsive navigation, readable tables and evidence-aware history charts.
+- Display complete numeric Spark subscriber identities in the authenticated UI; simplify subscriber inventory and preserve diagnostic/event redaction.
+- Reset Jetson passive-rate baselines when interface identity changes or sampling fails.
+- Include browser dependency license text in built frontend releases.
+
 ## Jetson 0.4.0 / connectivity-only data network
 
 - Separate network access, observed lab selection and diagnostic configuration; migrate schema 2 with backups.

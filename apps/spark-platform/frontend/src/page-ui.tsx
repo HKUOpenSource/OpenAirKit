@@ -1,32 +1,95 @@
+import { Banner, Card, Heading, Stack, Text } from "@astryxdesign/core";
 import type { LucideIcon } from "lucide-react";
-import { Badge, names, text, value } from "./components";
+import { Badge, Details, text, value } from "./components";
 import type { Observation } from "./types";
 
-export function PageIntro({ title, description, icon: Icon }: { title: string; description: string; icon: LucideIcon }) {
-  return <section className="page-intro"><div><h2>{title}</h2><p>{description}</p></div><Icon /></section>;
+export function PageIntro({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <Stack gap={2}>
+      <Stack direction="horizontal" gap={3} align="center">
+        <Icon size={20} />
+        <Heading level={2}>{title}</Heading>
+      </Stack>
+      <Text color="secondary">{description}</Text>
+    </Stack>
+  );
 }
-
-export function StatusSummary({ state, title, reason, updated }: { state: string; title: string; reason: string; updated: string }) {
-  return <section className={`status-summary state-${state}`}>
-    <div className="status-copy"><span className={`status-dot ${state}`} /><div><h2>{title}</h2><p>{reason}</p></div></div>
-    <time className="updated">Updated {updated}</time>
-  </section>;
+export function StatusSummary({
+  state,
+  title,
+  reason,
+  updated,
+}: {
+  state: string;
+  title: string;
+  reason: string;
+  updated: string;
+}) {
+  return (
+    <Banner
+      status={
+        state === "healthy"
+          ? "success"
+          : state === "failed"
+            ? "error"
+            : "warning"
+      }
+      title={title}
+      description={reason}
+      endContent={<Text type="supporting">Updated {updated}</Text>}
+    />
+  );
 }
-
-export function SummaryItem({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: React.ReactNode }) {
-  return <div><Icon /><span>{label}<strong>{children}</strong></span></div>;
+export function SummaryItem({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <Stack gap={3}>
+        <Stack direction="horizontal" gap={2} align="center">
+          <Icon size={18} />
+          <Text color="secondary">{label}</Text>
+        </Stack>
+        <Text type="large" weight="semibold">
+          {children}
+        </Text>
+      </Stack>
+    </Card>
+  );
 }
-
 export function DetailRows({ values }: { values: Record<string, unknown> }) {
-  return <dl className="detail-list">{Object.entries(values).map(([key, item]) => <div key={key}>
-    <dt>{names[key] || text(key)}</dt><dd className="mono">{item == null || item === "" ? "—" : typeof item === "object" ? JSON.stringify(item) : String(item)}</dd>
-  </div>)}</dl>;
+  return <Details values={values} />;
 }
-
 export function MetricValue({ observation }: { observation?: Observation }) {
   return <>{value(observation)}</>;
 }
-
-export function EvidenceState({ state, reason }: { state: string; reason?: unknown }) {
-  return <span className="evidence-state"><Badge state={state} /><small>{reason ? text(String(reason)) : "No supporting detail"}</small></span>;
+export function EvidenceState({
+  state,
+  reason,
+}: {
+  state: string;
+  reason?: unknown;
+}) {
+  return (
+    <Stack gap={1}>
+      <Badge state={state} />
+      <Text type="supporting" color="secondary">
+        {reason ? text(String(reason)) : "No supporting detail"}
+      </Text>
+    </Stack>
+  );
 }

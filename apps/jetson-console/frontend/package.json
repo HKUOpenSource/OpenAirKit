@@ -1,6 +1,6 @@
 {
   "name": "agentic-ocudu-jetson-console",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "lucide-react": "0.468.0",
+    "@astryxdesign/charts": "0.6.2-canary.d72e4d6",
+    "@astryxdesign/core": "0.6.2-canary.d72e4d6",
+    "@astryxdesign/theme-neutral": "0.6.2-canary.d72e4d6",
+    "@stylexjs/stylex": "0.19.0",
+    "lucide-react": "1.18.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-router-dom": "7.18.3"

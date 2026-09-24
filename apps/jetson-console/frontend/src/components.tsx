@@ -1,53 +1,276 @@
-import { Activity, Check, Download, Play, Square } from "lucide-react";
+import { Chart, ChartAxis, line } from "@astryxdesign/charts";
+import {
+  proportional,
+  Badge as AstryxBadge,
+  Banner,
+  Button,
+  Card,
+  EmptyState,
+  Heading,
+  MetadataList,
+  MetadataListItem,
+  ProgressBar,
+  Stack,
+  Table,
+  Text,
+} from "@astryxdesign/core";
+import { Download, Play, Square } from "lucide-react";
 import { api, download, number, Obj, terminal, when } from "./api";
 
 export function Badge({ state = "unknown" }: { state?: string }) {
-  return <span className={"badge " + state}><i />{state.replaceAll("_", " ")}</span>;
+  const variant = [
+    "ok",
+    "active",
+    "connected",
+    "complete",
+    "ready",
+    "available",
+    "live",
+  ].includes(state)
+    ? "success"
+    : ["failed", "error", "blocked", "cancelled"].includes(state)
+      ? "error"
+      : [
+            "warning",
+            "degraded",
+            "paused",
+            "running",
+            "cancelling",
+            "stale",
+          ].includes(state)
+        ? "warning"
+        : "neutral";
+  return (
+    <AstryxBadge
+      style={{ alignSelf: "flex-start" }}
+      className={"badge " + state}
+      variant={variant}
+      label={state.replaceAll("_", " ")}
+    />
+  );
 }
 
-export function Empty({ children = "No records in this window" }: { children?: React.ReactNode }) {
-  return <p className="empty">{children}</p>;
+export function Empty({
+  children = "No records in this window",
+}: {
+  children?: string;
+}) {
+  return <EmptyState title={children} isCompact />;
 }
 
 export function Fields({ items }: { items: [string, React.ReactNode][] }) {
-  return <dl className="fields">{items.map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value ?? "--"}</dd></div>)}</dl>;
+  return (
+    <MetadataList columns="single">
+      {items.map(([key, value]) => (
+        <MetadataListItem key={key} label={key}>
+          {value ?? "--"}
+        </MetadataListItem>
+      ))}
+    </MetadataList>
+  );
 }
 
-export function MiniChart({ samples, field, label, unit }: { samples: Obj[]; field: (sample: Obj) => number | null; label: string; unit: string }) {
-  const values = samples.map(field);
-  const valid = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-  const minimum = valid.length ? Math.min(...valid) : 0;
-  const maximum = valid.length ? Math.max(...valid) : 1;
-  const span = Math.max(1, maximum - minimum);
-  let current = "";
-  const paths: string[] = [];
-  values.forEach((value, index) => {
-    if (value === null || !Number.isFinite(value)) { if (current) paths.push(current); current = ""; return; }
-    const x = 18 + index / Math.max(1, values.length - 1) * 524;
-    const y = 102 - (value - minimum) / span * 76;
-    current += (current ? " L" : "M") + `${x},${y}`;
-  });
-  if (current) paths.push(current);
-  return <section className="chart-panel"><div className="section-heading"><div><h2>{label}</h2><small>{unit}</small></div><strong>{valid.length ? number(valid.at(-1)) : "--"}</strong></div>
-    {valid.length ? <svg viewBox="0 0 560 126" role="img" aria-label={label + " history"}><path className="grid-line" d="M18 26H542M18 64H542M18 102H542" />
-      {paths.map((path, index) => <path className="data-line" key={index} d={path} />)}</svg> : <Empty>No current samples</Empty>}</section>;
+export function MiniChart({
+  samples,
+  field,
+  label,
+  unit,
+}: {
+  samples: Obj[];
+  field: (sample: Obj) => number | null;
+  label: string;
+  unit: string;
+}) {
+  const data = samples
+    .filter(
+      (sample) => typeof sample.at === "number" && Number.isFinite(sample.at),
+    )
+    .map((sample) => {
+      const value = field(sample);
+      return {
+        at: sample.at * 1000,
+        value:
+          typeof value === "number" && Number.isFinite(value) ? value : null,
+      };
+    })
+    .sort((a, b) => a.at - b.at);
+  const valid = data.filter(
+    (item) => typeof item.value === "number" && Number.isFinite(item.value),
+  );
+  return (
+    <Card className="chart-panel">
+      <Stack gap={4}>
+        <Stack
+          direction="horizontal"
+          justify="between"
+          align="center"
+          wrap="wrap"
+        >
+          <Heading level={2}>{label}</Heading>
+          <Text>{valid.length ? number(valid.at(-1)?.value) : "--"}</Text>
+        </Stack>
+        <Text type="supporting" color="secondary">
+          {unit}
+        </Text>
+        {valid.length ? (
+          <Chart
+            title={label + " history"}
+            data={data}
+            xKey="at"
+            series={[
+              line("value", { label: unit, curve: "linear", dots: true }),
+            ]}
+            height={220}
+            yBaseline="data"
+            axes={
+              <>
+                <ChartAxis
+                  position="left"
+                  tickFormat={(value) => String(value)}
+                />
+                <ChartAxis
+                  position="bottom"
+                  maxTicks={3}
+                  tickFormat={(value) =>
+                    new Date(Number(value)).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  }
+                />
+              </>
+            }
+          />
+        ) : (
+          <Empty>No current samples</Empty>
+        )}
+      </Stack>
+    </Card>
+  );
 }
 
-export function JobPanel({ job, refresh, error }: { job: Obj | null; refresh: () => void; error: (value: string) => void }) {
-  if (!job) return <section><Empty>No task has been created</Empty></section>;
+export function JobPanel({
+  job,
+  refresh,
+  error,
+}: {
+  job: Obj | null;
+  refresh: () => void;
+  error: (value: string) => void;
+}) {
+  if (!job)
+    return (
+      <Card>
+        <Stack gap={4}>
+          <Empty>No task has been created</Empty>
+        </Stack>
+      </Card>
+    );
   async function perform(action: "run" | "cancel") {
-    try { await api(`jobs/${job!.id}/${action}`, action === "run" ? { confirmed: true } : {}); refresh(); }
-    catch (reason) { error(String(reason)); }
+    try {
+      await api(
+        `jobs/${job!.id}/${action}`,
+        action === "run" ? { confirmed: true } : {},
+      );
+      refresh();
+    } catch (reason) {
+      error(String(reason));
+    }
   }
-  return <section className="job-panel"><div className="section-heading"><div><h2>{job.kind === "setup" ? "Device setup" : "Recovery"}</h2>
-    <small>Task {job.id.slice(0, 8)} · {when(job.created_at)}</small></div><Badge state={job.state} /></div>
-    <progress value={job.progress || 0} max="100" aria-label="Task progress" />
-    <ol className="steps">{job.steps.map((step: Obj) => <li key={step.id}><span className={step.state}>{step.state === "complete" ? <Check size={14} /> : <Activity size={14} />}</span>
-      <div><b>{step.id}</b><small>{step.error || step.state}</small></div></li>)}</ol>
-    {job.error ? <p className="alert error" role="alert">{job.error}</p> : null}
-    {job.cleanup ? <p className="alert">Cleanup: {job.cleanup.error || job.cleanup.reason || JSON.stringify(job.cleanup)}</p> : null}
-    <div className="actions">{["ready", "paused"].includes(job.state) ? <button className="primary" onClick={() => perform("run")}><Play size={15} />{job.state === "paused" ? "Run next step" : "Confirm and run"}</button> : null}
-      {!terminal(job) ? <button onClick={() => perform("cancel")}><Square size={15} />Cancel</button> : null}
-      <button onClick={() => download(`jobs/${job.id}`, `aoc-jetson-task-${job.id}.json`).catch(reason => error(String(reason)))}><Download size={15} />Report</button></div>
-  </section>;
+  return (
+    <Card className="job-panel">
+      <Stack gap={4}>
+        <Stack
+          className="section-heading"
+          gap={3}
+          direction="horizontal"
+          align="center"
+          justify="between"
+          wrap="wrap"
+        >
+          <Stack gap={4}>
+            <Heading level={2}>
+              {job.kind === "setup" ? "Device setup" : "Recovery"}
+            </Heading>
+            <Text type="supporting" color="secondary">
+              Task {job.id.slice(0, 8)} · {when(job.created_at)}
+            </Text>
+          </Stack>
+          <Badge state={job.state} />
+        </Stack>
+        <ProgressBar
+          value={job.progress || 0}
+          label="Task progress"
+          hasValueLabel
+        />
+        <Table
+          data={job.steps as Obj[]}
+          idKey="id"
+          columns={[
+            { key: "id", header: "Step", width: proportional(2) },
+            {
+              key: "state",
+              header: "State",
+              width: proportional(1),
+              renderCell: (step) => <Badge state={step.state} />,
+            },
+            {
+              key: "error",
+              header: "Detail",
+              width: proportional(2),
+              renderCell: (step) => step.error || "—",
+            },
+          ]}
+        />
+        {job.error ? <Banner status="error" title={job.error} /> : null}
+        {job.cleanup ? (
+          <Banner
+            status="info"
+            title="Cleanup"
+            description={
+              job.cleanup.error ||
+              job.cleanup.reason ||
+              JSON.stringify(job.cleanup)
+            }
+          />
+        ) : null}
+        <Stack
+          className="actions"
+          gap={3}
+          direction="horizontal"
+          align="center"
+          justify="between"
+          wrap="wrap"
+        >
+          {["ready", "paused"].includes(job.state) ? (
+            <Button
+              onClick={() => perform("run")}
+              label={
+                job.state === "paused" ? "Run next step" : "Confirm and run"
+              }
+              icon={<Play size={15} />}
+              variant="primary"
+            ></Button>
+          ) : null}
+          {!terminal(job) ? (
+            <Button
+              onClick={() => perform("cancel")}
+              label={"Cancel"}
+              icon={<Square size={15} />}
+            ></Button>
+          ) : null}
+          <Button
+            onClick={() =>
+              download(
+                `jobs/${job.id}`,
+                `aoc-jetson-task-${job.id}.json`,
+              ).catch((reason) => error(String(reason)))
+            }
+            label={"Report"}
+            icon={<Download size={15} />}
+          ></Button>
+        </Stack>
+      </Stack>
+    </Card>
+  );
 }

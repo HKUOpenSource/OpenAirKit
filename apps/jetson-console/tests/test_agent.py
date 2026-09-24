@@ -2,6 +2,7 @@ import copy
 import json
 from pathlib import Path
 import tempfile
+import threading
 import time
 import unittest
 from unittest.mock import patch
@@ -63,6 +64,38 @@ class AgentTests(unittest.TestCase):
         self.assertFalse(value["connected"])
         self.assertEqual(value["quality"], "stale")
         self.assertTrue(all(layer["state"] == "unknown" for layer in value["layers"]))
+
+    def test_probes_share_a_sampling_window_and_keep_individual_failures(self):
+        barrier = threading.Barrier(4, timeout=2)
+        probe = self.network.probe
+
+        def simultaneous(kind, cancel=None):
+            barrier.wait()
+            if kind == "public":
+                raise TimeoutError("Public probe timed out")
+            return probe(kind, cancel)
+
+        with patch.object(self.network, "probe", side_effect=simultaneous):
+            value = self.agent.sample(True)
+        self.assertTrue(value["connected"])
+        self.assertTrue(all(value["probes"][kind]["state"] == "ok"
+                            for kind in ("gateway", "upf", "ext_dn")))
+        self.assertEqual(value["probes"]["public"]["state"], "unknown")
+        self.assertIn("timed out", self.agent.probes["public"]["reason"])
+
+    def test_parallel_required_probe_failure_still_blocks_connection(self):
+        probe = self.network.probe
+
+        def failure(kind, cancel=None):
+            if kind == "upf":
+                raise TimeoutError("UPF probe timed out")
+            return probe(kind, cancel)
+
+        with patch.object(self.network, "probe", side_effect=failure):
+            value = self.agent.sample(True)
+        self.assertFalse(value["connected"])
+        self.assertEqual(value["health"], "unknown")
+        self.assertEqual(value["probes"]["upf"]["state"], "unknown")
 
     def test_setup_is_single_stack_data_only_and_preserves_residual_contexts(self):
         job = self.agent.create("setup", self.config["revision"])

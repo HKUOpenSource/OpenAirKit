@@ -132,14 +132,23 @@ class Network:
         try:
             state = inspect(self.config, require_management=False)
             interface = state["data_interface"]
-            counters = [int((Path("/sys/class/net") / interface / "statistics" / name).read_text())
+            device = Path("/sys/class/net") / interface
+            ifindex = int((device / "ifindex").read_text())
+            counters = [int((device / "statistics" / name).read_text())
                         for name in ("rx_bytes", "tx_bytes")]
+            if int((device / "ifindex").read_text()) != ifindex:
+                raise ValueError("Data interface changed while sampling counters")
+            identity = (interface, ifindex)
+            sampled_at = time.monotonic()
             rates = [None, None]
             if self.previous:
-                previous_at, previous = self.previous
-                if at > previous_at and all(new >= old for new, old in zip(counters, previous)):
-                    rates = [(new - old) * 8 / (at - previous_at) for new, old in zip(counters, previous)]
-            self.previous = (at, counters)
+                previous_identity, previous_at, previous = self.previous
+                if (identity == previous_identity and sampled_at > previous_at
+                        and all(new >= old for new, old in zip(counters, previous))):
+                    rates = [(new - old) * 8 / (sampled_at - previous_at)
+                             for new, old in zip(counters, previous)]
+            # Renames, replacements and counter resets start a fresh interval.
+            self.previous = (identity, sampled_at, counters)
             try:
                 public_route = route_to(targets(self.config)["public"], state["data_address"])
             except (OSError, ValueError, RuntimeError):
@@ -148,6 +157,7 @@ class Network:
                     "rx_bps": rates[0], "tx_bps": rates[1],
                     "ipv6": {"quality": "unavailable", "reason": "IPv6 data path is not verified"}}
         except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as error:
+            self.previous = None
             try:
                 management = inspect_management(self.config)
             except (OSError, ValueError, RuntimeError) as guard:
