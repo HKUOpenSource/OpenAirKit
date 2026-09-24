@@ -28,7 +28,8 @@ def build(output, wheels):
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(source / "frontend/dist", output / "frontend")
     shutil.copytree(ROOT / "deploy/jetson", output / "deploy",
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+                    # Operator scripts are delivered separately in ~/aoc-ops.
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "platformctl.py", "start.sh", "stop.sh"))
     shutil.copyfile(source / "requirements-jetson.lock", output / "requirements.lock")
     shutil.copyfile(ROOT / "config/jetson.example.json", output / "device.example.json")
     shutil.copytree(wheels, output / "wheels")

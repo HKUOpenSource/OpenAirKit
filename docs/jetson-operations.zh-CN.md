@@ -2,7 +2,42 @@
 
 ## 服务生命周期
 
-所有生命周期操作都使用已安装的管理器：
+日常在设备本地执行独立部署的快捷脚本：
+
+```sh
+~/aoc-ops/jetson/start.sh
+~/aoc-ops/jetson/stop.sh
+/usr/bin/python3 -I ~/aoc-ops/jetson/platformctl.py status
+```
+
+使用已完成 commissioning 的 SSH 用户执行。脚本使用系统 Python 和既有
+`sudo -n /usr/local/sbin/aoc-maintain` 权限，不交互询问密码。启动并检查两个 V2 服务，
+另行显示注册、PDU、数据连接、维护模式和恢复暂停状态。UE 未连接时显示警告，不自动
+重连；不会请求接管、退出维护或模组恢复。执行器现有停止与恢复策略继续生效，停止
+执行器可能持久化恢复暂停状态。
+
+重复启动只检查已运行服务，不重启；重复停止确认两个服务、设备 socket 和网页监听均已
+停止。启动要求设备已完成 commissioning，脚本不初始化新安装。失败时保留现场并停止
+后续步骤。每次 helper 调用最多 330 秒，每次健康等待最多 60 秒。超时或中断后 systemd
+任务可能仍在运行，重试前应先查询状态。
+
+同一用户的各份脚本共用操作锁。不要同时通过网页或其他入口执行生命周期操作；此锁不
+替代维护工具自身的权限及互斥检查。退出码：成功 0、执行或验证失败 1、参数错误 2、
+脚本忙 3。`status` 成功读取状态即返回 0，服务停止不算查询失败。运行输出使用英文。
+
+从设备上的仓库安装时，先备份已有目标目录，再复制三个独立脚本：
+
+```sh
+mkdir -p ~/aoc-ops/jetson
+install -m 0755 deploy/jetson/start.sh deploy/jetson/stop.sh \
+  deploy/jetson/platformctl.py ~/aoc-ops/jetson/
+```
+
+执行前核对传输哈希，也可通过 SSH 复制这些文件，设备不需要完整仓库。脚本从应用发布包
+排除，不开启开机自启；撤回时恢复备份脚本，不回滚应用。脚本中不要加入站点地址。
+实机结果见 [2026-09-24 启停验收](acceptance/2026-09-24-platform-lifecycle.zh-CN.md)。
+
+管理员仍可使用底层已安装管理器：
 
 ```sh
 sudo /opt/agentic-ocudu/jetson/current/venv/bin/python -I \
