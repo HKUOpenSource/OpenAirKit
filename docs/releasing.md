@@ -8,8 +8,11 @@ artifacts. Release one platform at a time.
 1. Update the backend `__version__`, frontend package files, `CHANGELOG.md` and
    `RELEASE-VERSION` source together.
 2. Confirm Python locks, npm lockfiles, upstream revisions and image digests.
-3. Run `make check` and the selected frontend production build.
-4. Run `make docs-audit`, `make release-audit` and `make license-audit`.
+3. Run `make ci` for backend tests, production frontend builds and repository audits.
+4. Run the manual `Extended checks` workflow on the release candidate, covering
+   Jetson Python 3.10, Spark Python 3.12 and both browser suites. These checks are
+   not part of the minimal automatic PR gate. Resolve failures before release;
+   moving a test to manual execution does not make a failure acceptable.
 
 ## Build
 

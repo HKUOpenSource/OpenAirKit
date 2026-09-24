@@ -1,4 +1,4 @@
-.PHONY: check-python install-dev test-jetson-backend test-spark-backend typecheck build-jetson-frontend build-spark-frontend build-jetson-release build-spark-release e2e-jetson e2e-spark docs-audit release-audit license-audit shell-check check
+.PHONY: check-python install-dev test-jetson-backend test-spark-backend typecheck build-jetson-frontend build-spark-frontend build-jetson-release build-spark-release e2e-jetson e2e-spark docs-audit release-audit license-audit shell-check check ci
 VENV ?= .venv
 PYTHON ?= $(VENV)/bin/python
 BOOTSTRAP_PYTHON ?= python3
@@ -46,5 +46,8 @@ license-audit:
 shell-check:
 	find deploy scripts -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
 check: check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
+
+# One local/CI entry point; production builds already include TypeScript checks.
+ci: check-python test-jetson-backend test-spark-backend test-stack build-jetson-frontend build-spark-frontend docs-audit release-audit license-audit shell-check
 
 .PHONY: test-stack

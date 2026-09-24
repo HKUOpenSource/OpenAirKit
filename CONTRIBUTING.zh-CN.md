@@ -24,7 +24,23 @@ Conventional Commits。一次合并请求尽量只涉及一个应用或一项共
 
 ## 验证
 
-开发时运行最小相关目标，提交评审前运行 `make check`。前端或发布修改还应运行
-对应构建目标。硬件验收只在 `docs/acceptance/` 保存脱敏摘要。
+开发时运行最小相关目标，提交评审前运行 `make ci`。它执行两端后端测试、一次
+共享协议栈/发布测试、两端前端生产构建（含类型检查）和仓库审计。先安装后端
+开发依赖，前端构建会自行运行 `npm ci`。使用 Python 3.12 和 Node.js 22 与自动
+CI 对齐；已有 `make check` 仍可用于检查已准备好的开发环境。
+
+每个 PR 只运行一个 Ubuntu 24.04 下的 `Quick checks` 作业。合并后不重复运行，
+直接推送 main 不会自动检查；也可手动启动 `CI` 工作流。浏览器 E2E 和 Jetson
+Python 3.10/Spark Python 3.12 矩阵移到手动的 `Extended checks` 工作流。
+修改浏览器行为或发布前运行扩展检查，它使用模拟服务，不操作硬件。精简后的
+自动 CI 不证明浏览器行为或 Jetson Python 3.10 兼容性；已知 E2E 时序问题仍会
+在手动运行中暴露，本次调整不修复这些问题。
+
+问题是每次修改需要哪些检查。仓库无 CodeGraph 索引，路径为
+`pull_request → CI → make ci`，可选验证路径为
+`workflow_dispatch → Extended checks → 后端测试 / e2e-*`。自动检查保留代码、
+构建和仓库验证，移除浏览器启动、重复的共享测试及合并后的重跑。修改此约定时
+验证工作流语法并运行 `make ci`。硬件验收仅在 `docs/acceptance/` 保存脱敏摘要，
+发布验证见[发布指南](docs/releasing.zh-CN.md)。
 
 不得提交凭据、订阅身份、生产地址、数据库、日志、抓包、发布生成物或未脱敏截图。

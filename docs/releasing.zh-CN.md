@@ -7,8 +7,10 @@ Jetson Console 与 Spark Platform 使用独立版本和发布包，一次只发�
 1. 同步更新后端 `__version__`、前端 package 文件、`CHANGELOG.md` 和
    `RELEASE-VERSION` 来源。
 2. 核验 Python 锁、npm lockfile、上游源码版本和镜像摘要。
-3. 运行 `make check` 以及对应前端 production build。
-4. 运行 `make docs-audit`、`make release-audit`、`make license-audit`。
+3. 运行 `make ci`，覆盖后端测试、前端生产构建及仓库审计。
+4. 对候选发布手动运行 `Extended checks` 工作流，覆盖 Jetson Python 3.10、
+   Spark Python 3.12 和两端浏览器测试。这些检查不属于最小自动 PR 检查；
+   发布前仍须处理失败，改为手动执行不代表可以接受失败。
 
 ## 构建
 
