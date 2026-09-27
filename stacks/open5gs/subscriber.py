@@ -55,7 +55,7 @@ const fs = require('fs');
 const credentials = JSON.parse(fs.readFileSync('/run/secrets/subscriber-db.json', 'utf8'));
 const core = db.getSiblingDB('open5gs');
 if (!core.auth(credentials.username, credentials.password)) throw new Error('auth');
-const candidate = EJSON.parse(''' + payload + ''');
+const candidate = EJSON.parse(''' + payload + ''', {relaxed: false});
 core.subscribers.createIndex({imsi: 1}, {unique: true});
 if (core.subscribers.countDocuments({imsi: candidate.imsi}) !== 0) {
   print(JSON.stringify({inserted: false, reason: 'already_exists', sqn_changed: false}));
@@ -66,6 +66,7 @@ const saved = core.subscribers.findOne({imsi: candidate.imsi});
 const session = saved.slice[0].session[0];
 if (saved.slice.length !== 1 || saved.slice[0].sst !== 1 || saved.slice[0].session.length !== 1 ||
     session.name !== 'oai' || session.type !== 1 || session.qos.index !== 9 ||
+    saved.security.sqn._bsontype !== 'Long' ||
     saved.security.sqn.toString() !== '0') throw new Error('readback');
 print(JSON.stringify({inserted: true, dnn: 'oai', ipv4: true, sst: 1, five_qi: 9,
   sqn_policy: 'independent-zero-initialization', resynchronization_verified: false}));
