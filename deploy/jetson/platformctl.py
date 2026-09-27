@@ -187,20 +187,28 @@ class Controller:
         if not all(running(v) for v in value.values()):
             if any(v["ActiveState"] == "active" and not running(v) for v in value.values()):
                 raise RuntimeError("An active service is unhealthy; no restart will be attempted")
-            maintain("start")
+        # The manager also prepares owned routes and resumes observation when
+        # services are already running in maintenance mode.
+        maintain("start")
         wait_for(self.ready, "Jetson services and web health")
         # A working RPC is required; disconnected UE evidence is informational.
-        maintain("ue-status")
-        print("Services ready. UE connectivity is reported separately.", flush=True)
+        state = maintain("ue-status")
+        if state.get("maintenance") is not False or state.get("recovery_paused") is not True:
+            raise RuntimeError("Services started, but observation was not resumed with recovery paused")
+        print("Services and data routes ready; observation enabled, automatic recovery paused. "
+              "UE connectivity is reported separately.", flush=True)
 
     def stop(self):
         value = self.stable()
-        if not all(stopped(v) for v in value.values()):
-            maintain("stop")
+        # Always retry journal-aware cleanup, including after a partial stop.
+        maintain("stop")
         wait_for(lambda: all(stopped(v) for v in units().values())
                  and device_socket_state() == "absent" and not listening(), "Jetson shutdown")
 
     def details(self, value):
+        state = "ready" if all(running(v) for v in value.values()) else (
+            "stopped" if all(stopped(v) for v in value.values()) else "partial")
+        print("Services: " + state, flush=True)
         if running(value[UNITS[1]]):
             print("Web health: " + json.dumps(health()), flush=True)
         if running(value[UNITS[0]]):
@@ -209,9 +217,14 @@ class Controller:
             fields = ("quality", "health", "connected", "registered", "data_session_active",
                       "lab_policy_match", "management_protected", "maintenance", "recovery_paused")
             print("UE state: " + json.dumps({k: state.get(k) for k in fields}), flush=True)
+            observation = ("paused" if state.get("maintenance") else
+                           "current" if state.get("quality") == "ok" else "unavailable")
+            connectivity = ("verified" if state.get("quality") == "ok" and state.get("connected")
+                            and not state.get("maintenance") else "not verified")
+            print("Observation: " + observation + "; connectivity: " + connectivity, flush=True)
             if state.get("quality") != "ok" or not state.get("connected"):
                 print("WARNING: UE connection is not currently verified; no recovery was requested.", flush=True)
-        print("Web listener: " + ("present" if listening() else "absent"), flush=True)
+        print("Web listener: " + ("present (ownership not inferred)" if listening() else "absent"), flush=True)
         print("Device socket: " + device_socket_state(), flush=True)
 
 

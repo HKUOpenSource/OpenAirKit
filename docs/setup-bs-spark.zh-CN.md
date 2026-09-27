@@ -17,6 +17,18 @@ platform installer 完成 preflight 和 install。安装位置为
 `/opt/agentic-ocudu/monitor`，三个平台服务默认不开机自启。安装监测平台不会
 启动或重启协议栈。
 
+在解压后的 Spark 发布目录使用实际安装器动作：
+
+```sh
+python3 -I -B install.py verify --path .
+python3 -I -B install.py check-host --path .
+sudo python3 -I -B install.py install --path .
+```
+
+协议栈准备完成后，批准匹配的[维护包](../deploy/maintenance/README.md)，并安装
+[Spark 生命周期脚本](spark-operations.zh-CN.md)。完整启动和状态检查将 N2 建链
+与服务进程状态分开验证。
+
 ## 准备协议栈
 
 使用 `deploy/spark/stack` 和 `scripts/spark` 下的工具。接收 UE 流量前验证 B210

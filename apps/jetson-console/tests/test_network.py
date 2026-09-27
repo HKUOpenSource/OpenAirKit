@@ -1,4 +1,5 @@
 import copy
+from contextlib import contextmanager
 import json
 from pathlib import Path
 import subprocess
@@ -7,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from aoc_jetson.config import DEVICE, REFERENCE, SELECTION, DIAGNOSTICS, RECOVERY, migrate, validate
-from aoc_jetson.network import HELPER_ENTRY, Network, helper
+from aoc_jetson.network import HELPER_ENTRY, Network, helper, inspect_management
 
 
 def configuration(root):
@@ -125,7 +126,7 @@ class NetworkTests(unittest.TestCase):
         route.return_value = {"dev": "rndis0"}
         result = helper(self.config, "prepare")
         self.assertEqual(result["mutations"], 0)
-        self.assertTrue((self.root / "network-state.json").exists())
+        self.assertFalse((self.root / "network-state.json").exists())
 
     @patch("aoc_jetson.network.os.geteuid", return_value=0)
     @patch("aoc_jetson.network.inspect")
@@ -133,8 +134,90 @@ class NetworkTests(unittest.TestCase):
     def test_prepare_rejects_wrong_data_path(self, route, inspect_mock, _euid):
         inspect_mock.return_value = self.state
         route.return_value = {"dev": "wifi0"}
-        with self.assertRaisesRegex(ValueError, "not bound"):
+        with self.assertRaisesRegex(ValueError, "gateway"):
             helper(self.config, "prepare")
+
+    @contextmanager
+    def kernel(self, rows, fail=None):
+        commands = []
+        def lookup(address, source=None):
+            if address == self.config['diagnostics']['rndis_gateway']:
+                return {'dev': 'rndis0'}
+            return rows.get(address + '/32', {'dev': 'wifi0'})
+        def ip(*args):
+            self.assertIn('-N', args)
+            return [rows[args[-1]]] if args[-1] in rows else []
+        def execute(argv):
+            commands.append(argv)
+            destination = argv[4]
+            if argv[3] == 'add':
+                rows[destination] = {'dst': destination.removesuffix('/32'), 'dev': argv[8],
+                                     'gateway': argv[6], 'protocol': '186'}
+                if fail:
+                    raise fail
+            else:
+                del rows[destination]
+            return ''
+        with patch('aoc_jetson.network.os.geteuid', return_value=0), \
+                patch('aoc_jetson.network.inspect', return_value=self.state), \
+                patch('aoc_jetson.network.route_to', side_effect=lookup), \
+                patch('aoc_jetson.network.ip_json', side_effect=ip), \
+                patch('aoc_jetson.network.run', side_effect=execute):
+            yield commands
+
+    def test_independent_start_stop_routes_preserve_existing_routes(self):
+        existing = {'dst': '10.0.0.1', 'dev': 'rndis0', 'gateway': '192.168.225.1', 'protocol': 'static'}
+        rows = {'10.0.0.1/32': existing}
+        with self.kernel(rows) as commands:
+            self.assertEqual(helper(self.config, 'prepare')['mutations'], 2)
+            self.assertEqual(helper(self.config, 'prepare')['mutations'], 0)
+            with patch('aoc_jetson.network.inspect', side_effect=ValueError('Modem absent')):
+                helper(self.config, 'restore')
+                helper(self.config, 'restore')
+        self.assertEqual(rows, {'10.0.0.1/32': existing})
+        self.assertEqual(len(commands), 4)
+
+    def test_conflict_is_found_before_any_route_is_added(self):
+        rows = {'172.28.81.15/32': {'dev': 'wifi0', 'protocol': 'static'}}
+        with self.kernel(rows) as commands, self.assertRaisesRegex(ValueError, 'Conflicting'):
+            helper(self.config, 'prepare')
+        self.assertEqual(commands, [])
+
+    def test_changed_route_is_never_deleted(self):
+        rows = {}
+        with self.kernel(rows) as commands:
+            helper(self.config, 'prepare')
+            rows['172.28.81.15/32']['gateway'] = '192.168.225.2'
+            before = list(commands)
+            with self.assertRaisesRegex(ValueError, 'owned route changed'):
+                helper(self.config, 'restore')
+            self.assertEqual(commands, before)
+        self.assertTrue((self.root / 'network-state.json').exists())
+
+    def test_timeout_does_not_claim_or_delete_an_uncertain_route(self):
+        rows = {}
+        with self.kernel(rows, TimeoutError('Uncertain command outcome')):
+            with self.assertRaises(TimeoutError):
+                helper(self.config, 'prepare')
+            with self.assertRaisesRegex(ValueError, 'uncertain outcome'):
+                helper(self.config, 'restore')
+        self.assertEqual(len(rows), 1)
+
+    def test_routes_removed_by_kernel_allow_offline_cleanup(self):
+        rows = {}
+        with self.kernel(rows):
+            helper(self.config, 'prepare')
+            rows.clear()
+            helper(self.config, 'restore')
+        self.assertFalse((self.root / 'network-state.json').exists())
+
+    def test_tunnel_route_alone_does_not_prove_management_protection(self):
+        with patch('aoc_jetson.network.global_addresses', return_value=['192.0.2.2']), \
+                patch('aoc_jetson.network.route_to', return_value={'dev': 'tailscale0'}), \
+                patch('aoc_jetson.network.ip_json', return_value=[
+                    {'dev': 'rndis0', 'metric': 100}, {'dev': 'wifi0', 'metric': 600}]):
+            with self.assertRaisesRegex(ValueError, 'preferred IPv4 default'):
+                inspect_management(self.config)
 
     @patch("aoc_jetson.network.run")
     def test_uncommissioned_helper_does_not_run_commands(self, run_mock):

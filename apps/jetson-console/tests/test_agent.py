@@ -38,6 +38,15 @@ class AgentTests(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
+    def test_resume_route_failure_preserves_maintenance_without_modem_writes(self):
+        self.agent.set_maintenance(True)
+        self.network.failure = 'prepare'
+        with patch.object(self.modem, 'write') as write, self.assertRaisesRegex(ValueError, 'route failure'):
+            self.agent.set_maintenance(False)
+        self.assertTrue(self.agent.maintenance)
+        self.assertTrue(self.agent.store.setting('recovery_paused', False))
+        write.assert_not_called()
+
     def wait(self, job):
         self.agent.launch(job["id"], True)
         self.agent.worker.join(3)

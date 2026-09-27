@@ -466,6 +466,8 @@ class Agent:
             if self.current:
                 raise Conflict("Cancel the active operation and wait for it to finish")
             with self.hardware:
+                if not enabled:
+                    self.network.action("prepare")
                 self.maintenance = enabled
                 self.modem.close()
                 self.probes.clear()

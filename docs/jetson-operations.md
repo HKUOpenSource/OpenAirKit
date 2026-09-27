@@ -10,20 +10,29 @@ For normal local operation, use the separately deployed shortcuts:
 /usr/bin/python3 -I ~/aoc-ops/jetson/platformctl.py status
 ```
 
-Run these as the commissioned SSH user. They use system Python and the existing
-`sudo -n /usr/local/sbin/aoc-maintain` permission, with no interactive password
-prompt. Both V2 services are started and checked; registration, PDU, data connection,
-maintenance and recovery pause are reported separately. A disconnected UE produces
-a warning, not an automatic reconnect. These scripts never request takeover,
-maintenance exit or modem recovery. Existing executor shutdown/recovery policy still
-applies; stopping the executor can persist its recovery pause.
+Run these as the commissioned SSH user with the matching 0.6.0 application and
+restricted maintenance approval. Start checks resource ownership, prepares missing
+host routes for the configured UPF, ext-DN and public probe, starts both services,
+and exits maintenance with automatic recovery paused. It does not reset the modem
+or configure its SIM/PDU. A disconnected UE remains a separate warning.
 
-Repeated start checks the running services without restarting them. Repeated stop
-confirms both services, the device socket and web listener are stopped. Startup
-requires prior commissioning; the scripts do not initialize a new installation.
-Failures preserve current state and stop subsequent steps. Helper calls time out
-after 330 seconds; each health wait is bounded to 60 seconds. An interrupted or timed
-out command can leave a systemd job running: query status before retrying.
+Existing correct routes are reused. Missing routes are added only when no conflicting
+exact host route exists; defaults, NetworkManager profiles and external services
+are not modified. Owned routes are recorded privately with numeric protocol readback.
+Wi-Fi must remain the preferred management default. Startup rejects uncertain
+management protection, conflicting routes and active device operations.
+
+Repeated start rechecks route preparation and observation without restarting healthy
+services. Stop terminates the executor and Web service before removing only matching
+owned routes. Cleanup also runs on a repeated stop and works after device removal.
+Changed routes or ambiguous command outcomes retain their journal and cause an error;
+manual inspection is required rather than deleting a route with uncertain ownership.
+Startup failures preserve completed stages; `stop` performs owned-resource cleanup.
+
+Status separates services, observation (`paused`, `current`, `unavailable`) and
+connectivity (`verified`, `not verified`). A listening port alone does not establish
+ownership or device connectivity. Each helper call is bounded to 330 seconds and each
+health wait to 60 seconds. After timeout, query status before retrying.
 
 One user-level lock serializes these scripts across copies. Do not run lifecycle
 actions through the UI or another entrypoint concurrently. The lock does not replace
@@ -31,8 +40,9 @@ the helper's own access/locking checks. Exit codes are 0 for success, 1 for exec
 or verification failure, 2 for invalid arguments and 3 for a busy script. A successful
 `status` query returns 0 even when services are stopped. Runtime output is English.
 
-To install from a checkout on the device, first back up any existing destination,
-then copy only the three standalone scripts:
+After backing up existing shortcuts, copy the three scripts from the verified
+release (or the matching checkout). The example below uses checkout paths;
+inside an unpacked release, use `deploy/` in place of `deploy/jetson/`:
 
 ```sh
 mkdir -p ~/aoc-ops/jetson
@@ -41,11 +51,12 @@ install -m 0755 deploy/jetson/start.sh deploy/jetson/stop.sh \
 ```
 
 Verify transfer hashes before execution. The same files can be copied over SSH;
-no checkout is needed on the device. They are excluded from application releases,
-do not enable boot startup, and can be reverted by restoring their saved copies
-without rolling back the application. Do not put site addresses in these scripts.
+no checkout is needed on the device. They are included in 0.6.0 application releases
+and do not enable boot startup. Upgrade the application, approved maintenance bundle
+and shortcuts together; do not pair new shortcuts with an older manager. Do not put site addresses in these scripts.
 See the [2026-09-24 lifecycle acceptance](acceptance/2026-09-24-platform-lifecycle.md)
-for the completed device checks.
+for historical device checks. The two-device 0.6.0 upgrade and independent
+stop/start checks are in the [0.6.0 hardware acceptance](acceptance/2026-09-27-independent-lifecycle-deployment.md).
 
 The underlying installed manager remains available to administrators:
 
@@ -72,7 +83,8 @@ device identity stop the workflow.
 
 Maintenance mode waits for the current command, suspends collection and
 recovery, and releases the serial port. Leaving maintenance rediscovers the
-device and reads current state; it never replays an interrupted command.
+device, prepares configured data routes and reads current state. It never replays an
+interrupted command; route preparation failure leaves maintenance enabled.
 
 ## Recovery and connectivity
 
