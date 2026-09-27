@@ -18,7 +18,8 @@ issued directly; all changes use the existing noninteractive `aoc-maintain` acti
 Unrelated containers and persistent data are retained.
 
 Start requires all 12 core containers healthy, gNB active after its existing systemd
-startup checks, and a healthy monitor/collector. These checks do not certify UE
+startup checks, a successful N2 NG Setup from the Open5GS infoAPI, and a healthy
+monitor/collector. A running gNB alone is not sufficient. These checks do not certify UE
 attachment. Already-running components are checked without restart; missing stages
 are started in dependency order. An active unhealthy core or partially running core
 containers cause an error rather than an implicit restart. A startup failure preserves
@@ -31,7 +32,9 @@ status first: a systemd job may still be running. A user-level lock prevents ove
 script runs, including copies, but does not serialize all UI/administrator paths;
 do not mix those entrypoints during an operation. The helper retains its own checks.
 Exit codes: 0 success, 1 execution/verification failure, 2 invalid arguments, 3 busy.
-Successful `status` queries return 0 even for a stopped stack. Output is English.
+Successful `status` queries return 0 even for a stopped stack. Status distinguishes
+core health, radio process state and verified N2 setup; UE connectivity requires
+separate device evidence. Output is English.
 
 The standalone scripts require system Python, systemd tools, `ss`, Docker read access
 and the existing restricted maintenance permission. After backing up an existing

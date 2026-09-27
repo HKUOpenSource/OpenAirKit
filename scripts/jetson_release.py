@@ -28,12 +28,11 @@ def build(output, wheels):
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(source / "frontend/dist", output / "frontend")
     shutil.copytree(ROOT / "deploy/jetson", output / "deploy",
-                    # Operator scripts are delivered separately in ~/aoc-ops.
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "platformctl.py", "start.sh", "stop.sh"))
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copyfile(source / "requirements-jetson.lock", output / "requirements.lock")
     shutil.copyfile(ROOT / "config/jetson.example.json", output / "device.example.json")
     shutil.copytree(wheels, output / "wheels")
-    (output / "RELEASE-VERSION").write_text("0.5.1\n")
+    (output / "RELEASE-VERSION").write_text("0.6.0\n")
     (output / "THIRD_PARTY_NOTICES.md").write_text("Dependencies are supplied from the locked offline wheelhouse.\n")
     (output / "THIRD_PARTY_DEPENDENCIES.json").write_text(json.dumps({"platform":"jetson","lock":"requirements.lock","wheelhouse":True}, indent=2) + "\n")
     (output / "THIRD_PARTY_LICENSES").mkdir()

@@ -125,7 +125,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn("backend/aoc_jetson/agent.py", names)
             self.assertIn("frontend/index.html", names)
             for script in ("platformctl.py", "start.sh", "stop.sh"):
-                self.assertNotIn("deploy/" + script, names)
+                self.assertIn("deploy/" + script, names)
             self.assertNotIn("backend/aoc_jetson_v1/agent.py", names)
             self.assertFalse(any("retired-integration" in name.lower() for name in names))
 
@@ -177,10 +177,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('"device_started": False', manager)
         self.assertIn("socket.SO_REUSEADDR", manager)
 
-    def test_site_guard_checks_real_controllers_and_serial_owner(self):
+    def test_site_guard_checks_resources_without_external_service_dependencies(self):
         guard = (ROOT / "deploy/jetson/site_guard.py").read_text()
-        self.assertIn("oai-console.service", guard)
-        self.assertIn("aoc-jetson-agent.service", guard)
+        self.assertNotIn("oai-console.service", guard)
+        self.assertNotIn("aoc-jetson-agent.service", guard)
+        self.assertNotIn('"systemctl", "stop"', guard)
         self.assertIn('["fuser", port]', guard)
 
 

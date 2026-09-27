@@ -1,4 +1,4 @@
-"""Offline V2 install, explicit serial takeover, bounded stop and rollback."""
+"""Offline install, independent commissioning and complete OCUDU lifecycle."""
 import argparse
 from contextlib import closing
 import getpass
@@ -23,7 +23,6 @@ ETC = Path("/etc/aoc-v2-jetson")
 STATE = Path("/var/lib/aoc-v2-jetson")
 WEB_STATE = Path("/var/lib/aoc-v2-jetson-web")
 UNITS = ("aoc-v2-jetson-device.service", "aoc-v2-jetson-web.service")
-OLD_CONTROLLERS = ("oai-console.service", "aoc-jetson-agent.service")
 
 
 def run(argv, timeout=30, check=True):
@@ -237,10 +236,42 @@ def stop(emit=True):
     socket_path = Path("/run/aoc-v2-jetson/device.sock")
     if socket_path.exists():
         raise ValueError("Device socket remains after stop")
-    result = {"stopped": True, "seconds": round(time.monotonic() - started, 3), "results": results}
+    if (STATE / "network-state.json").exists():
+        network_action("restore")
+    result = {"stopped": True, "owned_routes": "cleared",
+              "seconds": round(time.monotonic() - started, 3), "results": results}
     if emit:
         print(json.dumps(result))
     return result
+
+
+def network_action(action):
+    return json.loads(output([str(BASE / "current/venv/bin/python"), "-I", "-B",
+                              str(BASE / "current/deploy/network_entry.py"),
+                              "--config", str(ETC / "device.json"), "--action", action], 50))
+
+
+def device_request(request):
+    with socket.socket(socket.AF_UNIX) as client:
+        client.settimeout(55)
+        client.connect('/run/aoc-v2-jetson/device.sock')
+        client.sendall(json.dumps(request).encode() + b'\n')
+        with client.makefile('rb') as reader:
+            response = json.loads(reader.readline(1024 * 1024))
+    if response.get('ok') is not True:
+        raise ValueError('Device request failed: ' + str(response.get('error', 'unknown'))[:300])
+    return response['result']
+
+
+def wait_device():
+    deadline = time.monotonic() + 15
+    while True:
+        try:
+            return device_request({'op': 'status'})
+        except (OSError, ValueError):
+            if time.monotonic() >= deadline:
+                raise ValueError('Device RPC did not become ready') from None
+            time.sleep(.25)
 
 
 def start():
@@ -248,30 +279,41 @@ def start():
     from aoc_jetson.config import load
     config = load(ETC / "device.json")
     if not config.get("commissioned") or not config.get("management_verified"):
-        raise ValueError("Run explicit takeover before starting the device executor")
+        raise ValueError("Run commission before starting the device executor")
+    if unit_state(UNITS[1]) != "active":
+        with socket.socket() as listener:
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.bind(("127.0.0.1", 8878))
+    if unit_state(UNITS[0]) == "active":
+        if device_request({'op': 'status'}).get('active_job'):
+            raise ValueError('A device operation is active; finish or cancel it before starting')
+    else:
+        output([str(BASE / "current/venv/bin/python"), "-I", "-B",
+                str(BASE / "current/deploy/site_guard.py")])
+    routes = network_action("prepare")
     output(["systemctl", "start", "aoc-v2-jetson-web.service", "aoc-v2-jetson-device.service"], 70)
-    print(json.dumps({"started": True, "services": {unit: unit_state(unit) for unit in UNITS}}))
+    state = wait_device()
+    if state.get('maintenance') is not False or state.get('recovery_paused') is not True:
+        device_request({'op': 'maintenance', 'enabled': False})
+    print(json.dumps({"started": True, "observation": "enabled", "recovery_paused": True,
+                      "routes": routes, "services": {unit: unit_state(unit) for unit in UNITS}}))
 
 
-def takeover(confirmed):
-    if not confirmed:
-        raise ValueError("Confirm the previous console is in maintenance before takeover")
-    for unit in OLD_CONTROLLERS:
-        run(["systemctl", "stop", unit], timeout=70, check=False)
-    deadline = time.monotonic() + 70
-    while any(unit_state(unit) not in {"inactive", "failed", "not-found"} for unit in OLD_CONTROLLERS):
-        if time.monotonic() >= deadline:
-            raise ValueError("A previous device controller did not stop within 70 seconds")
-        time.sleep(1)
-    for port in Path("/dev").glob("ttyUSB*"):
-        owner = run(["fuser", str(port)], timeout=5, check=False)
-        if owner.returncode != 1:
-            raise ValueError("Serial ownership could not be confirmed free: " + port.name)
+def commission(spark_address, wifi_interface):
+    if any(unit_state(unit) == "active" for unit in UNITS):
+        raise ValueError("Stop the OCUDU platform before commissioning")
     sys.path.insert(0, str(BASE / "current/backend"))
     from aoc_jetson.config import load, validate
+    from aoc_jetson.hardware import discover
     from aoc_jetson.modem import Modem
     from aoc_jetson.network import inspect
     config = load(ETC / "device.json")
+    config['management'].update(spark_address=spark_address, wifi_interface=wifi_interface)
+    config = validate(config)
+    port = discover(config)['at_port']
+    owner = run(["fuser", port], timeout=5, check=False)
+    if owner.returncode != 1:
+        raise ValueError("Modem serial port is in use; stop its owner before commissioning")
     management = inspect(config)
     modem = Modem(config)
     try:
@@ -283,17 +325,27 @@ def takeover(confirmed):
     config.update(sim_sha256=fingerprint, commissioned=True, management_verified=True)
     config = validate(config)
     private_write(ETC / "device.json", config)
-    output(["systemctl", "start", "aoc-v2-jetson-device.service"], 70)
-    print(json.dumps({"takeover": True, "device": unit_state(UNITS[0]),
+    print(json.dumps({"commissioned": True, "device_started": False,
                       "management": {"wifi_interface": management["wifi_interface"],
                                      "tailscale_interface": management["tailscale_interface"]},
-                      "maintenance": True}))
+                      "next_action": "start"}))
 
 
 def status():
+    device = {"observation": "stopped", "connectivity": "not_verified"}
+    if unit_state(UNITS[0]) == "active":
+        try:
+            value = device_request({'op': 'status'})
+            device = {"observation": "paused" if value.get('maintenance') else value.get('quality', 'unknown'),
+                      "connectivity": "verified" if value.get('quality') == 'ok'
+                      and value.get('connected') and not value.get('maintenance') else "not_verified",
+                      "recovery_paused": value.get('recovery_paused')}
+        except (OSError, ValueError):
+            device = {"observation": "unavailable", "connectivity": "not_verified"}
     print(json.dumps({"release": str((BASE / "current").resolve()) if (BASE / "current").exists() else None,
                       "services": {unit: unit_state(unit) for unit in UNITS},
-                      "previous_controllers": {unit: unit_state(unit) for unit in OLD_CONTROLLERS},
+                      "device": device,
+                      "owned_route_journal": (STATE / "network-state.json").exists(),
                       "enabled_at_boot": {unit: run(["systemctl", "is-enabled", unit], check=False).stdout.strip()
                                           for unit in UNITS}}))
 
@@ -326,9 +378,10 @@ def rollback(identifier):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("verify", "preflight", "install", "takeover", "start", "stop", "status", "rollback"))
+    parser.add_argument("action", choices=("verify", "preflight", "install", "commission", "start", "stop", "status", "rollback"))
     parser.add_argument("--stage", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--previous-maintenance-confirmed", action="store_true")
+    parser.add_argument("--spark-address")
+    parser.add_argument("--wifi-interface", default="auto")
     parser.add_argument("--backup")
     arguments = parser.parse_args()
     if arguments.action == "verify":
@@ -344,8 +397,15 @@ def main():
         raise SystemExit("Run this reviewed operation with sudo in the Jetson terminal")
     if arguments.action == "install":
         install(arguments.stage)
-    elif arguments.action == "takeover":
-        takeover(arguments.previous_maintenance_confirmed)
+    elif arguments.action == "commission":
+        if not arguments.spark_address:
+            parser.error('commission requires --spark-address')
+        # Commissioning imports the modem driver, never the OS Python's packages.
+        runtime = BASE / 'current/venv'
+        if Path(sys.prefix).resolve() != runtime.resolve():
+            os.execv(str(runtime / 'bin/python'), [str(runtime / 'bin/python'), '-I', '-B',
+                     str(BASE / 'current/deploy/manage.py'), *sys.argv[1:]])
+        commission(arguments.spark_address, arguments.wifi_interface)
     elif arguments.action == "start":
         start()
     elif arguments.action == "stop":

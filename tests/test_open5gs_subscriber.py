@@ -56,6 +56,8 @@ class SubscriberTests(unittest.TestCase):
         self.assertNotIn('updateOne', script)
         self.assertNotIn('upsert', script)
         self.assertIn('core.auth', script)
+        self.assertIn('{relaxed: false}', script)
+        self.assertIn("saved.security.sqn._bsontype !== 'Long'", script)
         self.assertNotIn('console.error', script)
 
 

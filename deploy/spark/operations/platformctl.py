@@ -32,6 +32,18 @@ DOCKER = ("docker", "--host", "unix:///var/run/docker.sock")
 PROJECT = "aoc-v2-open5gs"
 SERVICES = frozenset({"mongo", "nrf", "amf", "smf", "upf", "udr", "udm", "ausf",
                       "pcf", "nssf", "bsf", "ext-dn"})
+N2_ENDPOINT = "http://172.28.81.12:9090/gnb-info?page=-1"
+
+
+def n2_ready():
+    http = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with http.open(N2_ENDPOINT, timeout=remaining(3)) as response:
+            payload = json.loads(response.read(1024 * 1024))
+        rows = payload.get('items', [])
+        return len(rows) == 1 and rows[0].get('ng', {}).get('setup_success') is True
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False
 
 
 def containers():
@@ -229,6 +241,7 @@ class Controller:
                 raise RuntimeError("Active radio is unhealthy; no restart will be attempted")
             maintain("radio-start")
         wait_for(lambda: running(units()[RADIO]), "gNB startup checks")
+        wait_for(n2_ready, "N2 NG Setup")
         value = units()
         if not all(running(value[name]) for name in MONITOR):
             if any(value[name]["ActiveState"] == "active" and not running(value[name]) for name in MONITOR):
@@ -257,7 +270,13 @@ class Controller:
             raise RuntimeError("Stack changed during shutdown; inspect status")
 
     def details(self, value):
-        print("Core containers: " + json.dumps(containers()), flush=True)
+        core = containers()
+        print("Core containers: " + json.dumps(core), flush=True)
+        print("Stack readiness: " + json.dumps({
+            "core": "ready" if core_active(value[CORE]) and core_healthy(core) else "not_ready",
+            "radio": "running" if running(value[RADIO]) else "stopped",
+            "n2": "ready" if core_active(value[CORE]) and running(value[RADIO]) and n2_ready() else "not_verified",
+            "ue_connectivity": "requires_device_evidence"}), flush=True)
         if running(value[MONITOR[-1]]):
             print("Web health: " + json.dumps(health()), flush=True)
         print("Web listener: " + ("present" if listening() else "absent"), flush=True)

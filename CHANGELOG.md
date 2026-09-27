@@ -1,5 +1,13 @@
 # Changelog
 
+## Jetson Console 0.6.0 / lifecycle improvements (unreleased)
+
+- Replace cross-service takeover with independent commissioning through the installed runtime.
+- Prepare journaled data routes and resume observation on start; clean up owned routes on stop, including after device loss.
+- Keep management Wi-Fi as the preferred default and reject route/resource conflicts without modifying external services.
+- Package Jetson lifecycle scripts and distinguish service, observation and connection readiness.
+- Require N2 NG Setup in Spark full-stack startup, and correct paired installation and operations guidance.
+
 ## Jetson Console 0.5.1
 
 - Keep authenticated status streams open, recheck sessions for each update and bound graceful shutdown.

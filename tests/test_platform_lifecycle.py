@@ -39,7 +39,8 @@ class Host:
         self.actions = []
         self.listener = active
         self.device_socket = active
-        self.ue = dict(quality='ok', connected=False, recovery_paused=True)
+        self.ue = dict(quality='ok', connected=False, maintenance=False, recovery_paused=True)
+        self.n2 = True
         self.health = dict(status='ok', web='ok', collector='ok', device='ok')
         self.fail = None
         self.residual = None
@@ -51,6 +52,8 @@ class Host:
         if action == self.fail:
             raise RuntimeError('Injected maintenance failure')
         start = action.endswith('start')
+        if self.module is JETSON and start:
+            self.ue.update(maintenance=False, recovery_paused=True)
         if action.startswith('core-'):
             names = [SPARK.CORE]
             for container in self.containers:
@@ -79,6 +82,7 @@ class Host:
             stack.enter_context(patch.object(self.module, name, value))
         if self.module is SPARK:
             stack.enter_context(patch.object(SPARK, 'containers', lambda: self.containers))
+            stack.enter_context(patch.object(SPARK, 'n2_ready', lambda: self.n2))
         else:
             stack.enter_context(patch.object(JETSON.Path, 'exists', lambda _: self.device_socket))
         stack.enter_context(redirect_stdout(io.StringIO()))
@@ -192,7 +196,7 @@ class LifecycleTests(unittest.TestCase):
             ctl.start()
             ctl.report()
             ctl.start()
-        self.assertEqual(host.actions, ['start'])
+        self.assertEqual(host.actions, ['start', 'start'])
         self.assertIn('no recovery was requested', output.getvalue())
         self.assertTrue(host.ue['recovery_paused'])
 
@@ -202,7 +206,45 @@ class LifecycleTests(unittest.TestCase):
             ctl = JETSON.Controller()
             ctl.stop()
             ctl.stop()
-        self.assertEqual(host.actions, ['stop'])
+        self.assertEqual(host.actions, ['stop', 'stop'])
+
+    def test_start_resumes_an_already_running_paused_console(self):
+        host = Host(JETSON, True)
+        host.ue['maintenance'] = True
+        with host.patched():
+            JETSON.Controller().start()
+        self.assertEqual(host.actions, ['start'])
+        self.assertFalse(host.ue['maintenance'])
+
+    def test_old_manager_cannot_silently_leave_observation_paused(self):
+        host = Host(JETSON, True)
+        host.ue['maintenance'] = True
+        with host.patched(), patch.object(JETSON, 'maintain', return_value=host.ue), \
+                self.assertRaisesRegex(RuntimeError, 'observation was not resumed'):
+            JETSON.Controller().start()
+
+    def test_missing_n2_is_not_reported_as_stack_ready(self):
+        host = Host(SPARK)
+        host.n2 = False
+        with host.patched(), self.assertRaisesRegex(RuntimeError, 'N2 NG Setup'):
+            SPARK.Controller().start()
+        self.assertEqual(host.actions, ['core-start', 'radio-start'])
+
+    def test_n2_requires_one_explicit_success_without_requiring_ues(self):
+        cases = [
+            ({'items': [{'ng': {'setup_success': True}, 'ues': []}]}, True),
+            ({'items': [{'ng': {'setup_success': False}}]}, False),
+            ({'items': [{'ng': {'setup_success': 'true'}}]}, False),
+            ({'items': [{'ng': {'setup_success': True}}] * 2}, False),
+            ({'items': []}, False), ({'items': None}, False), ([], False),
+        ]
+        for payload, expected in cases:
+            with self.subTest(payload=payload), \
+                    patch.object(SPARK.urllib.request, 'ProxyHandler') as proxy, \
+                    patch.object(SPARK.urllib.request, 'build_opener') as opener:
+                opener.return_value.open.return_value.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+                self.assertEqual(SPARK.n2_ready(), expected)
+                proxy.assert_called_once_with({})
 
     def test_jetson_socket_or_listener_residue_is_failure(self):
         for residue in ('device_socket', 'listener'):

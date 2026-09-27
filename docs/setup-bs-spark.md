@@ -19,6 +19,19 @@ then run its platform installer in preflight and install modes. The target is
 `/opt/agentic-ocudu/monitor`; the three platform services remain disabled at
 boot. Installing the monitor does not start or restart the protocol stack.
 
+From the unpacked Spark release, use the actual installer actions:
+
+```sh
+python3 -I -B install.py verify --path .
+python3 -I -B install.py check-host --path .
+sudo python3 -I -B install.py install --path .
+```
+
+After preparing the protocol stack, approve the matching
+[maintenance bundle](../deploy/maintenance/README.md) and install the
+[Spark lifecycle scripts](spark-operations.md). Full-stack startup and status
+check N2 independently from service process state.
+
 ## Prepare the protocol stack
 
 Use the stack-specific tools under `deploy/spark/stack` and `scripts/spark`.

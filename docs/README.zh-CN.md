@@ -16,7 +16,10 @@
 | 使用仓库代码图 | [CodeGraph 指南](coding-agent-codegraph.zh-CN.md) |
 | 查看交付状态 | [路线图](roadmap.md) |
 | 查看真实验收依据 | [验收记录](acceptance/README.md) |
-| 查看下一轮开发起点 | [2026-09-24 开发准备审阅](acceptance/2026-09-24-development-readiness.zh-CN.md) |
+| 查看下一轮开发起点 | [2026-09-27 开发准备审阅](acceptance/2026-09-27-development-readiness.zh-CN.md) |
+| 查看双 Console 平台切换结果 | [完整平台切换](acceptance/2026-09-27-full-platform-switch.zh-CN.md) |
+| 查看独立安装与启停改进 | [独立生命周期](acceptance/2026-09-27-independent-lifecycle.zh-CN.md) |
+| 查看 0.6.0 实机部署结果 | [独立生命周期实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md) |
 
 命令和界面名称以英文文档为准，`.zh-CN.md` 文件提供对应的简体中文说明。
 

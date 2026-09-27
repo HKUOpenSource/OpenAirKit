@@ -1,6 +1,7 @@
 """Bound data-path operations and a journaled, fixed-parameter network helper."""
 import json
 import ipaddress
+import fcntl
 import os
 from pathlib import Path
 import re
@@ -95,6 +96,13 @@ def inspect_management(config):
     tailscale = config["management"]["tailscale_interface"]
     if route_to(config["management"]["spark_address"]).get("dev") != tailscale:
         raise ValueError("Spark management route is not protected by Tailscale")
+    defaults = ip_json("-4", "route", "show", "default")
+    if not defaults:
+        raise ValueError("Management Wi-Fi needs a default route")
+    metric = min(row.get("metric", 0) for row in defaults)
+    if any(row.get("dev") != wifi or row.get("nexthops") for row in defaults
+           if row.get("metric", 0) == metric):
+        raise ValueError("Management Wi-Fi must be the preferred IPv4 default; review NetworkManager settings")
     return {"wifi_interface": wifi, "wifi_address": wifi_addresses[0],
             "tailscale_interface": tailscale, "management_protected": True}
 
@@ -190,6 +198,123 @@ class Network:
                     "reason": "No valid ICMP reply; PDU release is not inferred"}
 
 
+def route_rows(destination):
+    # Protocol 186 otherwise appears as its iproute2 name, "bgp".
+    return ip_json("-N", "-4", "route", "show", "table", "main", "exact", destination)
+
+
+def matches_route(row, record):
+    return (row.get("dst") in (record["destination"], record["destination"].removesuffix("/32"))
+            and str(row.get("protocol")) == "186" and row.get("dev") == record["interface"]
+            and row.get("gateway") == record["gateway"] and row.get("metric", 0) == 0
+            and row.get("type", "unicast") == "unicast" and not row.get("nexthops"))
+
+
+def save_routes(journal, routes):
+    temporary = journal.with_name(".network-state-" + str(time.time_ns()))
+    fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(fd, "w") as output:
+            json.dump({"routes": routes}, output)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary, journal)
+        directory = os.open(journal.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def managed_routes(config, action):
+    """Serialize exact host-route ownership; never replace another owner's route."""
+    directory = Path(config["state_dir"])
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    journal = directory / "network-state.json"
+    fd = os.open(directory / "network.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if journal.is_symlink():
+            raise ValueError("Unsafe route journal")
+        owned = json.loads(journal.read_text())["routes"] if journal.exists() else []
+        destinations = {targets(config)[kind] + "/32" for kind in ("upf", "ext_dn", "public")}
+        if not isinstance(owned, list):
+            raise ValueError("Invalid route journal")
+        seen = set()
+        for record in owned:
+            if (not isinstance(record, dict) or record.get("destination") not in destinations
+                    or record.get("destination") in seen
+                    or record.get("gateway") != targets(config)["gateway"]
+                    or not isinstance(record.get("interface"), str)
+                    or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,15}", record["interface"])
+                    or not isinstance(record.get("pending"), bool)):
+                raise ValueError("Invalid route ownership record; inspect before continuing")
+            seen.add(record["destination"])
+            current = route_rows(record["destination"])
+            if current and (record["pending"] or len(current) != 1 or not matches_route(current[0], record)):
+                raise ValueError("An owned route changed or has an uncertain outcome; inspect before continuing")
+        if action == "restore":
+            # Cleanup still works after the modem, DHCP address or Wi-Fi disappears.
+            for record in list(reversed(owned)):
+                current = route_rows(record["destination"])
+                if current:
+                    if record["pending"] or len(current) != 1 or not matches_route(current[0], record):
+                        raise ValueError("An owned route changed; refusing to delete it")
+                    run(["ip", "-4", "route", "del", record["destination"], "via", record["gateway"],
+                         "dev", record["interface"], "proto", "186"])
+                owned.remove(record)
+                save_routes(journal, owned)
+            journal.unlink(missing_ok=True)
+            return {"restored": True}
+
+        state = inspect(config)
+        interface = state["data_interface"]
+        gateway = targets(config)["gateway"]
+        if route_to(gateway).get("dev") != interface:
+            raise ValueError("Modem gateway is not reachable on the discovered data interface")
+        additions = []
+        for destination in sorted(destinations):
+            address = destination.removesuffix("/32")
+            if address in (state.get("wifi_address"), config["management"]["spark_address"]):
+                raise ValueError("Data target conflicts with a management address")
+            prior = next((r for r in owned if r["destination"] == destination), None)
+            if prior and prior["interface"] != interface:
+                raise ValueError("Modem interface changed; stop to clean up old routes first")
+            path = route_to(address, state["data_address"])
+            if path.get("dev") == config["management"]["tailscale_interface"]:
+                raise ValueError("Data target conflicts with a management tunnel route")
+            bound = path.get("dev") == interface
+            if bound:
+                continue
+            if route_rows(destination):
+                raise ValueError("Conflicting data host route; no existing route will be replaced")
+            additions.append({"destination": destination, "gateway": gateway,
+                              "interface": interface, "pending": True})
+        for record in additions:
+            owned = [r for r in owned if r["destination"] != record["destination"]] + [record]
+            save_routes(journal, owned)  # Record intent before any network mutation.
+            try:
+                run(["ip", "-4", "route", "add", record["destination"], "via", gateway,
+                     "dev", interface, "proto", "186"])
+            except RuntimeError:
+                # A definite command rejection must not claim a competing route.
+                owned.remove(record)
+                save_routes(journal, owned)
+                raise
+            current = route_rows(record["destination"])
+            if len(current) != 1 or not matches_route(current[0], record):
+                raise ValueError("New route readback failed; ownership remains uncertain")
+            record["pending"] = False
+            save_routes(journal, owned)
+        for destination in destinations:
+            if route_to(destination.removesuffix("/32"), state["data_address"]).get("dev") != interface:
+                raise ValueError("Data route verification failed; inspect policy routing")
+        return {"prepared": True, "mode": "bound_data_routes", "management_protected": True,
+                "mutations": len(additions), "owned_routes": len(owned)}
+
+
 def helper(config, action):
     if os.geteuid() != 0 or not config.get("commissioned") or not config.get("management_verified"):
         raise ValueError("Commissioning, management verification and root execution are required")
@@ -198,39 +323,11 @@ def helper(config, action):
     if action == "protect":
         inspect_management(config)
         return {"management_protected": True, "mutations": 0}
+    if action in {"prepare", "restore", "promote"}:
+        return managed_routes(config, "prepare" if action == "promote" else action)
     state = inspect(config)
-    journal = Path(config["state_dir"]) / "network-state.json"
-    owned = json.loads(journal.read_text()) if journal.exists() else {"routes": []}
-    if action == "restore":
-        for route in reversed(owned["routes"]):
-            current = ip_json("-4", "route", "show", route["destination"])
-            ours = [item for item in current if str(item.get("protocol")) == "186"
-                    and item.get("dev") == route["interface"]]
-            if current and not ours:
-                raise ValueError("An owned route changed; manual inspection is required")
-            if ours:
-                run(["ip", "route", "del", route["destination"], "dev", route["interface"], "proto", "186"])
-        journal.unlink(missing_ok=True)
-        return {"restored": True}
-    if action == "prepare":
-        for kind in ("upf", "ext_dn", "public"):
-            target = targets(config)[kind]
-            route = route_to(target, state["data_address"])
-            if route.get("dev") != state["data_interface"]:
-                raise ValueError(kind + " route is not bound to the RM520N data interface")
-        journal.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        if not journal.exists():
-            fd = os.open(journal, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
-            with os.fdopen(fd, "w") as output:
-                json.dump(owned, output)
-        return {"prepared": True, "mode": "existing_networkmanager_routes",
-                "management_protected": True, "mutations": 0}
     defaults = ip_json("-4", "route", "show", "default")
-    data_default = any(item.get("dev") == state["data_interface"] for item in defaults)
     wifi_default = any(item.get("dev") == state["wifi_interface"] for item in defaults)
-    if action == "promote" and data_default and wifi_default:
-        return {"mode": "5g", "management_protected": True,
-                "owner": "existing_networkmanager_routes", "mutations": 0}
     if action == "fallback" and wifi_default:
         return {"mode": "wifi-available", "management_protected": True,
                 "reason": "The platform does not delete an unowned RNDIS default route", "mutations": 0}
