@@ -7,6 +7,7 @@ import tempfile
 import threading
 import unittest
 import uuid
+from unittest.mock import patch
 
 from aoc_spark.control import ControlServer, Executor, OPERATIONS, valid_task_id
 
@@ -51,6 +52,82 @@ class ControlExecutorTests(unittest.TestCase):
             job = executor.begin(str(uuid.uuid4()), "start")
             executor.execute(job, lambda _message: None)
             self.assertEqual(executor.query(job.task_id)["error"], "executor_step_failed")
+
+    def test_progress_and_cancel_serialize_persistence(self):
+        with tempfile.TemporaryDirectory() as root:
+            cancel_done, cancel_started, writing, release_write = (threading.Event() for _ in range(4))
+            calls, errors = [], []
+            def runner(arguments):
+                calls.append(arguments)
+                self.assertTrue(cancel_done.wait(3))
+            executor = Executor(root, runner=runner)
+            job = executor.begin(str(uuid.uuid4()), "restart")
+            write = Path.write_text
+            def paused_write(path, *args, **kwargs):
+                result = write(path, *args, **kwargs)
+                if threading.current_thread().name == "progress" and not writing.is_set():
+                    writing.set()
+                    if not release_write.wait(3):
+                        raise TimeoutError("Test write was not released")
+                return result
+            def execute():
+                try:
+                    executor.execute(job, lambda _: None)
+                except Exception as error:
+                    errors.append(error)
+            def cancel():
+                cancel_started.set()
+                try:
+                    executor.request_cancel(job.task_id)
+                except Exception as error:
+                    errors.append(error)
+                finally:
+                    cancel_done.set()
+            progress = threading.Thread(target=execute, name="progress")
+            cancellation = threading.Thread(target=cancel)
+            with patch.object(Path, "write_text", paused_write):
+                try:
+                    progress.start()
+                    self.assertTrue(writing.wait(3))
+                    cancellation.start()
+                    self.assertTrue(cancel_started.wait(3))
+                    self.assertFalse(cancel_done.wait(.1), "Cancel raced an unfinished progress write")
+                finally:
+                    release_write.set()
+                    progress.join(4)
+                    if cancellation.ident is not None:
+                        cancellation.join(4)
+            self.assertFalse(progress.is_alive())
+            self.assertFalse(cancellation.is_alive())
+            self.assertEqual(errors, [])
+            self.assertIn(calls, ([], [("stop",)]))
+            self.assertEqual(executor.query(job.task_id)["state"], "cancelled")
+            self.assertEqual(json.loads((Path(root) / (job.task_id + ".json")).read_text())["state"], "cancelled")
+            executor.begin(str(uuid.uuid4()), "start")
+
+    def test_failed_initial_persistence_does_not_strand_reservation(self):
+        with tempfile.TemporaryDirectory() as root:
+            executor = Executor(root, runner=lambda _: self.fail("Must not run after failed initial emission"))
+            job = executor.begin(str(uuid.uuid4()), "start")
+            persist = executor.persist
+            attempts = []
+            def fail_once(value):
+                attempts.append(value)
+                if len(attempts) == 1:
+                    raise OSError("Synthetic write failure")
+                persist(value)
+            with patch.object(executor, "persist", side_effect=fail_once):
+                executor.execute(job, lambda _: None)
+            self.assertEqual(executor.query(job.task_id)["state"], "failed")
+            executor.begin(str(uuid.uuid4()), "stop")
+
+    def test_failed_begin_does_not_reserve_a_job(self):
+        with tempfile.TemporaryDirectory() as root:
+            executor = Executor(root)
+            with patch.object(executor, "persist", side_effect=OSError("Synthetic write failure")):
+                with self.assertRaises(OSError):
+                    executor.begin(str(uuid.uuid4()), "start")
+            executor.begin(str(uuid.uuid4()), "start")
 
     @unittest.skipIf(sys.platform == "darwin", "macOS application sandbox blocks Unix-domain bind")
     def test_unix_protocol_accepts_only_structured_fixed_action(self):

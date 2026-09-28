@@ -9,7 +9,9 @@ User=root
 Group=aoc-v2-jetson-web
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStartPre=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/site_guard.py
+ExecStartPre=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback
 ExecStart=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/device_entry.py --config /etc/aoc-v2-jetson/device.json
+ExecStopPost=/opt/agentic-ocudu/jetson/current/venv/bin/python -I /opt/agentic-ocudu/jetson/current/deploy/network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback
 RuntimeDirectory=aoc-v2-jetson
 RuntimeDirectoryMode=0750
 KillMode=control-group

@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from aoc_jetson.config import DEVICE, REFERENCE, SELECTION, DIAGNOSTICS, RECOVERY, migrate, validate
-from aoc_jetson.network import HELPER_ENTRY, Network, helper, inspect_management
+from aoc_jetson.network import HELPER_ENTRY, Network, helper, inspect_management, managed_routes, managed_defaults
 
 
 def configuration(root):
@@ -124,7 +124,8 @@ class NetworkTests(unittest.TestCase):
     def test_prepare_accepts_existing_bound_routes_without_mutation(self, route, inspect_mock, _euid):
         inspect_mock.return_value = self.state
         route.return_value = {"dev": "rndis0"}
-        result = helper(self.config, "prepare")
+        with patch("aoc_jetson.network.route_rows", return_value=[{"dev": "rndis0", "protocol": "static"}]):
+            result = managed_routes(self.config, "prepare")
         self.assertEqual(result["mutations"], 0)
         self.assertFalse((self.root / "network-state.json").exists())
 
@@ -135,7 +136,7 @@ class NetworkTests(unittest.TestCase):
         inspect_mock.return_value = self.state
         route.return_value = {"dev": "wifi0"}
         with self.assertRaisesRegex(ValueError, "gateway"):
-            helper(self.config, "prepare")
+            managed_routes(self.config, "prepare")
 
     @contextmanager
     def kernel(self, rows, fail=None):
@@ -169,28 +170,28 @@ class NetworkTests(unittest.TestCase):
         existing = {'dst': '10.0.0.1', 'dev': 'rndis0', 'gateway': '192.168.225.1', 'protocol': 'static'}
         rows = {'10.0.0.1/32': existing}
         with self.kernel(rows) as commands:
-            self.assertEqual(helper(self.config, 'prepare')['mutations'], 2)
-            self.assertEqual(helper(self.config, 'prepare')['mutations'], 0)
+            self.assertEqual(managed_routes(self.config, 'prepare')['mutations'], 2)
+            self.assertEqual(managed_routes(self.config, 'prepare')['mutations'], 0)
             with patch('aoc_jetson.network.inspect', side_effect=ValueError('Modem absent')):
-                helper(self.config, 'restore')
-                helper(self.config, 'restore')
+                managed_routes(self.config, 'restore')
+                managed_routes(self.config, 'restore')
         self.assertEqual(rows, {'10.0.0.1/32': existing})
         self.assertEqual(len(commands), 4)
 
     def test_conflict_is_found_before_any_route_is_added(self):
         rows = {'172.28.81.15/32': {'dev': 'wifi0', 'protocol': 'static'}}
         with self.kernel(rows) as commands, self.assertRaisesRegex(ValueError, 'Conflicting'):
-            helper(self.config, 'prepare')
+            managed_routes(self.config, 'prepare')
         self.assertEqual(commands, [])
 
     def test_changed_route_is_never_deleted(self):
         rows = {}
         with self.kernel(rows) as commands:
-            helper(self.config, 'prepare')
+            managed_routes(self.config, 'prepare')
             rows['172.28.81.15/32']['gateway'] = '192.168.225.2'
             before = list(commands)
             with self.assertRaisesRegex(ValueError, 'owned route changed'):
-                helper(self.config, 'restore')
+                managed_routes(self.config, 'restore')
             self.assertEqual(commands, before)
         self.assertTrue((self.root / 'network-state.json').exists())
 
@@ -198,17 +199,17 @@ class NetworkTests(unittest.TestCase):
         rows = {}
         with self.kernel(rows, TimeoutError('Uncertain command outcome')):
             with self.assertRaises(TimeoutError):
-                helper(self.config, 'prepare')
+                managed_routes(self.config, 'prepare')
             with self.assertRaisesRegex(ValueError, 'uncertain outcome'):
-                helper(self.config, 'restore')
+                managed_routes(self.config, 'restore')
         self.assertEqual(len(rows), 1)
 
     def test_routes_removed_by_kernel_allow_offline_cleanup(self):
         rows = {}
         with self.kernel(rows):
-            helper(self.config, 'prepare')
+            managed_routes(self.config, 'prepare')
             rows.clear()
-            helper(self.config, 'restore')
+            managed_routes(self.config, 'restore')
         self.assertFalse((self.root / 'network-state.json').exists())
 
     def test_tunnel_route_alone_does_not_prove_management_protection(self):
@@ -216,8 +217,33 @@ class NetworkTests(unittest.TestCase):
                 patch('aoc_jetson.network.route_to', return_value={'dev': 'tailscale0'}), \
                 patch('aoc_jetson.network.ip_json', return_value=[
                     {'dev': 'rndis0', 'metric': 100}, {'dev': 'wifi0', 'metric': 600}]):
-            with self.assertRaisesRegex(ValueError, 'preferred IPv4 default'):
+            with self.assertRaisesRegex(ValueError, 'Wi-Fi fallback gateway'):
                 inspect_management(self.config)
+
+    def test_cellular_default_still_allows_wifi_fallback_guard(self):
+        with patch('aoc_jetson.network.global_addresses', return_value=['192.0.2.2']), \
+                patch('aoc_jetson.network.route_to', return_value={'dev': 'tailscale0'}), \
+                patch('aoc_jetson.network.ip_json', return_value=[
+                    {'dev': 'rndis0', 'metric': 100, 'gateway': '192.168.225.1'},
+                    {'dev': 'wifi0', 'metric': 30000, 'gateway': '192.0.2.1'}]):
+            self.assertEqual(inspect_management(self.config)['wifi_gateway'], '192.0.2.1')
+
+    def test_probe_routes_are_installed_even_when_default_is_cellular(self):
+        rows = {}
+        with self.kernel(rows), patch('aoc_jetson.network.route_to', return_value={'dev': 'rndis0'}):
+            self.assertEqual(managed_routes(self.config, 'prepare')['mutations'], 3)
+        self.assertEqual(len(rows), 3)
+
+    def test_usb_reenumeration_rebuilds_owned_probe_routes(self):
+        rows = {}
+        with self.kernel(rows):
+            managed_routes(self.config, 'prepare')
+            self.state['data_interface'] = 'rndis1'
+            with patch('aoc_jetson.network.route_to', return_value={'dev': 'rndis1'}):
+                managed_routes(self.config, 'prepare')
+        self.assertTrue(all(row['dev'] == 'rndis1' for row in rows.values()))
+        records = json.loads((self.root / 'network-state.json').read_text())['routes']
+        self.assertTrue(all(row['interface'] == 'rndis1' for row in records))
 
     @patch("aoc_jetson.network.run")
     def test_uncommissioned_helper_does_not_run_commands(self, run_mock):
@@ -240,6 +266,131 @@ class NetworkTests(unittest.TestCase):
         argv = run_mock.call_args.args[0]
         self.assertEqual(argv[1:3], ["-I", HELPER_ENTRY])
         self.assertNotIn("-m", argv)
+
+
+class DefaultRouteTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.config = configuration(self.root)
+        self.state = {'wifi_interface': 'wifi0', 'wifi_gateway': '192.0.2.1',
+                      'data_interface': 'rndis0', 'data_address': '192.168.225.29'}
+        self.original = [
+            {'dst': 'default', 'dev': 'wifi0', 'gateway': '192.0.2.1', 'metric': 30000, 'protocol': 'dhcp'},
+            {'dst': 'default', 'dev': 'rndis0', 'gateway': '192.168.225.1', 'metric': 100, 'protocol': 'dhcp'}]
+        self.rows = copy.deepcopy(self.original)
+        self.commands = []
+        self.failure = None
+        for name, kw in [('inspect_management', {'return_value': self.state}),
+                         ('inspect', {'return_value': self.state}),
+                         ('ip_json', {'side_effect': lambda *args: copy.deepcopy(self.rows)}),
+                         ('route_to', {'side_effect': self.lookup}),
+                         ('run', {'side_effect': self.execute})]:
+            patcher = patch('aoc_jetson.network.' + name, **kw)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def lookup(self, address, source=None):
+        if address == self.config['diagnostics']['rndis_gateway']:
+            return {'dev': self.state['data_interface']}
+        return min(self.rows, key=lambda row: row.get('metric', 0))
+
+    def execute(self, argv):
+        self.commands.append(argv)
+        row = {'dst': 'default', 'gateway': argv[6], 'dev': argv[8],
+               'metric': int(argv[10]), 'protocol': argv[12]}
+        if argv[3] == 'add':
+            if isinstance(self.failure, RuntimeError):
+                raise self.failure
+            self.rows.append(row)
+            if self.failure:
+                raise self.failure
+        else:
+            self.rows.remove(row)
+        return ''
+
+    def action(self, action):
+        return managed_defaults(self.config, action)
+
+    def test_failover_failback_is_idempotent_and_restore_preserves_system_defaults(self):
+        self.assertEqual(self.action('fallback')['ipv4_egress'], 'wifi0')
+        self.assertEqual(self.action('fallback')['mutations'], 0)
+        self.assertEqual(self.action('promote')['ipv4_egress'], 'rndis0')
+        self.assertEqual(self.action('promote')['mutations'], 0)
+        self.assertEqual(self.action('fallback')['ipv4_egress'], 'wifi0')
+        with patch('aoc_jetson.network.inspect_management', side_effect=ValueError('offline')):
+            self.action('restore')
+            self.action('restore')
+        self.assertEqual(self.rows, self.original)
+        self.assertFalse((self.root / 'egress-state.json').exists())
+
+    def test_foreign_reserved_or_higher_priority_default_is_never_changed(self):
+        for metric in (0, 5, 10):
+            with self.subTest(metric=metric):
+                self.rows = copy.deepcopy(self.original) + [
+                    {'dst': 'default', 'dev': 'eth0', 'gateway': '192.0.2.3', 'metric': metric}]
+                before = copy.deepcopy(self.rows)
+                with self.assertRaises(ValueError):
+                    self.action('fallback')
+                self.assertEqual(self.rows, before)
+                self.assertFalse(self.commands)
+
+    def test_modified_owned_default_blocks_cleanup(self):
+        self.action('promote')
+        self.rows[-1]['gateway'] = '192.168.225.2'
+        before = list(self.commands)
+        with self.assertRaisesRegex(ValueError, 'owned default route changed'):
+            self.action('restore')
+        self.assertEqual(self.commands, before)
+
+    def test_timeout_keeps_uncertain_ownership_and_rejection_does_not_claim(self):
+        self.failure = RuntimeError('File exists')
+        with self.assertRaises(RuntimeError):
+            self.action('fallback')
+        self.assertEqual(json.loads((self.root / 'egress-state.json').read_text())['routes'], [])
+        self.failure = TimeoutError('Unknown outcome')
+        with self.assertRaises(TimeoutError):
+            self.action('fallback')
+        with self.assertRaisesRegex(ValueError, 'Uncertain'):
+            self.action('restore')
+        self.assertEqual(len(self.rows), 3)
+
+    def test_fallback_does_not_require_modem_and_reconnect_accepts_new_interface(self):
+        self.action('promote')
+        # Kernel removes interface-owned routes on USB disappearance.
+        self.rows = [row for row in self.rows if row['dev'] != 'rndis0']
+        with patch('aoc_jetson.network.inspect', side_effect=ValueError('No modem')):
+            self.assertEqual(self.action('fallback')['ipv4_egress'], 'wifi0')
+        self.state['data_interface'] = 'rndis1'
+        self.assertEqual(self.action('promote')['ipv4_egress'], 'rndis1')
+        self.action('restore')
+        self.assertEqual(self.rows, [self.original[0]])
+
+    def test_changed_interface_uses_wifi_during_default_replacement(self):
+        self.action('promote')
+        self.state['data_interface'] = 'rndis1'
+        self.commands.clear()
+        self.action('promote')
+        self.assertEqual([(c[3], c[8]) for c in self.commands],
+                         [('add', 'wifi0'), ('del', 'rndis0'), ('add', 'rndis1'), ('del', 'wifi0')])
+
+    def test_ordinary_egress_is_checked_without_a_bound_probe_source(self):
+        with patch('aoc_jetson.network.route_to', side_effect=self.lookup) as lookup:
+            self.action('promote')
+        self.assertIn(unittest.mock.call('1.1.1.1'), lookup.call_args_list)
+
+    def test_helper_restores_both_journals_and_prepare_initializes_fallback(self):
+        with patch('aoc_jetson.network.os.geteuid', return_value=0), \
+                patch('aoc_jetson.network.managed_routes', return_value={'prepared': True}) as routes:
+            helper(self.config, 'prepare')
+            self.assertEqual(self.lookup('1.1.1.1')['dev'], 'wifi0')
+            helper(self.config, 'promote')
+            helper(self.config, 'prepare')
+            self.assertEqual(self.lookup('1.1.1.1')['dev'], 'rndis0')
+            helper(self.config, 'restore')
+            routes.assert_called_with(self.config, 'restore')
+        self.assertEqual(self.rows, self.original)
 
 
 if __name__ == "__main__":

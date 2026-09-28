@@ -1,6 +1,20 @@
 # Changelog
 
-## Jetson Console 0.6.0 / lifecycle improvements (unreleased)
+## Jetson 0.6.2
+
+- Automatically prefer verified cellular IPv4 after two fresh successful probe samples, and fall back to Wi-Fi on failures or expired evidence independently of modem recovery permission.
+- Journal and restore only owned default routes, rebuild owned probe routes after USB enumeration changes, and report ordinary IPv4 egress separately from probe routing.
+- Preserve system routes and NetworkManager profiles; Wi-Fi fallback does not guarantee independent Tailscale transport.
+
+## Jetson Console 0.6.1 / Spark Platform 0.2.1
+
+- Fix cancellation cleanup, concurrent task persistence, structured diagnostics redaction and idle-UE throughput aggregation.
+- Deploy and verify ARM64 patch packages on Spark and both Jetsons, including previous-version rollback/reinstallation and live data connectivity; retain independent stack installation boundaries.
+
+- Restore the current Spark stack lifecycle source, private release staging/verification and fresh-install tooling with local regression coverage; hardware acceptance remains pending.
+- Update Spark browser navigation expectations to the existing eight-page console.
+
+## Jetson Console 0.6.0 / lifecycle improvements
 
 - Correct local-state filters, persistent operation feedback and retained-history access in both Astryx consoles.
 - Prioritize radio health and traffic, share chart queries, expose operations in navigation, and add responsive Setup assessments.

@@ -240,7 +240,7 @@ def stop(emit=True):
     socket_path = Path("/run/aoc-v2-jetson/device.sock")
     if socket_path.exists():
         raise ValueError("Device socket remains after stop")
-    if (STATE / "network-state.json").exists():
+    if any((STATE / name).exists() for name in ("network-state.json", "egress-state.json")):
         network_action("restore")
     result = {"stopped": True, "owned_routes": "cleared",
               "seconds": round(time.monotonic() - started, 3), "results": results}

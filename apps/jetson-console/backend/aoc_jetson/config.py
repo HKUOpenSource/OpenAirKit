@@ -136,4 +136,4 @@ def public(config):
             "commissioned": config["commissioned"],
             "management_verified": config["management_verified"],
             "sim_fingerprint_configured": bool(config.get("sim_sha256")),
-            "route_policy": "RNDIS-bound IPv4 with protected management fallback"}
+            "route_policy": "Verified cellular IPv4 default with automatic Wi-Fi fallback"}

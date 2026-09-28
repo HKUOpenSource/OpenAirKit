@@ -59,6 +59,30 @@ class TelemetryTests(unittest.TestCase):
         self.assertNotEqual(first['id'], again['id'])
         self.assertEqual(first['identity'], 'RNTI 007b')
 
+    def test_explicit_idle_rates_remain_zero_without_inventing_missing_rates(self):
+        import copy
+        active = scheduler_payload()['cells'][0]['ue_list'][0]
+        active['ul_nof_ok'] = 3
+        idle = {**active, 'rnti': 124, 'dl_brate': 0, 'ul_brate': 0,
+                'dl_nof_ok': 0, 'dl_nof_nok': 0, 'ul_nof_ok': 0, 'ul_nof_nok': 0}
+        missing = {k: v for k, v in idle.items() if k not in ('dl_brate', 'ul_brate')}
+        for rows, expected in (([active], (23_000_000, 5_000_000)),
+                               ([active, idle], (23_000_000, 5_000_000)),
+                               ([idle, idle], (0, 0)),
+                               ([active, active], (46_000_000, 10_000_000)),
+                               ([active, missing], (None, None))):
+            with self.subTest(expected=expected):
+                payload = scheduler_payload()
+                payload['cells'][0]['ue_list'] = copy.deepcopy(rows)
+                devices, values = parse_ocudu(payload, 'test')
+                totals = {m['name']: m['value'] for m in values}
+                self.assertEqual((totals['dl_bps'], totals['ul_bps']), expected)
+                for device, row in zip(devices, rows):
+                    if row['dl_nof_ok'] + row['dl_nof_nok'] == 0:
+                        metrics = {m['name']: m['value'] for m in device['metrics']}
+                        self.assertIsNone(metrics['dl_bler'])
+                        self.assertIsNone(metrics['dl_mcs'])
+
     def test_control_metrics_are_allowlisted(self):
         payload = {'cu-cp': {'rrcs': {'du': [
             {'rrc_connection_number': {'mean_nof_rrc_connections': 1, 'max_nof_rrc_connections': 2}},

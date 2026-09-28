@@ -11,4 +11,14 @@ for path in (root / "deploy/jetson", root / "deploy/spark/platform"):
         raise SystemExit(f"symlink in deployment tree: {path}")
 for name in ("config/network-contract.json", "config/images.lock.json"):
     json.loads((root / name).read_text())
+stack = root / 'deploy/spark/stack'
+for name in ('runtime.py', 'package.py', 'systemd/aoc-v2-core.service', 'systemd/aoc-v2-radio.service'):
+    if not (stack / name).is_file() or (stack / name).is_symlink():
+        raise SystemExit('missing current stack deployment input: ' + name)
+if 'scripts.v2' in (root / 'scripts/aocctl').read_text():
+    raise SystemExit('stack CLI imports a retired implementation')
+for name in ('aoc-v2-core.service', 'aoc-v2-radio.service'):
+    text = (stack / 'systemd' / name).read_text()
+    if '[Install]' in text or '/opt/agentic-ocudu/v2/' not in text:
+        raise SystemExit('stack unit violates independent installation contract: ' + name)
 print("Release boundary audit passed")

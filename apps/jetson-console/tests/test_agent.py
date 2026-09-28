@@ -107,6 +107,104 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(value["health"], "unknown")
         self.assertEqual(value["probes"]["upf"]["state"], "unknown")
 
+    def route_sample(self):
+        self.agent.sample(True)
+        self.agent.reconcile_routes()
+
+    def test_cellular_failback_requires_two_fresh_samples_even_when_recovery_paused(self):
+        self.assertTrue(self.agent.store.setting('recovery_paused'))
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.agent.reconcile_routes()  # The same cached evidence is not confirmation.
+        self.assertEqual(self.network.mode, 'wifi')
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'cellular')
+        self.assertEqual(self.agent.status()['routing']['mode'], 'cellular')
+        self.assertFalse(self.modem.calls)
+
+    def test_public_failure_falls_back_without_reset_and_recovers_automatically(self):
+        self.route_sample()
+        self.route_sample()
+        probe = self.network.probe
+        def no_internet(kind, cancel=None):
+            return {**probe(kind, cancel), 'state': 'failed' if kind == 'public' else 'ok'}
+        with patch.object(self.network, 'probe', side_effect=no_internet):
+            self.route_sample()
+            self.assertTrue(self.agent.status()['connected'])  # Base station is still connected.
+            self.assertEqual(self.network.mode, 'cellular')
+            self.route_sample()
+            self.assertEqual(self.network.mode, 'wifi')
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'cellular')
+        self.assertFalse(self.modem.calls)
+
+    def test_partial_probe_refresh_does_not_confirm_failback(self):
+        self.route_sample()
+        self.agent.cached['probes']['public']['at'] += .001
+        self.agent.reconcile_routes()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'cellular')
+
+    def test_stale_or_disconnected_cellular_falls_back_immediately(self):
+        for reason in ('stale', 'disconnect'):
+            with self.subTest(reason=reason):
+                self.route_sample()
+                self.route_sample()
+                if reason == 'stale':
+                    self.agent.cached['evidence_at'] -= 30
+                else:
+                    self.modem.registered = False
+                    self.agent.sample(True)
+                self.agent.reconcile_routes()
+                self.assertEqual(self.network.mode, 'wifi')
+                self.modem.registered = True
+                self.route_sample()
+                self.assertEqual(self.network.mode, 'wifi')
+                self.route_sample()
+                self.assertEqual(self.network.mode, 'cellular')
+
+    def test_ready_task_retains_no_stale_cellular_default_and_does_not_write_modem(self):
+        self.route_sample()
+        self.route_sample()
+        self.agent.create('setup', self.config['revision'])
+        self.agent.cached['evidence_at'] -= 30
+        self.agent.reconcile_routes()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.assertFalse(self.modem.calls)
+
+    def test_route_prepare_failure_falls_back_and_new_proof_is_required(self):
+        self.route_sample()
+        self.route_sample()
+        self.network.failure = 'prepare'
+        with self.assertRaises(ValueError):
+            self.agent.reconcile_routes()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.network.failure = None
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'wifi')
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'cellular')
+
+    def test_maintenance_switches_to_wifi_before_releasing_serial(self):
+        self.route_sample()
+        self.route_sample()
+        self.agent.set_maintenance(True)
+        self.assertEqual(self.network.mode, 'wifi')
+        self.agent.set_maintenance(False)
+        self.route_sample()
+        self.assertEqual(self.network.mode, 'wifi')
+
+    def test_routing_mode_survives_sampling_without_repeated_transition_events(self):
+        with patch.object(self.agent.store, 'event') as event:
+            for _ in range(5):
+                self.route_sample()
+        transitions = [call for call in event.call_args_list if call.args[0] == 'routing']
+        self.assertEqual(len(transitions), 2)
+        self.assertEqual(self.agent.status()['routing']['mode'], 'cellular')
+
     def test_setup_is_single_stack_data_only_and_preserves_residual_contexts(self):
         job = self.agent.create("setup", self.config["revision"])
         result = self.wait(job)
@@ -194,6 +292,23 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(self.agent.store.get_job(job["id"])["state"], "cancelled")
         self.assertFalse(self.agent.cancel.is_set())
         self.assertEqual(self.agent.sample(True)["quality"], "ok")
+
+    def test_cancel_ready_and_paused_tasks_resumes_idle_probes(self):
+        for state in ("ready", "paused"):
+            with self.subTest(state=state):
+                job = self.agent.create("setup", self.config["revision"], {"mode": "manual"})
+                if state == "paused":
+                    job = self.wait(job)
+                self.assertEqual(job["state"], state)
+                result = self.agent.cancel_job(job["id"])
+                self.assertEqual(result["state"], "cancelled")
+                self.assertIsNone(self.agent.current)
+                self.assertTrue(self.agent.store.setting("recovery_paused"))
+                # No replacement job or restart may be needed for observation.
+                for _ in range(2):
+                    sample = self.agent.sample(True)
+                    self.assertEqual(sample["quality"], "ok")
+                    self.assertTrue(sample["connected"])
 
     def test_recovery_records_failed_precheck_before_bounded_repair(self):
         self.network.failure = "probe"

@@ -73,24 +73,25 @@ class SimModem:
 class SimNetwork:
     def __init__(self):
         self.failure = None
-        self.mode = "5g"
+        self.mode = "cellular"
         self.calls = []
 
     def action(self, action, cancel=None):
         self.calls.append(action)
         if self.failure == action:
             raise ValueError("Simulated protected route failure")
-        if action == "fallback":
-            self.mode = "wifi-available"
+        if action in {"fallback", "protect"}:
+            self.mode = "wifi"
         elif action == "promote":
-            self.mode = "5g"
-        return {"mode": self.mode, "management_protected": True, "mutations": 0}
+            self.mode = "cellular"
+        return {"mode": self.mode, "ipv4_egress": self.snapshot()["ipv4_egress"],
+                "management_protected": True, "mutations": 0}
 
     def snapshot(self):
         return {"at": time.time(), "quality": "ok", "management_protected": True, "data_interface": "usb-rndis",
                 "data_address": "192.168.225.88", "wifi_interface": "wifi0",
                 "wifi_address": "192.0.2.10", "tailscale_interface": "tailscale0",
-                "ipv4_egress": "usb-rndis", "rx_bps": 19e6, "tx_bps": 5e6,
+                "ipv4_egress": "usb-rndis" if self.mode == "cellular" else "wifi0", "rx_bps": 19e6, "tx_bps": 5e6,
                 "ipv6": {"quality": "unavailable", "reason": "IPv6 data path is not verified"}}
 
     def probe(self, kind, cancel=None):

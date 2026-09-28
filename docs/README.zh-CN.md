@@ -16,7 +16,10 @@
 | 使用仓库代码图 | [CodeGraph 指南](coding-agent-codegraph.zh-CN.md) |
 | 查看交付状态 | [路线图](roadmap.md) |
 | 查看真实验收依据 | [验收记录](acceptance/README.md) |
-| 查看下一轮开发起点 | [2026-09-27 三设备开发审阅](acceptance/2026-09-27-next-round-review.zh-CN.md) |
+| 查看下一轮开发起点 | [2026-09-28 三设备开发审阅](acceptance/2026-09-28-next-round-review.zh-CN.md) |
+| 查看本地修复与待实机验证项 | [2026-09-28 审阅问题修复](acceptance/2026-09-28-review-fixes.zh-CN.md) |
+| 跟踪审阅修复的实机部署 | [2026-09-28 部署记录](acceptance/2026-09-28-review-deployment.zh-CN.md) |
+| 查看蜂窝恢复自动切回 | [0.6.2 路由修复](acceptance/2026-09-28-cellular-failback.zh-CN.md) |
 | 查看 Astryx UI 修复 | [修复记录](acceptance/2026-09-27-ui-fixes.zh-CN.md) · [原始审阅](acceptance/2026-09-27-ui-review.zh-CN.md) |
 | 查看 UI 部署 | [部署与实机检查](acceptance/2026-09-27-ui-deployment.zh-CN.md) |
 | 查看双 Console 平台切换结果 | [完整平台切换](acceptance/2026-09-27-full-platform-switch.zh-CN.md) |

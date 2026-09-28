@@ -127,6 +127,25 @@ class ApiTests(unittest.TestCase):
         result = redacted_diagnostics({"nested": [{"supi": "imsi-secret", "state": "active"}]})
         self.assertEqual(result, {"nested": [{"supi": "<redacted>", "state": "active"}]})
 
+    def test_diagnostic_export_redacts_real_observation_shapes(self):
+        sample = json.loads(self.snapshot.read_text())
+        markers = ["SYNTHETIC-SERIAL", 424242, 535353, "SYNTHETIC-INVOCATION"]
+        sample['observations'] = [observation('host', 'host', 'b210_serial', markers[0]),
+                                  observation('host', 'ocudu', 'radio_pid', markers[1])]
+        sample['components'] = [dict(id='host', stack='ocudu', name='Host', kind='host',
+            state='running', observed_at=utc(), details={'InvocationID': markers[3]},
+            metrics=[observation('host', 'host', 'b210_holder_pids', [markers[2]]),
+                     observation('host', 'host', 'cpu_usage', .5, 'ratio')])]
+        self.snapshot.write_text(json.dumps(sample))
+        self.assertEqual(self.client.get('/api/v1/diagnostics').status_code, 401)
+        self.login()
+        response = self.client.get('/api/v1/diagnostics')
+        self.assertEqual(response.status_code, 200)
+        for marker in markers:
+            self.assertNotIn(str(marker), response.text)
+        self.assertEqual(response.json()['components'][0]['metrics'][1]['value'], .5)
+        self.assertEqual(self.client.get('/api/v1/snapshot').json()['observations'][0]['value'], markers[0])
+
     def test_device_identity_visible_after_login_but_redacted_in_diagnostics(self):
         identity = '00101' + '0' * 9 + '1'  # Synthetic test-network subscriber.
         device = dict(id='ocudu:ue:test', identity=identity, identifiers={}, stack='ocudu',

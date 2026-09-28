@@ -188,7 +188,7 @@ export function Overview(context: Context) {
                       : "Mismatch",
                 ],
                 [
-                  "Protected management",
+                  "Management fallback",
                   state.management_protected == null
                     ? "Unknown"
                     : state.management_protected

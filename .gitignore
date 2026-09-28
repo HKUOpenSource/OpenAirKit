@@ -8,6 +8,9 @@ node_modules/
 /artifacts/
 /archive/*
 !/archive/development-baseline-tests/
+!/archive/legacy/
+/archive/legacy/*
+!/archive/legacy/spark-stack-deployment/
 /secrets/
 .env
 .env.*

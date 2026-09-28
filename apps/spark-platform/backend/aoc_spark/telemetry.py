@@ -49,7 +49,8 @@ def parse_ocudu(payload, epoch, received_at=None):
             for source, name, unit in fields:
                 value = number(ue.get(source), -100 if unit == "dB" else 0)
                 direction = name[:2] if name.startswith(("dl_", "ul_")) else None
-                if direction and name in (direction + "_bps", direction + "_mcs") and transport[direction][2] == 0:
+                if (direction and transport[direction][2] == 0
+                        and (name == direction + "_mcs" or name == direction + "_bps" and value != 0)):
                     value, reason = None, "no_transport_blocks"
                 else:
                     reason = None if value is not None else "scheduler_field_absent"

@@ -20,7 +20,10 @@ the product.
 | Use the repository graph | [CodeGraph guide](coding-agent-codegraph.md) |
 | Check delivery status | [Roadmap](roadmap.md) |
 | Review real validation evidence | [Acceptance records](acceptance/README.md) |
-| Review the next development starting point | [2026-09-27 three-device review](acceptance/2026-09-27-next-round-review.md) |
+| Review the next development starting point | [2026-09-28 three-device review](acceptance/2026-09-28-next-round-review.md) |
+| Review local repairs and deferred hardware checks | [2026-09-28 review fixes](acceptance/2026-09-28-review-fixes.md) |
+| Track deployment of the review fixes | [2026-09-28 deployment](acceptance/2026-09-28-review-deployment.md) |
+| Review automatic cellular failback | [0.6.2 routing repair](acceptance/2026-09-28-cellular-failback.md) |
 | Review Astryx UI changes | [UI fixes](acceptance/2026-09-27-ui-fixes.md) · [original review](acceptance/2026-09-27-ui-review.md) |
 | Review UI deployment | [Deployment and hardware checks](acceptance/2026-09-27-ui-deployment.md) |
 | Review dual-console platform switching results | [Full platform switch](acceptance/2026-09-27-full-platform-switch.md) |
