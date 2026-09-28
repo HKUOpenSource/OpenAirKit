@@ -63,32 +63,36 @@ class Executor:
         self.state_directory.mkdir(parents=True, exist_ok=True)
         self.runner = runner
         self.jobs = {}
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
 
     def persist(self, job):
-        job.status["updated_at"] = time.time()
-        temporary = self.state_directory / (job.task_id + ".tmp")
-        temporary.write_text(json.dumps(job.status, sort_keys=True) + "\n")
-        os.chmod(temporary, 0o640)
-        temporary.replace(self.state_directory / (job.task_id + ".json"))
+        with self.lock:
+            job.status["updated_at"] = time.time()
+            temporary = self.state_directory / (job.task_id + ".tmp")
+            temporary.write_text(json.dumps(job.status, sort_keys=True) + "\n")
+            os.chmod(temporary, 0o640)
+            temporary.replace(self.state_directory / (job.task_id + ".json"))
 
     def emit(self, job, send, **changes):
-        job.status.update(changes)
-        self.persist(job)
-        send(dict(job.status))
+        with self.lock:
+            job.status.update(changes)
+            self.persist(job)
+            message = dict(job.status)
+        # A slow/disconnected client must not hold up cancellation or queries.
+        send(message)
 
     def begin(self, task_id, action):
         with self.lock:
             if any(job.status["state"] not in FINAL_STATES for job in self.jobs.values()):
                 raise RuntimeError("operation_in_progress")
             job = Job(task_id, action)
-            self.jobs[task_id] = job
             self.persist(job)
+            self.jobs[task_id] = job
             return job
 
     def execute(self, job, send):
-        self.emit(job, send, state="running")
         try:
+            self.emit(job, send, state="running")
             for arguments in OPERATIONS[job.action]:
                 step = arguments[0]
                 if job.cancel.is_set():

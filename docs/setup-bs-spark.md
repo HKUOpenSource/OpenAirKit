@@ -7,8 +7,9 @@ B210 connected over USB 3. Confirm that ports `127.0.0.1:8877` and
 `127.0.0.1:8001` are available. The monitor, radio and core have separate
 release and lifecycle boundaries.
 
-Verify image digests from `config/images.lock.json`, source revisions from
-`config/upstreams.json` and site settings derived from
+Verify Open5GS image digests from `stacks/open5gs/artifacts.lock.json` and source
+revisions from `stacks/open5gs/sources.lock.json`, the OCUDU revision from
+`config/upstreams.json`, and site settings derived from
 `config/network-contract.json`. Production subscriber material must be loaded
 from the protected deployment state, never from the repository.
 
@@ -34,7 +35,13 @@ check N2 independently from service process state.
 
 ## Prepare the protocol stack
 
-Use the stack-specific tools under `deploy/spark/stack` and `scripts/spark`.
+Follow the [independent stack package guide](../deploy/spark/stack/README.md):
+build the pinned radio artifacts, render/provision a private authenticated N6
+bundle, then stage and verify with `deploy/spark/stack/package.py`. Its fresh-install
+path supplies the V2 controller and core/radio units without starting services;
+existing installations are never overwritten. Local package tests do not certify
+target installation or RF operation. `scripts/spark` supplies the subsequent
+guarded telemetry setup.
 Validate B210 ownership, the core network, N2 and the loopback JSON metrics
 endpoint before accepting UE traffic. Bind the metrics endpoint to loopback and
 restrict it to the collector account.

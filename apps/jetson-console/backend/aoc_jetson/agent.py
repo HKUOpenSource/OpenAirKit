@@ -28,7 +28,7 @@ from .store import Store
 TERMINAL = frozenset({"complete", "failed", "cancelled", "interrupted"})
 STEPS = {
     "setup": ["Inspect device", "Protect management", "Save baseline",
-              "Configure radio", "Register", "Data PDU", "Verify data path", "Prefer 5G"],
+              "Configure radio", "Register", "Data PDU", "Verify data path", "Enable automatic routing"],
     "recover": ["Inspect device", "Protect management", "Verify data path",
                 "Reconnect once", "Restore data PDU", "Repair route", "Verify recovery"],
 }
@@ -84,8 +84,10 @@ class Agent:
                        "health": "unknown", "connected": False, "layers": [],
                        "radio": {}, "data_session": {}, "network": {}, "probes": {}}
         self.last_poll = self.last_sample = self.last_probe = 0
-        self.last_probe_evidence = 0
+        self.last_probe_evidence = None
         self.route_good = self.route_bad = 0
+        self.route_identity = None
+        self.routing = {"status": "pending", "mode": "unverified"}
         self.evidence_generation = None
         self.outage_since = None
 
@@ -96,7 +98,7 @@ class Agent:
                      management_verified=bool(self.config.get("management_verified")),
                      recovery_paused=self.store.setting("recovery_paused", True),
                      active_job=self.store.get_job(self.current) if self.current else None,
-                     simulation=bool(self.config.get("simulation")))
+                     simulation=bool(self.config.get("simulation")), routing=copy.deepcopy(self.routing))
         return value
 
     def check_cancel(self):
@@ -186,8 +188,8 @@ class Agent:
                 layers.extend([
                     self.layer("lab_policy", "Lab selection policy", "ok" if policy_ok else "failed",
                                "Observed match; no modem lock programmed" if policy_ok else "Serving cell does not match lab policy", modem["at"]),
-                    self.layer("management", "Protected management", "ok" if network.get("management_protected") else "failed",
-                               network.get("management_reason", "Management route verified"), network.get("at", now))])
+                    self.layer("management", "Management fallback", "ok" if network.get("management_protected") else "failed",
+                               network.get("management_reason", "Wi-Fi fallback and Tailscale route available"), network.get("at", now))])
                 required = {"sim", "radio", "registration", "data_pdu", "rndis", *self.config["diagnostics"]["required"]}
                 for item in layers:
                     if now - item["at"] > 20:
@@ -398,8 +400,10 @@ class Agent:
                     else:
                         job["result"]["verification"] = self.verify_data(
                             require_two=name == "Verify recovery")
-                elif name == "Prefer 5G":
-                    job["result"]["routing"] = self.network.action("promote", self.cancel)
+                elif name == "Enable automatic routing":
+                    # Default-route promotion requires two fresh Internet probes
+                    # in the background reconciler, including after a manual job.
+                    job["result"]["routing"] = {"mode": "awaiting_verified_samples"}
                 elif name == "Repair route":
                     job["result"]["route_repair"] = self.network.action("prepare", self.cancel)
                 elif name == "Reconnect once":
@@ -457,6 +461,9 @@ class Agent:
             else:
                 job.update(state="cancelled")
                 self.current = None
+                # No worker will reach execute()'s terminal cleanup for a
+                # ready/paused task. Do not cancel later background probes.
+                self.cancel.clear()
             return self.store.save_job(job)
 
     def set_maintenance(self, enabled):
@@ -468,6 +475,9 @@ class Agent:
             with self.hardware:
                 if not enabled:
                     self.network.action("prepare")
+                else:
+                    self.apply_route("fallback")
+                self.route_identity = None
                 self.maintenance = enabled
                 self.modem.close()
                 self.probes.clear()
@@ -482,6 +492,72 @@ class Agent:
                 and radio.get("plmn") == self.config["network"]["plmn"]
                 and all(policy[key] is None or radio.get(key) == policy[key]
                         for key in ("band", "pci", "ssb_arfcn")))
+
+    def apply_route(self, action):
+        result = self.network.action(action)
+        previous = self.routing.get("mode")
+        self.routing = {"status": "ok", **result}
+        if "ipv4_egress" in result:
+            self.cached["network"]["ipv4_egress"] = result["ipv4_egress"]
+        if previous != result.get("mode"):
+            self.store.event("routing", "Default IPv4 route: " + result.get("mode", action), "info")
+
+    def reconcile_routes(self):
+        """Route failover is independent of permission to reset the modem."""
+        with self.control:
+            if self.maintenance or not self.config.get("commissioned"):
+                return
+            value = self.status()
+            network = value.get("network", {})
+            probes = value.get("probes", {})
+            required = sorted(set(self.config["diagnostics"]["required"]) | {"public"})
+            proof = tuple(probes.get(k, {}).get("at", 0) for k in required)
+            now = time.time()
+            stale = any(not 0 <= now - at <= 20 for at in proof)
+            unavailable = (value.get("quality") != "ok" or value.get("registered") is not True
+                           or value.get("data_session_active") is not True
+                           or network.get("quality") != "ok")
+            if self.current:
+                # A ready/paused task stops sampling. Expired evidence must not
+                # leave a cellular default in place indefinitely. No AT writes.
+                if stale or unavailable:
+                    self.route_good = self.route_bad = 0
+                    self.last_probe_evidence = None
+                    self.apply_route("fallback")
+                return
+            identity = (self.evidence_generation, network.get("data_interface"), network.get("data_address"))
+            changed = identity != self.route_identity
+            if changed:
+                self.route_good = self.route_bad = 0
+                self.last_probe_evidence = None
+                self.route_identity = identity
+                self.apply_route("fallback")
+            # Dedicated routes keep probes on cellular even with a Wi-Fi default.
+            # Rebuild only owned routes when USB enumeration changes the device.
+            if network.get("quality") == "ok":
+                try:
+                    self.network.action("prepare")
+                except Exception:
+                    self.route_good = self.route_bad = 0
+                    self.last_probe_evidence = None
+                    self.apply_route("fallback")
+                    raise
+            healthy = (not unavailable and not stale and value.get("connected") is True
+                       and all(probes.get(k, {}).get("state") == "ok" for k in required))
+            # Re-reading cached or partly updated probes is not a second sample.
+            if all(proof) and (self.last_probe_evidence is None or
+                              all(new > old for new, old in zip(proof, self.last_probe_evidence))):
+                self.last_probe_evidence = proof
+                self.route_good = self.route_good + 1 if healthy else 0
+                self.route_bad = 0 if healthy else self.route_bad + 1
+            if unavailable or stale:
+                self.route_good = self.route_bad = 0
+                self.last_probe_evidence = None
+                self.apply_route("fallback")
+            elif healthy and self.route_good >= 2:
+                self.apply_route("promote")
+            elif not healthy and self.route_bad >= 2:
+                self.apply_route("fallback")
 
     def auto_reconcile(self):
         if self.current or self.maintenance or self.store.setting("recovery_paused", True):
@@ -611,10 +687,21 @@ class Agent:
                         if do_probe:
                             self.last_probe = now
                         try:
+                            await asyncio.to_thread(self.reconcile_routes)
+                        except Exception as error:
+                            self.routing = {**self.routing, "status": "error", "reason": str(error)[:250]}
+                            self.store.event("routing", str(error)[:250], "warning")
+                        try:
                             await asyncio.to_thread(self.auto_reconcile)
                         except Exception as error:
                             self.store.set("recovery_paused", True)
                             self.store.event("recovery", str(error)[:250], "warning")
+                    if self.current and now - self.last_poll >= 10:
+                        try:
+                            await asyncio.to_thread(self.reconcile_routes)
+                        except Exception as error:
+                            self.routing = {**self.routing, "status": "error", "reason": str(error)[:250]}
+                        self.last_poll = now
                     if now - self.last_sample >= 15:
                         self.store.sample(self.status())
                         self.last_sample = now

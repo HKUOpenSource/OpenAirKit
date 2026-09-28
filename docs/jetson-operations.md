@@ -10,16 +10,17 @@ For normal local operation, use the separately deployed shortcuts:
 /usr/bin/python3 -I ~/aoc-ops/jetson/platformctl.py status
 ```
 
-Run these as the commissioned SSH user with the matching 0.6.0 application and
+Run these as the commissioned SSH user with the matching 0.6.2 application and
 restricted maintenance approval. Start checks resource ownership, prepares missing
 host routes for the configured UPF, ext-DN and public probe, starts both services,
 and exits maintenance with automatic recovery paused. It does not reset the modem
 or configure its SIM/PDU. A disconnected UE remains a separate warning.
 
 Existing correct routes are reused. Missing routes are added only when no conflicting
-exact host route exists; defaults, NetworkManager profiles and external services
-are not modified. Owned routes are recorded privately with numeric protocol readback.
-Wi-Fi must remain the preferred management default. Startup rejects uncertain
+exact host route exists. NetworkManager profiles, foreign routes and external
+services are not modified. Protocol-186 defaults use metric 5 for Wi-Fi fallback
+and metric 10 for verified cellular preference; foreign defaults must use metrics above 10. Owned routes are recorded privately with numeric protocol readback.
+Wi-Fi must retain an available default gateway. Startup rejects uncertain
 management protection, conflicting routes and active device operations.
 
 Repeated start rechecks route preparation and observation without restarting healthy
@@ -81,12 +82,30 @@ Device Setup previews every write and records a private baseline before it
 changes an allowed data context. Duplicate DNNs, conflicting CIDs or uncertain
 device identity stop the workflow.
 
-Maintenance mode waits for the current command, suspends collection and
-recovery, and releases the serial port. Leaving maintenance rediscovers the
+Maintenance mode waits for the current command, selects Wi-Fi fallback, suspends
+collection and recovery, and releases the serial port. Leaving maintenance rediscovers the
 device, prepares configured data routes and reads current state. It never replays an
 interrupted command; route preparation failure leaves maintenance enabled.
 
 ## Recovery and connectivity
+
+IPv4 default-route selection is independent of permission to reset the modem.
+Two complete fresh probe samples, including the public target, must pass before
+cellular is preferred. Two failures return ordinary traffic to Wi-Fi; loss of
+registration/PDU/interface or evidence older than 20 seconds triggers fallback on
+the next reconciliation. Sampling normally runs every 10 seconds. Ready or paused
+tasks cannot retain a cellular default after their evidence expires. Diagnostic
+host routes remain bound to cellular so recovery can be detected while using Wi-Fi.
+A renamed USB interface replaces only routes with verified ownership. Start and
+systemd post-stop select fallback; the manager's full stop restores the original
+system routes by removing both owned route journals. A foreign high-priority
+route, changed ownership or uncertain mutation stops reconciliation with an error.
+
+The Overview IPv4 egress reports an ordinary destination outside the diagnostic
+host routes. `management_protected` means the Wi-Fi fallback gateway and configured
+Tailscale route are available; it does not verify an independent tunnel transport.
+These Jetson kernels do not support policy routing. A switch may briefly reconnect
+Tailscale. IPv6 failover is not implemented or claimed.
 
 Recovery first checks current state and repairs only owned routes. A task may
 perform one modem reconnect when needed and persists every step, cancellation

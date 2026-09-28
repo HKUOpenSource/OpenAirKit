@@ -1,0 +1,16 @@
+[Unit]
+Description=Agentic-OCUDU Open5GS data core
+Requires=docker.service
+After=docker.service
+Before=aoc-v2-radio.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 -I /opt/agentic-ocudu/v2/runtime.py core-start
+ExecStop=/usr/bin/python3 -I /opt/agentic-ocudu/v2/runtime.py core-stop
+TimeoutStartSec=210
+TimeoutStopSec=210
+Restart=no
+KillMode=control-group
+UMask=0077

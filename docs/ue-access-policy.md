@@ -8,7 +8,7 @@ expectations, not proof that the modem negotiated them.
 
 Jetson schema 3 separates `network` (access and PDU expectations), `selection`
 (observed NR SA/band/optional PCI/optional **SSB** ARFCN), `diagnostics` (bound
-probe addresses and required probes), `management` (Wi-Fi/Tailscale protection)
+probe addresses and required probes), `management` (Wi-Fi fallback and Tailscale route checks)
 and `recovery` (bounded timing and attempt policy). Fields are validated
 individually. Changing a configured expectation does not reconfigure Open5GS or
 silently program the modem. Setup checks and preserves existing radio settings.
@@ -35,6 +35,10 @@ recovery jobs, at least 300 seconds apart. Each job allows at most one reconnect
 reset cooldown survives process restart. Cancellation and maintenance pause
 automation. Diagnostic-only failures never cause resets. The budget resets only
 after data remains healthy for the cooldown period.
+
+IPv4 default routing operates independently of the modem recovery permission.
+Two fresh successful probe sets, including public Internet, prefer cellular;
+failures or stale evidence select Wi-Fi. See [routing behavior and limits](jetson-operations.md#recovery-and-connectivity).
 
 The ext-DN service returns a fixed small HTTP response at `/health` on port 8080,
 inside the core network. It publishes no host port and runs no throughput server.

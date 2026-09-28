@@ -301,6 +301,9 @@ try {
       "Core Network",
       "Devices",
       "Events",
+      "Metric history",
+      "Operations",
+      "Diagnostics",
     ]);
     if (viewport.width <= 760) {
       await page.keyboard.press("Escape");
@@ -424,7 +427,7 @@ try {
     await page.close();
   }
   console.log(
-    "Five-page navigation, responsive layout, safe device state, secondary tools, legacy routes and stale evidence passed",
+    "Primary navigation, responsive layout, safe device state, secondary tools, legacy routes and stale evidence passed",
   );
 } finally {
   await browser.close();

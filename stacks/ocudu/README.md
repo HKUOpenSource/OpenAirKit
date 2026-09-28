@@ -7,9 +7,9 @@
 ## 实现位置
 
 - `scripts/build.py`：已实现固定提交检查、普通用户 ARM64 构建、私有 mbedTLS/GTest 解包和无射频测试，输出 `build-result.json`。
-- 仓库 `scripts/aoclib/radio.py`：固定首轮参数，生成 OCUDU 可读取的 JSON/YAML 子集配置，制作私有生产安装包。
+- `deploy/spark/stack/runtime.py`：生成当前单数据 PDU 的无线配置，核对 B210 与当前 N2 建链。
 - `scripts/probe_b210.cpp`：只在原 gNB 完全退出后探测 UHD serial 和增益范围，不启动射频流。
-- 仓库 `scripts/radio_runtime.py`：固定版本校验、共同交接锁、设备释放检查及指定 AMF 的 N2 就绪判定。
+- `deploy/spark/stack/package.py`：按固定构建记录打包和验证 ARM64 产物，提供不启动服务的全新安装入口。
 
 Build entry point: `python3 stacks/ocudu/scripts/build.py --workspace <private-workspace> --jobs 2`. It does not install system packages or probe UHD devices. Keep source and build output outside this repository.
 

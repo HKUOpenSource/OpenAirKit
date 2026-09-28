@@ -3,14 +3,15 @@
 ## 前提
 
 使用 Linux ARM64、Python 3.10、systemd、NetworkManager 和受支持的 RM520N。
-Wi-Fi 必须有唯一地址并作为首选 IPv4 默认出口；Tailscale 必须能路由到配置的
+Wi-Fi 必须有唯一地址和唯一的 IPv4 回退网关；Tailscale 必须能路由到配置的
 Spark 管理地址；模组必须取得自己的 RNDIS DHCP 地址。OCUDU 验证这些条件，
 不会替换管理员拥有的默认路由，也不会停止外部服务。端口 `127.0.0.1:8878`
 及发现的 AT 串口必须空闲。
 
 必要时先一次性配置站点 NetworkManager 连接。通过
 `nmcli -f NAME,UUID,TYPE,DEVICE connection show --active` 检查活动连接，保持
-管理 Wi-Fi 为首选默认出口，模组连接启用 `ipv4.never-default`。应用连接配置
+管理 Wi-Fi 默认路由可用。既有默认路由的 metric 必须大于 10；metric 5、10 和
+协议号 186 保留给应用自有默认路由。模组连接可启用或关闭 `ipv4.never-default`。应用连接配置
 可能中断该链路，首次网络准备应在本地管理终端完成。这些是本站点的前置条件，
 不借用其他项目的动作。
 
@@ -47,7 +48,11 @@ sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py s
 服务、不写模组配置。该命令替代旧的 takeover 入口。初始化失败时保留安装供检查，
 修正提示的条件后重试 commissioning，无需重新安装。
 
-`start` 准备配置的数据探测路由、启动两个服务并恢复采集，自动恢复保持暂停。
+`start` 准备配置的数据探测路由和 Wi-Fi 回退默认路由，启动两个服务并恢复采集，
+自动模组恢复保持暂停。连续两次新鲜的蜂窝验证（包含公网）成功后，将 IPv4 默认
+出口切到蜂窝；连续两次失败后回退 Wi-Fi。证据过期、注册/PDU 或数据接口丢失时，
+在下一次路由协调中立即回退。路由切换独立于自动模组恢复开关，不要求内核支持策略
+路由。切换期间 Tailscale 可能重连；Wi-Fi 回退不等于独立且保证不断线的管理通道。
 注册、PDU 和数据连通状态单独显示，启动不强制重连模组。
 
 ## 操作员权限与验收

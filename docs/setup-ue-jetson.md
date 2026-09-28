@@ -3,7 +3,7 @@
 ## Prerequisites
 
 Use Linux ARM64, Python 3.10, systemd, NetworkManager and the supported RM520N
-modem. Wi-Fi must have a unique address and the preferred IPv4 default route;
+modem. Wi-Fi must have a unique address and one fallback IPv4 gateway;
 Tailscale must route the configured Spark management address. The modem must
 have its own RNDIS DHCP address. OCUDU validates these prerequisites and never
 replaces an administrator-owned default route or stops an external service.
@@ -11,8 +11,9 @@ Port `127.0.0.1:8878` and the discovered AT port must be free.
 
 Configure the site's NetworkManager profiles once, if necessary. Review active
 profiles with `nmcli -f NAME,UUID,TYPE,DEVICE connection show --active`. Keep the
-management Wi-Fi profile as the preferred default and the modem profile's
-`ipv4.never-default` enabled. Applying a connection profile can interrupt that
+management Wi-Fi default available. Existing defaults must have metrics above 10;
+metrics 5 and 10 and protocol 186 are reserved for application-owned defaults.
+The modem profile may have `ipv4.never-default` enabled or disabled. Applying a connection profile can interrupt that
 link; perform initial network setup through a local management terminal. These
 settings are site prerequisites, not actions borrowed from another project.
 
@@ -55,8 +56,14 @@ or issue modem configuration writes. It replaces the old takeover command.
 A failed commissioning attempt leaves the installed application available for
 inspection; correct the reported prerequisite and rerun commissioning, not installation.
 
-`start` prepares only the configured data-probe routes, starts the two services,
-and resumes observation with automatic recovery paused. SIM registration and
+`start` prepares the configured data-probe routes and a Wi-Fi fallback default,
+starts the two services, and resumes observation with automatic modem recovery paused.
+Two fresh successful cellular samples, including Internet, select cellular as the
+IPv4 default. Two failed samples select Wi-Fi; stale evidence or loss of registration,
+PDU or data interface selects Wi-Fi immediately at the next reconciliation.
+This routing policy operates independently of the automatic modem recovery switch.
+The kernel need not support policy routing. Tailscale may reconnect during a switch;
+the Wi-Fi fallback is not an independent, guaranteed management channel. SIM registration and
 PDU/data-path readiness are reported separately; no forced reconnect is part of start.
 
 ## Operator access and verification

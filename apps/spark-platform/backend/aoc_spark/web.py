@@ -28,13 +28,20 @@ REDACTED_DIAGNOSTIC_KEYS = frozenset({
     "n3_remote", "pei", "pid", "radio_pid", "remote_address",
     "source_address", "suci", "supi", "teid",
 })
+NORMALIZED_DIAGNOSTIC_KEYS = frozenset(key.replace("_", "") for key in REDACTED_DIAGNOSTIC_KEYS)
+
+
+def sensitive_diagnostic_name(name):
+    return (isinstance(name, str)
+            and name.casefold().replace("_", "").replace("-", "") in NORMALIZED_DIAGNOSTIC_KEYS)
 
 
 def redacted_diagnostics(value):
     """Return a useful support bundle without device, host, or radio identifiers."""
     if isinstance(value, dict):
         return {
-            key: ("<redacted>" if key.casefold() in REDACTED_DIAGNOSTIC_KEYS
+            key: ("<redacted>" if sensitive_diagnostic_name(key)
+                  or key == "value" and sensitive_diagnostic_name(value.get("name"))
                   else redacted_diagnostics(item))
             for key, item in value.items()
         }

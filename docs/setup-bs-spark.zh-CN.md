@@ -6,8 +6,9 @@
 连接的受支持 B210。确认 `127.0.0.1:8877` 与 `127.0.0.1:8001` 空闲。监测
 平台、无线栈和核心网具有不同的发布与生命周期边界。
 
-安装前核验 `config/images.lock.json` 的镜像摘要、`config/upstreams.json` 的
-源码版本，以及从 `config/network-contract.json` 派生的站点配置。生产订阅资料
+安装前核验 `stacks/open5gs/artifacts.lock.json` 的镜像摘要、
+`stacks/open5gs/sources.lock.json` 的核心网源码版本、`config/upstreams.json` 的
+OCUDU 版本，以及从 `config/network-contract.json` 派生的站点配置。生产订阅资料
 只能从受保护的部署状态加载，不能进入仓库。
 
 ## 安装监测平台
@@ -31,7 +32,10 @@ sudo python3 -I -B install.py install --path .
 
 ## 准备协议栈
 
-使用 `deploy/spark/stack` 和 `scripts/spark` 下的工具。接收 UE 流量前验证 B210
+按[独立协议栈包指南](../deploy/spark/stack/README.zh-CN.md)构建固定无线产物、生成并初始化
+私有鉴权 N6 包，再用 `deploy/spark/stack/package.py` 暂存和校验。全新安装入口补齐 V2
+控制器及 core/radio unit，不启动服务，也不覆盖已有安装。本地打包测试不代表目标机安装
+或射频验证；随后使用 `scripts/spark` 进行带访问保护的遥测设置。接收 UE 流量前验证 B210
 所有权、核心网、N2 和回环 JSON 指标端点。指标端点只绑定回环地址并限制为采集器
 账户访问。
 
