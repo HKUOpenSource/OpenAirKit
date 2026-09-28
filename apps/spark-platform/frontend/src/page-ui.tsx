@@ -1,6 +1,6 @@
 import { Banner, Card, Heading, Stack, Text } from "@astryxdesign/core";
 import type { LucideIcon } from "lucide-react";
-import { Badge, Details, text, value } from "./components";
+import { Badge, Details, text, value, when } from "./components";
 import type { Observation } from "./types";
 
 export function PageIntro({
@@ -43,8 +43,8 @@ export function StatusSummary({
             : "warning"
       }
       title={title}
-      description={reason}
-      endContent={<Text type="supporting">Updated {updated}</Text>}
+      description={text(reason)}
+      endContent={<Text type="supporting">Updated {when(updated)}</Text>}
     />
   );
 }

@@ -47,10 +47,20 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
       ),
     [snapshot, stack],
   );
-  const kinds = useMemo(
-    () => Array.from(new Set(items.map((item) => item.kind))).sort(),
-    [items],
-  );
+  const [kinds, setKinds] = useState<string[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    api<{ items: string[] }>(`events/kinds?stack=${stack}`, {
+      signal: controller.signal,
+    })
+      .then((result) => {
+        if (!controller.signal.aborted) setKinds(result.items);
+      })
+      .catch((exc) => {
+        if (exc.name !== "AbortError") setError("Unable to load event types");
+      });
+    return () => controller.abort();
+  }, [stack, refresh, reload]);
   useEffect(() => {
     setCursor(null);
     setItems([]);
@@ -73,6 +83,7 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
       next_cursor: string | null;
     }>(`events?${query}`, { signal: controller.signal })
       .then((result) => {
+        if (controller.signal.aborted) return;
         setItems((current) =>
           cursor
             ? [
@@ -88,7 +99,9 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
       .catch((exc) => {
         if (exc.name !== "AbortError") setError("Unable to load events");
       })
-      .finally(() => setBusy(false));
+      .finally(() => {
+        if (!controller.signal.aborted) setBusy(false);
+      });
     return () => controller.abort();
   }, [stack, level, entity, kind, hours, cursor, refresh, reload]);
   return (
@@ -134,7 +147,10 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
               label: item.label,
             })),
           ]}
-          onChange={(selected) => setEntity(selected)}
+          onChange={(selected) => {
+            setEntity(selected);
+            setCursor(null);
+          }}
         ></Selector>
         <Selector
           label={"Event level"}
@@ -145,7 +161,10 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
             { value: String("warning"), label: "Warning" },
             { value: String("error"), label: "Error" },
           ]}
-          onChange={(selected) => setLevel(selected)}
+          onChange={(selected) => {
+            setLevel(selected);
+            setCursor(null);
+          }}
         ></Selector>
         <Selector
           label={"Event type"}
@@ -157,7 +176,10 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
               label: text(item),
             })),
           ]}
-          onChange={(selected) => setKind(selected)}
+          onChange={(selected) => {
+            setKind(selected);
+            setCursor(null);
+          }}
         ></Selector>
         <Selector
           label={"Event time range"}
@@ -167,7 +189,10 @@ export function EventsPage({ snapshot, stack, refresh }: PageProps) {
             { value: String(24), label: "Last day" },
             { value: String(168), label: "Last seven days" },
           ]}
-          onChange={(selected) => setHours(Number(selected))}
+          onChange={(selected) => {
+            setHours(Number(selected));
+            setCursor(null);
+          }}
         ></Selector>
         <Button
           onClick={() => {

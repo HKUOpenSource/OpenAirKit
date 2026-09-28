@@ -75,6 +75,39 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/v1/snapshot").json()["active_stack"], "ocudu")
         self.assertEqual(self.client.get("/api/v1/devices?stack=legacy").status_code, 422)
 
+    def test_history_catalog_retains_offline_entities_and_old_metric_names(self):
+        self.assertEqual(self.client.get("/api/v1/history/catalog").status_code, 401)
+        self.login()
+        store = Store(Path(self.tmp.name) / "history.db")
+        from datetime import datetime, timedelta, timezone
+        old = (datetime.now(timezone.utc) - timedelta(minutes=2)).isoformat()
+        def sample(at, metrics, identifier="ocudu:retired"):
+            return dict(observed_at=at, components=[dict(id=identifier, stack="ocudu", name=identifier,
+                observed_at=at, metrics=metrics)], devices=[], links=[], events=[])
+        store.ingest(sample(old, [observation("test", "ocudu:retired", "cpu_usage", .5, "ratio")]))
+        store.ingest(sample(utc(), []))
+        store.ingest(sample(utc(), [], "ocudu:second"))
+        first = self.client.get("/api/v1/history/catalog?stack=ocudu&limit=1").json()
+        self.assertEqual(first["items"][0]["id"], "ocudu:retired")
+        self.assertEqual(first["items"][0]["metrics"], [{"name": "cpu_usage", "unit": "ratio"}])
+        self.assertEqual(first["items"][0]["apiKind"], "components")
+        second = self.client.get("/api/v1/history/catalog", params={"stack": "ocudu", "limit": 1,
+                                  "after": first["next_cursor"]}).json()
+        self.assertEqual(second["items"][0]["id"], "ocudu:second")
+        self.assertIsNone(second["next_cursor"])
+
+    def test_event_types_are_independent_of_filtered_pages(self):
+        self.assertEqual(self.client.get("/api/v1/events/kinds").status_code, 401)
+        self.login()
+        store = Store(Path(self.tmp.name) / "history.db")
+        at = utc()
+        events = [dict(id=str(index), at=at, stack="ocudu", entity="ocudu:gnb", level="info",
+                       kind=kind, message="Synthetic event") for index, kind in enumerate(["radio_state", "device_change"])]
+        store.ingest(dict(observed_at=at, components=[], devices=[], events=events))
+        self.assertEqual(len(self.client.get("/api/v1/events?stack=ocudu&kind=device_change&limit=1").json()["items"]), 1)
+        self.assertEqual(self.client.get("/api/v1/events/kinds?stack=ocudu").json()["items"],
+                         ["device_change", "radio_state"])
+
     def test_diagnostics_redacts_identifiers_and_component_route(self):
         self.login()
         sample = dict(schema_version=SCHEMA_VERSION, observed_at=utc(), collector_status="ok",
@@ -181,8 +214,8 @@ class ApiTests(unittest.TestCase):
                     PRAGMA user_version=3;
                 """)
             store = Store(path)
-            self.assertEqual(sqlite3.connect(path).execute("PRAGMA user_version").fetchone()[0], 5)
-            self.assertEqual(len(list(Path(root).glob("data.db.before-v5-*.db"))), 1)
+            self.assertEqual(sqlite3.connect(path).execute("PRAGMA user_version").fetchone()[0], 6)
+            self.assertEqual(len(list(Path(root).glob("data.db.before-v6-*.db"))), 1)
             twenty_days = time.strftime('%Y-%m-%dT%H:%M:%S+00:00', time.gmtime(time.time() - 20 * 86400))
             event = {"id": "retained", "at": twenty_days, "stack": "ocudu", "kind": "test", "message": "kept"}
             with store.connect() as db:

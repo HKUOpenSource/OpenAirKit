@@ -221,14 +221,33 @@ class Modem:
             if operation not in commands:
                 raise ValueError("Operation not allow-listed")
             command = commands[operation]
-        result = self.exchange(command, 45 if operation in {"activate", "deactivate", "automatic"} else 30,
-                               optional=operation.startswith("cfun"))
-        if operation.startswith("cfun"):
-            expected = "+CFUN: " + operation[-1]
-            if expected not in self.query("AT+CFUN?"):
-                raise ValueError("CFUN acknowledge/readback did not confirm the target")
-            self.power_restore_authorized = operation == "cfun0"
-        return result
+        if operation == "cfun0":
+            # Identity has been checked, but SIM queries may stop working as
+            # soon as the write takes effect, even if its reply is lost.
+            self.power_restore_authorized = True
+        try:
+            result = self.exchange(command, 45 if operation in {"activate", "deactivate", "automatic"} else 30,
+                                   optional=operation.startswith("cfun"))
+            if operation.startswith("cfun"):
+                expected = "+CFUN: " + operation[-1]
+                if expected not in self.query("AT+CFUN?"):
+                    raise ValueError("CFUN acknowledge/readback did not confirm the target")
+            return result
+        except Exception as error:
+            if operation == "cfun0":
+                # The caller still holds the hardware lock. Restore once even
+                # on cancellation; do not retry the disruptive power-off or
+                # turn a failed reconnect into a successful task.
+                try:
+                    self.write("cfun1")
+                except Exception as restore_error:
+                    raise RuntimeError(f"CFUN=0 failed ({error}); power restoration failed: "
+                                       f"{restore_error}") from error
+            raise
+        finally:
+            if operation == "cfun1":
+                # A failed restoration must not leave a reusable SIM bypass.
+                self.power_restore_authorized = False
 
     def snapshot(self):
         at = time.time()

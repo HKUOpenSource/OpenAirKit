@@ -3,7 +3,9 @@
 Agentic-OCUDU is an independent OCUDU/Open5GS project. Keep Jetson, Spark,
 the radio stack, the core stack and deployment tools in their declared
 directories. Runtime UI text is English; documentation is paired English and
-Simplified Chinese.
+Simplified Chinese. Both consoles must use the existing Astryx Core, Charts,
+Neutral theme and UIProvider. Keep device consoles focused on local state; do
+not introduce global fleet state or a parallel component system.
 
 Use CodeGraph before searching source when a `.codegraph/` index exists. Record
 the question, call path, impact and tests in the change description. Do not add

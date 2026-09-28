@@ -1,3 +1,4 @@
+import { HistoryProvider } from "./history";
 import {
   AppShell,
   Banner,
@@ -21,6 +22,9 @@ import {
   ScrollText,
   Server,
   UserRound,
+  History,
+  Wrench,
+  Stethoscope,
 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
@@ -30,7 +34,6 @@ import {
   Route,
   Routes,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 import { api } from "./api";
 import {
@@ -62,6 +65,9 @@ const navigation = [
   ["/core", "Core Network", Server],
   ["/devices", "Devices", Layers],
   ["/events", "Events", ScrollText],
+  ["/history", "Metric history", History],
+  ["/operations", "Operations", Wrench],
+  ["/diagnostics", "Diagnostics", Stethoscope],
 ] as const;
 
 function pageTitle(path: string) {
@@ -84,6 +90,7 @@ function App() {
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [rawSnapshot, setRawSnapshot] = useState<Snapshot | null>(null);
   const [menu, setMenu] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -92,7 +99,6 @@ function App() {
   const [now, setNow] = useState(Date.now());
   const received = useRef(0);
   const location = useLocation();
-  const navigate = useNavigate();
   const stack = "ocudu";
   const snapshot = freshView(rawSnapshot, connected, received.current, now);
   const acceptSnapshot = (next: Snapshot) => {
@@ -100,6 +106,7 @@ function App() {
     setNow(received.current);
     setConnected(true);
     setRawSnapshot(next);
+    setLoadError("");
   };
 
   useEffect(() => {
@@ -111,6 +118,8 @@ function App() {
     const expired = () => {
       setCsrf("");
       setRawSnapshot(null);
+      received.current = 0;
+      setLoadError("");
       setConnected(false);
       setError("Session expired. Sign in again.");
     };
@@ -129,24 +138,34 @@ function App() {
       .then((next) => {
         if (alive) acceptSnapshot(next);
       })
-      .catch(() => {});
+      .catch((exc) => {
+        if (alive && exc.name !== "AbortError")
+          setLoadError("Unable to load Spark status. Retry the request.");
+      });
     const stream = new EventSource("/api/v1/stream");
     stream.addEventListener("snapshot", (event) => {
       if (alive) {
         acceptSnapshot(JSON.parse((event as MessageEvent).data));
-        setError("");
+        setLoadError("");
       }
     });
     stream.addEventListener("auth_expired", () => {
       stream.close();
+      setError("Session expired. Sign in again.");
       setCsrf("");
       setRawSnapshot(null);
+      received.current = 0;
+      setLoadError("");
       setConnected(false);
     });
     stream.onerror = () => {
       if (alive) {
         setConnected(false);
-        setError("Live connection lost. Reconnecting…");
+        setLoadError(
+          received.current
+            ? "Live connection lost. Reconnecting…"
+            : "Unable to load Spark status. Retry the request.",
+        );
       }
     };
     const history = window.setInterval(
@@ -188,7 +207,7 @@ function App() {
       setRevision((value) => value + 1);
       setError("");
     } catch (exc) {
-      setError((exc as Error).message);
+      setLoadError("Unable to refresh Spark status. Retry the request.");
     }
   }
   async function logout() {
@@ -199,6 +218,8 @@ function App() {
       });
       setCsrf("");
       setRawSnapshot(null);
+      received.current = 0;
+      setLoadError("");
       setConnected(false);
     } catch (exc) {
       setError((exc as Error).message);
@@ -304,7 +325,13 @@ function App() {
           endContent={
             <Stack direction="horizontal" align="center" gap={3}>
               <span className="collection-status">
-                <Badge state={snapshot?.collector_status || "unavailable"} />
+                <Text type="supporting">
+                  {snapshot?.collector_status === "ok"
+                    ? "Live data"
+                    : snapshot?.collector_status === "stale"
+                      ? "Evidence stale"
+                      : "Data unavailable"}
+                </Text>
               </span>
               <Button
                 label="Refresh"
@@ -321,22 +348,7 @@ function App() {
                   isIconOnly: true,
                 }}
                 alignment="end"
-                items={[
-                  {
-                    label: "Operations",
-                    onClick: () => navigate("/operations"),
-                  },
-                  {
-                    label: "Diagnostics",
-                    onClick: () => navigate("/diagnostics"),
-                  },
-                  {
-                    label: "Metric history",
-                    onClick: () => navigate("/history"),
-                  },
-                  { type: "divider" },
-                  { label: "Sign out", onClick: logout },
-                ]}
+                items={[{ label: "Sign out", onClick: logout }]}
               />
             </Stack>
           }
@@ -345,42 +357,57 @@ function App() {
     >
       <Stack className="page-content" gap={6}>
         {error && <Banner status="warning" title={text(error)} />}
+        {loadError && (
+          <Banner
+            status="warning"
+            title={loadError}
+            endContent={<Button label="Retry" onClick={refresh} />}
+          />
+        )}
         {props ? (
-          <CollectionAvailable.Provider
-            value={snapshot?.collector_status === "ok"}
-          >
-            <CurrentSnapshot.Provider value={snapshot}>
-              <Routes>
-                <Route path="/" element={<OverviewPage {...props} />} />
-                <Route path="/overview" element={<Navigate to="/" replace />} />
-                <Route path="/gnb" element={<GnbPage {...props} />} />
-                <Route path="/ran" element={<Navigate to="/gnb" replace />} />
-                <Route path="/core" element={<CoreNetworkPage {...props} />} />
-                <Route
-                  path="/components/:id"
-                  element={<ComponentDetailPage {...props} />}
-                />
-                <Route path="/devices" element={<DevicesPage {...props} />} />
-                <Route
-                  path="/devices/:id"
-                  element={<DeviceDetailPage {...props} />}
-                />
-                <Route path="/events" element={<EventsPage {...props} />} />
-                <Route path="/history" element={<HistoryPage {...props} />} />
-                <Route
-                  path="/diagnostics"
-                  element={<DiagnosticsPage {...props} />}
-                />
-                <Route
-                  path="/operations"
-                  element={<OperationsPage {...props} />}
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </CurrentSnapshot.Provider>
-          </CollectionAvailable.Provider>
+          <HistoryProvider>
+            <CollectionAvailable.Provider
+              value={snapshot?.collector_status === "ok"}
+            >
+              <CurrentSnapshot.Provider value={snapshot}>
+                <Routes>
+                  <Route path="/" element={<OverviewPage {...props} />} />
+                  <Route
+                    path="/overview"
+                    element={<Navigate to="/" replace />}
+                  />
+                  <Route path="/gnb" element={<GnbPage {...props} />} />
+                  <Route path="/ran" element={<Navigate to="/gnb" replace />} />
+                  <Route
+                    path="/core"
+                    element={<CoreNetworkPage {...props} />}
+                  />
+                  <Route
+                    path="/components/:id"
+                    element={<ComponentDetailPage {...props} />}
+                  />
+                  <Route path="/devices" element={<DevicesPage {...props} />} />
+                  <Route
+                    path="/devices/:id"
+                    element={<DeviceDetailPage {...props} />}
+                  />
+                  <Route path="/events" element={<EventsPage {...props} />} />
+                  <Route path="/history" element={<HistoryPage {...props} />} />
+                  <Route
+                    path="/diagnostics"
+                    element={<DiagnosticsPage {...props} />}
+                  />
+                  <Route
+                    path="/operations"
+                    element={<OperationsPage {...props} />}
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </CurrentSnapshot.Provider>
+            </CollectionAvailable.Provider>
+          </HistoryProvider>
         ) : (
-          <Spinner label="Loading Spark status" />
+          !loadError && <Spinner label="Loading Spark status" />
         )}
         <Text type="supporting" color="secondary">
           Spark / ARM64 · OCUDU + Open5GS

@@ -24,7 +24,7 @@ import {
   Square,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
 import {
@@ -152,41 +152,54 @@ export function ComponentDetailPage({ snapshot, refresh }: PageProps) {
     </Stack>
   );
 }
-export function HistoryPage({ snapshot, stack, refresh }: PageProps) {
-  const options = useMemo(
-    () => [
-      ...[...(snapshot.components || []), ...(snapshot.links || [])]
-        .filter((item) => item.stack === stack || item.id === "spark")
-        .map((item) => ({ ...item, apiKind: "components" })),
-      ...(snapshot.devices || [])
-        .filter((item) => item.stack === stack)
-        .map((item) => ({ ...item, name: item.identity, apiKind: "devices" })),
-    ],
-    [snapshot, stack],
-  );
+export function HistoryPage({ stack, refresh }: PageProps) {
+  type HistoryEntity = {
+    id: string;
+    name: string;
+    apiKind: string;
+    metrics: { name: string; unit: string }[];
+  };
+  const [options, setOptions] = useState<HistoryEntity[]>([]);
+  const [catalogError, setCatalogError] = useState("");
+  const [after, setAfter] = useState("");
+  const [next, setNext] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    api<{ items: HistoryEntity[]; next_cursor: string | null }>(
+      `history/catalog?stack=${stack}&after=${encodeURIComponent(after)}`,
+      { signal: controller.signal },
+    )
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setOptions((previous) =>
+          after
+            ? [
+                ...new Map(
+                  [...previous, ...result.items].map((item) => [item.id, item]),
+                ).values(),
+              ]
+            : result.items,
+        );
+        setNext(result.next_cursor);
+        setCatalogError("");
+      })
+      .catch((exc) => {
+        if (exc.name !== "AbortError")
+          setCatalogError("Unable to load retained history. Refresh to retry.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [stack, after, refresh]);
   const [entity, setEntity] = useState("spark");
   const [hours, setHours] = useState(1);
   const [metric, setMetric] = useState("cpu_usage");
   const current = options.find((item) => item.id === entity) || options[0];
   const available = [
-    ...new Set(
-      (current?.metrics || [])
-        .filter(
-          (item) =>
-            typeof item.value === "number" ||
-            [
-              "ratio",
-              "byte",
-              "bit/s",
-              "cores",
-              "C",
-              "seconds",
-              "dB",
-              "count",
-            ].includes(item.unit),
-        )
-        .map((item) => item.name),
-    ),
+    ...new Set((current?.metrics || []).map((item) => item.name)),
   ];
   const selectedMetric = available.includes(metric)
     ? metric
@@ -255,6 +268,22 @@ export function HistoryPage({ snapshot, stack, refresh }: PageProps) {
           onChange={(selected) => setHours(Number(selected))}
         ></Selector>
       </Stack>
+      {catalogError && <Banner status="error" title={catalogError} />}
+      {next && (
+        <Button
+          label="Load more history sources"
+          isLoading={loading}
+          onClick={() => setAfter(next)}
+        />
+      )}
+      {!current && (
+        <EmptyState
+          title={
+            loading ? "Loading history sources" : "No retained metric evidence"
+          }
+          isCompact
+        />
+      )}
       {selectedMetric && current && (
         <Trend
           key={`${current.id}:${selectedMetric}:${hours}`}
@@ -410,6 +439,8 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
   const [selected, setSelected] = useState<ControlTask["action"] | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const active = items.find((item) =>
     ["queued", "running", "cancel_requested"].includes(item.state),
   );
@@ -422,11 +453,11 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
         .then((result) => {
           if (alive) {
             setItems(result.items);
-            setError("");
+            setLoadError("");
           }
         })
         .catch(() => {
-          if (alive) setError("Unable to load stack control history");
+          if (alive) setLoadError("Unable to load stack control history");
         });
     load();
     const timer = window.setInterval(load, active ? 1000 : 5000);
@@ -436,7 +467,8 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
     };
   }, [refresh, active?.id, active?.state]);
   async function submit() {
-    if (!selected) return;
+    if (!selected || busy || cancelling || active) return;
+    setError("");
     setBusy(true);
     try {
       const task = await api<ControlTask>("control", {
@@ -454,6 +486,9 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
     }
   }
   async function cancel(id: string) {
+    if (busy || cancelling) return;
+    setCancelling(id);
+    setError("");
     try {
       const task = await api<ControlTask>(`control/${id}/cancel`, {
         method: "POST",
@@ -464,6 +499,8 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
       );
     } catch (exc) {
       setError(text((exc as Error).message));
+    } finally {
+      setCancelling(null);
     }
   }
   return (
@@ -498,22 +535,31 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
             wrap="wrap"
           >
             <Button
-              onClick={() => setSelected("start")}
+              onClick={() => {
+                setError("");
+                setSelected("start");
+              }}
               label={"Start"}
               icon={<Play />}
-              isDisabled={Boolean(active)}
+              isDisabled={Boolean(active) || busy || Boolean(cancelling)}
             ></Button>
             <Button
-              onClick={() => setSelected("stop")}
+              onClick={() => {
+                setError("");
+                setSelected("stop");
+              }}
               label={"Stop"}
               icon={<Square />}
-              isDisabled={Boolean(active)}
+              isDisabled={Boolean(active) || busy || Boolean(cancelling)}
             ></Button>
             <Button
-              onClick={() => setSelected("restart")}
+              onClick={() => {
+                setError("");
+                setSelected("restart");
+              }}
               label={"Restart"}
               icon={<RotateCcw />}
-              isDisabled={Boolean(active)}
+              isDisabled={Boolean(active) || busy || Boolean(cancelling)}
             ></Button>
           </Stack>
           <AlertDialog
@@ -521,14 +567,26 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
             onOpenChange={(open) => {
               if (!open && !busy) setSelected(null);
             }}
-            title="Confirm stack operation"
-            description={`Confirm ${selected || "operation"}. This interrupts active UE sessions. Jetson must reconnect after the radio returns.`}
+            title={
+              error
+                ? "Operation could not be submitted"
+                : "Confirm stack operation"
+            }
+            description={`Confirm ${selected || "operation"}. This interrupts active UE sessions. Jetson must reconnect after the radio returns.${error ? ` Error: ${error}` : ""}${active ? " Another operation is now in progress. Close this dialog and review its status." : ""}`}
             cancelLabel="Back"
             actionLabel="Confirm"
             isActionLoading={busy}
             onAction={submit}
           />
-          {error && <Banner status="error" title={error} />}
+          {loadError && <Banner status="warning" title={loadError} />}
+          {error && !selected && (
+            <Banner
+              status="error"
+              title={error}
+              isDismissable
+              onDismiss={() => setError("")}
+            />
+          )}
         </Stack>
       </Card>
       <Card className="table-section">
@@ -580,6 +638,8 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
                   <Button
                     onClick={() => cancel(item.id)}
                     label={"Cancel at next safe boundary"}
+                    isLoading={cancelling === item.id}
+                    isDisabled={busy || Boolean(cancelling)}
                     icon={<XCircle />}
                   ></Button>
                 )}

@@ -3,3 +3,16 @@
 @import "@astryxdesign/theme-neutral/theme.css";
 @import "@astryxdesign/charts/charts.css";
 @import "../../../../packages/console-ui/layout.css";
+
+/* Responsive composition uses Astryx components and Neutral tokens. */
+.setup-mobile {
+  display: none !important;
+}
+@media (max-width: 767px) {
+  .setup-desktop {
+    display: none !important;
+  }
+  .setup-mobile {
+    display: flex !important;
+  }
+}

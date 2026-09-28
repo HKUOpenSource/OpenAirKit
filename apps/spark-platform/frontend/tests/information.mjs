@@ -87,6 +87,17 @@ try {
       ],
     };
     let chartMode = "stale";
+    await page.route("**/api/v1/history/catalog?*", (route) =>
+      route.fulfill({
+        json: {
+          items: [...state.components, ...state.links].map((item) => ({
+            ...item,
+            apiKind: "components",
+          })),
+          next_cursor: null,
+        },
+      }),
+    );
     await page.route("**/api/v1/snapshot", (route) =>
       route.fulfill({ json: { ...state, observed_at: at() } }),
     );
@@ -228,6 +239,12 @@ try {
       /CQI/,
     );
     await page.goto(base + "/gnb");
+    await page
+      .getByRole("button", {
+        name: "Runtime, RF configuration and hardware",
+        exact: true,
+      })
+      .click();
     await page
       .getByRole("heading", { name: "RF configuration", exact: true })
       .waitFor();

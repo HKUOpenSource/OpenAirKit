@@ -30,14 +30,16 @@ import {
   text,
   when,
 } from "../components";
-import { freshDevice } from "../freshness";
+import { activeDataSession, freshDevice } from "../freshness";
 import type { PageProps } from "../page-types";
 import { PageIntro, StatusSummary } from "../page-ui";
 import type { Device } from "../types";
 export function DevicesPage({ snapshot, stack, refresh }: PageProps) {
   const [items, setItems] = useState<Device[]>([]);
   const [query, setQuery] = useState("");
-  const [state, setState] = useState("active");
+  const [state, setState] = useState("");
+  const [pdu, setPdu] = useState("active");
+  const [quality, setQuality] = useState("");
   const [scope, setScope] = useState("subscribers");
   const [error, setError] = useState("");
   useEffect(() => {
@@ -74,18 +76,23 @@ export function DevicesPage({ snapshot, stack, refresh }: PageProps) {
     snapshot.collector_status,
   ]);
   const filtered = items.filter((item) => {
-    if (!state) return true;
-    if (state === "active")
-      return (
-        item.status === "ok" &&
-        item.registration === "registered" &&
-        item.sessions.some(
-          (session) => session.dnn === "oai" && session.status === "ok",
-        )
-      );
-    if (state === "connected") return item.connection?.state === "connected";
-    if (state === "stale") return item.status === "stale";
-    return item.state === state || item.registration === state;
+    if (quality && item.status !== quality) return false;
+    if (scope === "subscribers" && pdu === "active" && !activeDataSession(item))
+      return false;
+    if (
+      scope === "subscribers" &&
+      pdu === "inactive" &&
+      !item.sessions.some(
+        (session) =>
+          session.dnn === "oai" &&
+          session.status === "ok" &&
+          session.state === "inactive",
+      )
+    )
+      return false;
+    return (
+      !state || (scope === "radio" ? item.state : item.registration) === state
+    );
   });
   return (
     <Stack className="spark-page" gap={4}>
@@ -110,19 +117,48 @@ export function DevicesPage({ snapshot, stack, refresh }: PageProps) {
           startIcon={<Search size={18} />}
         />
         <Selector
-          label={"Device state"}
-          value={String(state)}
+          label={scope === "radio" ? "Radio state" : "Registration"}
+          value={state}
+          options={
+            scope === "radio"
+              ? [
+                  { value: "", label: "All radio states" },
+                  { value: "radio_observed", label: "Radio observed" },
+                  { value: "released", label: "Released" },
+                  { value: "unknown", label: "Unknown" },
+                ]
+              : [
+                  { value: "", label: "All registrations" },
+                  { value: "registered", label: "Registered" },
+                  { value: "deregistered", label: "Deregistered" },
+                  { value: "unknown", label: "Unknown" },
+                ]
+          }
+          onChange={setState}
+        />
+        {scope === "subscribers" && (
+          <Selector
+            label="Data PDU"
+            value={pdu}
+            options={[
+              { value: "", label: "All session states" },
+              { value: "active", label: "Active data PDU" },
+              { value: "inactive", label: "Inactive data PDU" },
+            ]}
+            onChange={setPdu}
+          />
+        )}
+        <Selector
+          label="Evidence quality"
+          value={quality}
           options={[
-            { value: String("active"), label: "Active" },
-            { value: String(""), label: "All states" },
-            { value: String("connected"), label: "Connected" },
-            { value: String("registered"), label: "Registered" },
-            { value: String("disconnected"), label: "Disconnected" },
-            { value: String("stale"), label: "Stale" },
-            { value: String("unknown"), label: "Unknown" },
+            { value: "", label: "All evidence" },
+            { value: "ok", label: "Fresh" },
+            { value: "stale", label: "Stale" },
+            { value: "unavailable", label: "Unavailable" },
           ]}
-          onChange={(selected) => setState(selected)}
-        ></Selector>
+          onChange={setQuality}
+        />
         <Selector
           label={"Inventory"}
           value={String(scope)}
@@ -132,7 +168,8 @@ export function DevicesPage({ snapshot, stack, refresh }: PageProps) {
           ]}
           onChange={(selected) => {
             setScope(selected);
-            setState(selected === "radio" ? "" : "active");
+            setState("");
+            setQuality("");
           }}
         ></Selector>
         <span>{filtered.length} devices</span>
@@ -150,7 +187,15 @@ export function DevicesPage({ snapshot, stack, refresh }: PageProps) {
             <Heading level={2}>Device inventory</Heading>
             <span className="section-meta">30-day recent window</span>
           </Stack>
-          <DeviceTable radio={scope === "radio"} devices={filtered} />
+          <DeviceTable
+            radio={scope === "radio"}
+            devices={filtered}
+            emptyTitle={
+              query || state || (scope === "subscribers" && pdu) || quality
+                ? "No matching devices. Adjust the filters to view other evidence."
+                : "No device evidence"
+            }
+          />
         </Stack>
       </Card>
     </Stack>

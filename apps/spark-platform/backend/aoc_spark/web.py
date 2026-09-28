@@ -125,9 +125,12 @@ def create_app(config):
                 if message.get("state") in {"succeeded", "failed", "cancelled"}:
                     store.audit("stack_control_result", json.dumps({"task_id": identifier,
                                 "action": action, "state": message.get("state")}))
-                    break
+                    return
         except (OSError, RuntimeError, ValueError, asyncio.TimeoutError):
-            await poll_control(identifier)
+            pass
+        # Normal EOF is also a lost result when no terminal message arrived.
+        # Query the original task; never resend a potentially executed action.
+        await poll_control(identifier)
 
     async def reconcile_controls():
         for item in store.controls(20, unfinished=True):
@@ -239,6 +242,18 @@ def create_app(config):
         session(request)
         return {"items": store.history(limit)}
 
+    @app.get("/api/v1/history/catalog")
+    def history_catalog(request: Request, stack: Optional[str] = Query(None, pattern="^ocudu$"),
+                        after: str = Query("", max_length=100), limit: int = Query(200, ge=1, le=500)):
+        session(request)
+        snapshot()  # Ingest currently available local evidence before listing retained entities.
+        return store.history_catalog(stack, after, limit)
+
+    @app.get("/api/v1/events/kinds")
+    def event_kinds(request: Request, stack: Optional[str] = Query(None, pattern="^ocudu$")):
+        session(request)
+        return {"items": store.event_kinds(stack)}
+
     @app.get("/api/v1/events")
     def events(request: Request, limit: int = Query(100, ge=1, le=500), stack: Optional[str] = Query(None, pattern="^ocudu$"),
                level: Optional[str] = Query(None, pattern="^(info|warning|error)$"), entity: Optional[str] = Query(None, max_length=100),
@@ -309,18 +324,19 @@ def create_app(config):
         session(request)
         async def messages():
             previous = None
-            started = time.monotonic()
             yield 'retry: 1000\n\n'
             try:
-                # Bound every stream. EventSource reconnects automatically, while a
-                # service stop never has to wait indefinitely for an open browser.
-                while time.monotonic() - started < 15 and not await request.is_disconnected():
+                # Keep healthy streams open. Uvicorn's graceful-shutdown timeout
+                # bounds service stops without making browsers report false outages.
+                while not await request.is_disconnected():
                     try:
+                        await asyncio.to_thread(session, request)
+                        current = await asyncio.to_thread(snapshot)
+                        # A slow read must not publish after logout/session expiry.
                         await asyncio.to_thread(session, request)
                     except HTTPException:
                         yield 'event: auth_expired\ndata: {}\n\n'
                         return
-                    current = await asyncio.to_thread(snapshot)
                     version = (current["observed_at"], current["collector_status"])
                     if version != previous:
                         yield 'event: snapshot\ndata: ' + json.dumps(current, allow_nan=False) + '\n\n'

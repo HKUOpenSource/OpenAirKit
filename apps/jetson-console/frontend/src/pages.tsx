@@ -1,4 +1,5 @@
 import {
+  Banner,
   Button,
   Card,
   Grid,
@@ -42,6 +43,7 @@ export type Context = {
   error: (value: string) => void;
   begin: (kind: string, params?: Obj) => void;
   maintenance: () => void;
+  maintenanceBusy: boolean;
 };
 function PageTitle({
   description,
@@ -83,9 +85,25 @@ export function Overview(context: Context) {
   const network = state.network || {};
   const [events, setEvents] = useState<Obj[]>([]);
   useEffect(() => {
-    api("history?hours=24")
-      .then((value) => setEvents(value.items.slice(0, 5)))
-      .catch((reason) => context.error(String(reason)));
+    let controller: AbortController | undefined;
+    const load = () => {
+      controller?.abort();
+      controller = new AbortController();
+      const signal = controller.signal;
+      api("history?hours=24", undefined, signal)
+        .then((value) => {
+          if (!signal.aborted) setEvents(value.items.slice(0, 5));
+        })
+        .catch((reason) => {
+          if (reason.name !== "AbortError") context.error(String(reason));
+        });
+    };
+    load();
+    const timer = window.setInterval(load, 15000);
+    return () => {
+      controller?.abort();
+      window.clearInterval(timer);
+    };
   }, [context.jobs.length]);
   const layerMap = new Map(
     (state.layers || []).map((layer: Obj) => [layer.id, layer]),
@@ -431,20 +449,68 @@ export function DeviceSetup(context: Context) {
     state.active_job?.kind === "setup"
       ? state.active_job
       : context.jobs.find((item) => item.kind === "setup") || null;
+  const compare = (current: unknown, expected: unknown) =>
+    state.quality !== "ok" || current == null || expected == null
+      ? "Unknown"
+      : String(current).toLowerCase() === String(expected).toLowerCase()
+        ? "Matched"
+        : "Different";
   const rows = [
-    ["PLMN", radio.plmn, target.plmn],
+    ["PLMN", radio.plmn, target.plmn, compare(radio.plmn, target.plmn)],
     [
-      "Band",
+      "Band (observed policy)",
       radio.band ? `n${radio.band}` : null,
       policy.band ? `n${policy.band}` : null,
+      compare(radio.band, policy.band),
     ],
-    ["Physical cell ID", radio.pci, policy.pci ?? "Any"],
-    ["Carrier center ARFCN", "Not reported by UE", reference.carrier_arfcn],
-    ["Serving SSB ARFCN", radio.ssb_arfcn, "Observed only"],
-    ["Data DNN", session.dnn, target.data?.dnn],
-    ["PDU type", session.pdu_type, target.data?.pdu_type],
-    ["Data address", session.address, target.data?.ue_pool],
+    [
+      "Physical cell ID (observed policy)",
+      radio.pci,
+      policy.pci ?? "Any",
+      policy.pci == null ? "Observation only" : compare(radio.pci, policy.pci),
+    ],
+    [
+      "Carrier center ARFCN",
+      "Not reported by UE",
+      reference.carrier_arfcn,
+      "Observation only",
+    ],
+    [
+      "Serving SSB ARFCN",
+      radio.ssb_arfcn,
+      "No programmed target",
+      "Observation only",
+    ],
+    [
+      "Data DNN",
+      session.dnn,
+      target.data?.dnn,
+      compare(session.dnn, target.data?.dnn),
+    ],
+    [
+      "PDU type",
+      session.pdu_type,
+      target.data?.pdu_type,
+      compare(session.pdu_type, target.data?.pdu_type),
+    ],
+    [
+      "Data address / pool",
+      session.address,
+      target.data?.ue_pool,
+      state.quality !== "ok" || !session.address || session.pool_valid == null
+        ? "Unknown"
+        : session.pool_valid
+          ? "Matched"
+          : "Different",
+    ],
   ];
+  const blockers = [
+    !context.config.revision && "Configuration revision is unavailable.",
+    !state.commissioned && "Device commissioning is incomplete.",
+    !state.management_verified && "Management-route verification is required.",
+    state.maintenance && "Exit maintenance mode before creating a plan.",
+    state.active_job && "Finish or cancel the current task first.",
+  ].filter(Boolean);
   return (
     <>
       <PageTitle
@@ -486,26 +552,58 @@ export function DeviceSetup(context: Context) {
             </Stack>
             <ShieldCheck size={19} />
           </Stack>
-          <Stack className="table-wrap" gap={4}>
+          <Stack className="table-wrap setup-desktop" gap={4}>
             <Table style={{ minWidth: 600 }}>
               <TableHeader>
                 <TableRow isHeaderRow>
                   <TableHeaderCell>Parameter</TableHeaderCell>
                   <TableHeaderCell>Current evidence</TableHeaderCell>
                   <TableHeaderCell>Target</TableHeaderCell>
+                  <TableHeaderCell>Assessment</TableHeaderCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map(([label, current, expected]) => (
+                {rows.map(([label, current, expected, assessment]) => (
                   <TableRow key={String(label)}>
                     <TableCell>{label}</TableCell>
                     <TableCell>{current ?? "Not observed"}</TableCell>
                     <TableCell>{expected ?? "--"}</TableCell>
+                    <TableCell>{assessment}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </Stack>
+          <Stack className="setup-mobile" gap={3}>
+            {rows.map(([label, current, expected, assessment]) => (
+              <Card key={String(label)} variant="muted">
+                <Stack gap={2}>
+                  <Heading level={3}>{label}</Heading>
+                  <Fields
+                    items={[
+                      ["Current evidence", current ?? "Not observed"],
+                      ["Target", expected ?? "Not specified"],
+                      ["Assessment", assessment],
+                    ]}
+                  />
+                </Stack>
+              </Card>
+            ))}
+          </Stack>
+          <Banner
+            status={blockers.length ? "warning" : "info"}
+            title={blockers.length ? "Setup prerequisites" : "Planned actions"}
+            description={
+              blockers.length
+                ? blockers.join(" ")
+                : "Save a baseline and protect management access; reconnect only if needed, restore the data PDU, verify the path, then prefer the 5G route. Radio policy is checked without programming a modem lock. Creating a plan does not execute it."
+            }
+          />
+          <Text type="supporting">
+            {rows.filter((row) => row[3] === "Different").length} differences ·{" "}
+            {rows.filter((row) => row[3] === "Unknown").length} unknown. Address
+            matching checks membership in the configured pool.
+          </Text>
           <Stack className="callout" gap={4}>
             <Text weight="semibold">
               {mode === "automatic" ? "Automatic plan" : "Manual plan"}
@@ -527,7 +625,7 @@ export function DeviceSetup(context: Context) {
             <Button
               onClick={() => context.begin("setup", { mode })}
               label={"Create setup plan"}
-              isDisabled={state.maintenance || Boolean(state.active_job)}
+              isDisabled={blockers.length > 0}
               variant="primary"
             ></Button>
           </Stack>
@@ -538,22 +636,81 @@ export function DeviceSetup(context: Context) {
   );
 }
 export function History(context: Context) {
-  const [hours, setHours] = useState(24);
-  const [kind, setKind] = useState("");
-  const [level, setLevel] = useState("");
+  const [{ hours, kind, level, before }, setFilters] = useState({
+    hours: 24,
+    kind: "",
+    level: "",
+    before: null as number | null,
+  });
   const [events, setEvents] = useState<Obj[]>([]);
   const [samples, setSamples] = useState<Obj[]>([]);
+  const [next, setNext] = useState<number | null>(null);
+  const [reload, setReload] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [metricError, setMetricError] = useState("");
   useEffect(() => {
-    Promise.all([
-      api(`history?hours=${hours}&kind=${kind}&level=${level}`),
-      api(`metrics?hours=${Math.min(hours, 168)}`),
-    ])
-      .then(([history, metrics]) => {
-        setEvents(history.items);
-        setSamples(metrics);
+    const timer = window.setInterval(
+      () => setReload((value) => value + 1),
+      15000,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    setEvents([]);
+    setNext(null);
+  }, [hours, kind, level]);
+  useEffect(() => setSamples([]), [hours]);
+  // Keep the selected older page stable; refresh explicitly returns to the newest page.
+  const liveRefresh = before === null ? reload : 0;
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+
+    api(
+      `history?hours=${hours}&kind=${kind}&level=${level}${before === null ? "" : `&before=${before}`}`,
+      undefined,
+      controller.signal,
+    )
+      .then((history) => {
+        if (controller.signal.aborted) return;
+        setEvents((previous) =>
+          before === null
+            ? history.items
+            : [
+                ...new Map(
+                  [...previous, ...history.items].map((item: Obj) => [
+                    item.id,
+                    item,
+                  ]),
+                ).values(),
+              ],
+        );
+        setNext(history.next_cursor);
+        setHistoryError("");
       })
-      .catch((reason) => context.error(String(reason)));
-  }, [hours, kind, level, context.jobs.length]);
+      .catch((reason) => {
+        if (reason.name !== "AbortError") setHistoryError(String(reason));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [hours, kind, level, before, liveRefresh]);
+  useEffect(() => {
+    const controller = new AbortController();
+    api(`metrics?hours=${Math.min(hours, 168)}`, undefined, controller.signal)
+      .then((metrics) => {
+        if (!controller.signal.aborted) {
+          setSamples(metrics);
+          setMetricError("");
+        }
+      })
+      .catch((reason) => {
+        if (reason.name !== "AbortError") setMetricError(String(reason));
+      });
+    return () => controller.abort();
+  }, [hours, reload]);
   return (
     <>
       <PageTitle
@@ -577,7 +734,9 @@ export function History(context: Context) {
             { value: String("168"), label: "Last 7 days" },
             { value: String("720"), label: "Last 30 days" },
           ]}
-          onChange={(selected) => setHours(Number(selected))}
+          onChange={(selected) =>
+            setFilters({ hours: Number(selected), kind, level, before: null })
+          }
         ></Selector>
         <Selector
           label={"Event type"}
@@ -588,7 +747,9 @@ export function History(context: Context) {
             { value: String("recover"), label: "Recovery" },
             { value: String("maintenance"), label: "Maintenance" },
           ]}
-          onChange={(selected) => setKind(selected)}
+          onChange={(selected) =>
+            setFilters({ hours, kind: selected, level, before: null })
+          }
         ></Selector>
         <Selector
           label={"Level"}
@@ -599,9 +760,35 @@ export function History(context: Context) {
             { value: String("warning"), label: "Warning" },
             { value: String("error"), label: "Error" },
           ]}
-          onChange={(selected) => setLevel(selected)}
+          onChange={(selected) =>
+            setFilters({ hours, kind, level: selected, before: null })
+          }
         ></Selector>
       </Stack>
+      <Button
+        label="Refresh history"
+        icon={<RefreshCw size={15} />}
+        isLoading={loading}
+        onClick={() => {
+          setFilters({ hours, kind, level, before: null });
+          setReload((value) => value + 1);
+        }}
+      />
+      <Text type="supporting">
+        Events: last{" "}
+        {hours === 720
+          ? "30 days"
+          : hours === 168
+            ? "7 days"
+            : `${hours} hours`}
+        . Metrics: last{" "}
+        {hours >= 168 ? "7 days (retention limit)" : `${hours} hours`}.
+        {before !== null
+          ? " Older events loaded; refresh to return to the latest events."
+          : " Updates every 15 seconds."}
+      </Text>
+      {historyError && <Banner status="error" title={historyError} />}
+      {metricError && <Banner status="error" title={metricError} />}
       <Grid
         className="grid two"
         columns={{ minWidth: 320, max: 2, repeat: "fit" }}
@@ -609,6 +796,7 @@ export function History(context: Context) {
       >
         <MiniChart
           samples={samples}
+          hours={Math.min(hours, 168)}
           field={(sample) =>
             sample.quality === "ok" ? (sample.radio?.rsrp_dbm ?? null) : null
           }
@@ -617,6 +805,7 @@ export function History(context: Context) {
         />
         <MiniChart
           samples={samples}
+          hours={Math.min(hours, 168)}
           field={(sample) =>
             sample.quality === "ok" ? (sample.radio?.sinr_db ?? null) : null
           }
@@ -656,7 +845,16 @@ export function History(context: Context) {
               </Stack>
             </Stack>
           ))}
-          {!events.length ? <Empty /> : null}
+          {!events.length ? (
+            <Empty>{loading ? "Loading events" : "No matching events"}</Empty>
+          ) : null}
+          {next !== null && (
+            <Button
+              label="Load older events"
+              isLoading={loading}
+              onClick={() => setFilters({ hours, kind, level, before: next })}
+            />
+          )}
         </Stack>
       </Card>
     </>
@@ -706,6 +904,7 @@ export function Settings(context: Context) {
               isLabelHidden
               value={Boolean(state.maintenance)}
               onChange={context.maintenance}
+              isDisabled={context.maintenanceBusy}
             />
           </Stack>
           <Grid

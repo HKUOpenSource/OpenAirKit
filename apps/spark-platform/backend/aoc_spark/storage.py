@@ -6,18 +6,20 @@ from datetime import datetime, timezone
 
 
 class Store:
-    SCHEMA_VERSION = 5
+    SCHEMA_VERSION = 6
+    NUMERIC_UNITS = frozenset(('ratio', 'byte', 'bit/s', 'cores', 'C', 'seconds', 'dB', 'count'))
 
     def __init__(self, path):
         self.path = str(path)
         Path(path).parent.mkdir(parents=True, exist_ok=True)
+        version = 0
         if Path(path).exists():
             with self.connect() as existing:
                 version = existing.execute("PRAGMA user_version").fetchone()[0]
                 if version > self.SCHEMA_VERSION:
                     raise ValueError("Database schema is newer than this monitor release")
                 if version < self.SCHEMA_VERSION:
-                    with sqlite3.connect(self.path + ".before-v5-" + str(time.time_ns()) + ".db") as backup:
+                    with sqlite3.connect(self.path + ".before-v6-" + str(time.time_ns()) + ".db") as backup:
                         existing.backup(backup)
         with self.connect() as db:
             db.executescript("""
@@ -32,8 +34,20 @@ class Store:
                 CREATE INDEX IF NOT EXISTS samples_time ON entity_samples(at);
                 CREATE INDEX IF NOT EXISTS events_time ON events(at,id);
                 CREATE INDEX IF NOT EXISTS control_time ON control_tasks(updated,id);
-                PRAGMA user_version=5;
+                CREATE TABLE IF NOT EXISTS metric_catalog(entity TEXT NOT NULL, name TEXT NOT NULL,
+                    unit TEXT NOT NULL, last_seen TEXT NOT NULL, PRIMARY KEY(entity,name,unit));
             """)
+            if version < self.SCHEMA_VERSION:
+                # Scan retained samples once during migration, never on page reads.
+                db.execute("""INSERT INTO metric_catalog
+                    SELECT s.id,json_extract(m.value,'$.name'),COALESCE(json_extract(m.value,'$.unit'),''),MAX(s.at)
+                    FROM entity_samples s, json_each(s.body,'$.metrics') m
+                    WHERE json_type(m.value,'$.name')='text' AND
+                        (json_type(m.value,'$.value') IN ('integer','real') OR
+                         json_extract(m.value,'$.unit') IN ('ratio','byte','bit/s','cores','C','seconds','dB','count'))
+                    GROUP BY 1,2,3
+                    ON CONFLICT(entity,name,unit) DO UPDATE SET last_seen=MAX(last_seen,excluded.last_seen)""")
+                db.execute("PRAGMA user_version=6")
 
     def connect(self):
         return sqlite3.connect(self.path, timeout=10)
@@ -61,12 +75,20 @@ class Store:
                     db.execute("INSERT INTO entities VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET at=excluded.at,body=excluded.body",
                                (item["id"], kind, item["stack"], snapshot["observed_at"], body))
                     db.execute("INSERT OR IGNORE INTO entity_samples VALUES(?,?,?,?)", (item["id"], snapshot["observed_at"], item["stack"], body))
+                    db.executemany("INSERT INTO metric_catalog VALUES(?,?,?,?) "
+                                   "ON CONFLICT(entity,name,unit) DO UPDATE SET last_seen=excluded.last_seen "
+                                   "WHERE excluded.last_seen>last_seen",
+                                   [(item["id"], metric["name"], metric.get("unit") or "", snapshot["observed_at"])
+                                    for metric in item.get("metrics", [])
+                                    if isinstance(metric.get("name"), str) and
+                                    (type(metric.get("value")) in (int, float) or metric.get("unit") in self.NUMERIC_UNITS)])
             db.execute("DELETE FROM snapshots WHERE inserted < ?", (time.time() - retention_days * 86400,))
             db.execute("DELETE FROM events WHERE id NOT IN (SELECT id FROM events ORDER BY at DESC LIMIT 10000)")
             db.execute("DELETE FROM sessions WHERE expires < ?", (time.time(),))
             db.execute("DELETE FROM audit WHERE at < ?", (time.time() - event_retention_days * 86400,))
             cutoff = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(time.time() - retention_days * 86400))
             db.execute("DELETE FROM entity_samples WHERE at < ?", (cutoff,))
+            db.execute("DELETE FROM metric_catalog WHERE last_seen < ?", (cutoff,))
             event_cutoff = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(time.time() - event_retention_days * 86400))
             for table in ("entities", "events"):
                 db.execute("DELETE FROM " + table + " WHERE at < ?", (event_cutoff,))
@@ -96,6 +118,27 @@ class Store:
                 args.extend(row)
             where = " WHERE " + " AND ".join(filters) if filters else ""
             return [json.loads(row[0]) for row in db.execute("SELECT body FROM events" + where + " ORDER BY at DESC,id DESC LIMIT ?", (*args, limit))]
+
+    def event_kinds(self, stack=None):
+        with self.connect() as db:
+            return [row[0] for row in db.execute(
+                "SELECT DISTINCT json_extract(body, '$.kind') FROM events "
+                "WHERE (? IS NULL OR json_extract(body, '$.stack')=?) ORDER BY 1", (stack, stack)) if row[0]]
+
+    def history_catalog(self, stack=None, after="", limit=200):
+        with self.connect() as db:
+            rows = list(db.execute(
+                "SELECT id,kind,body FROM entities WHERE id>? AND (? IS NULL OR stack=? OR id='spark') "
+                "ORDER BY id LIMIT ?", (after, stack, stack, limit + 1)))
+            items = []
+            # Only retained numeric metric names/units are returned, never raw samples.
+            for identifier, kind, body in rows[:limit]:
+                entity = json.loads(body)
+                metrics = [{"name": name, "unit": unit} for name, unit in db.execute(
+                    "SELECT name,unit FROM metric_catalog WHERE entity=? ORDER BY name,unit", (identifier,))]
+                items.append({"id": identifier, "name": entity.get("identity", entity.get("name", identifier)),
+                              "apiKind": "devices" if kind == "device" else "components", "metrics": metrics})
+        return {"items": items, "next_cursor": items[-1]["id"] if len(rows) > limit else None}
 
     def entities(self, kind, stack=None, query="", state=None, limit=200):
         with self.connect() as db:

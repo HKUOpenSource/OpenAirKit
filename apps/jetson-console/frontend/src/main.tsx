@@ -1,3 +1,4 @@
+import { confirmOperation, type PendingOperation } from "./operations";
 import {
   AlertDialog,
   AppShell,
@@ -59,10 +60,10 @@ function App() {
   const [received, setReceived] = useState(0);
   const [clock, setClock] = useState(Date.now());
   const [streamConnected, setStreamConnected] = useState(false);
-  const [pending, setPending] = useState<{ kind: string; params: Obj } | null>(
-    null,
-  );
+  const [pending, setPending] = useState<PendingOperation | null>(null);
   const [busy, setBusy] = useState(false);
+  const [operationError, setOperationError] = useState("");
+  const [maintenanceBusy, setMaintenanceBusy] = useState(false);
   const location = useLocation();
 
   const refresh = useCallback(() => {
@@ -153,25 +154,23 @@ function App() {
       );
       return;
     }
+    setOperationError("");
     setPending({ kind, params });
   }
 
   async function confirm() {
-    if (!pending) return;
+    if (!pending || busy) return;
     setBusy(true);
-    setError("");
+    setOperationError("");
     try {
-      const job = await api("jobs", {
-        kind: pending.kind,
-        revision: config.revision,
-        params: pending.params,
-      });
-      if (pending.kind !== "setup")
-        await api(`jobs/${job.id}/run`, { confirmed: true });
+      await confirmOperation(pending, config.revision, (jobId) =>
+        setPending({ ...pending, jobId }),
+      );
       setPending(null);
       refresh();
     } catch (reason) {
-      setError(String(reason));
+      setOperationError(reason instanceof Error ? reason.message : String(reason));
+      refresh();
     } finally {
       setBusy(false);
     }
@@ -184,10 +183,19 @@ function App() {
     refresh,
     error: setError,
     begin,
-    maintenance: () =>
-      api("maintenance", { enabled: !status.maintenance })
-        .then(refresh)
-        .catch((reason) => setError(String(reason))),
+    maintenanceBusy,
+    maintenance: async () => {
+      if (maintenanceBusy) return;
+      setMaintenanceBusy(true);
+      try {
+        await api("maintenance", { enabled: !status.maintenance });
+        refresh();
+      } catch (reason) {
+        setError(String(reason));
+      } finally {
+        setMaintenanceBusy(false);
+      }
+    },
   };
 
   if (checking)
@@ -335,9 +343,11 @@ function App() {
         {stale && (
           <Banner
             status="warning"
-            title={streamStale
-              ? "Live stream unavailable. Current values are marked stale until new evidence arrives."
-              : "Device evidence is stale. Waiting for a fresh device sample."}
+            title={
+              streamStale
+                ? "Live stream unavailable. Current values are marked stale until new evidence arrives."
+                : "Device evidence is stale. Waiting for a fresh device sample."
+            }
           />
         )}
         {error && (
@@ -365,7 +375,7 @@ function App() {
         title={
           pending?.kind === "recover" ? "Start recovery?" : "Create setup plan?"
         }
-        description={`Device operations can briefly interrupt the active data connection. Network ${config.network?.plmn} · ${config.network?.data?.dnn} · ${config.network?.data?.ue_pool}.`}
+        description={`Device operations can briefly interrupt the active data connection. Network ${config.network?.plmn} · ${config.network?.data?.dnn} · ${config.network?.data?.ue_pool}.${pending?.jobId ? ` Task ${pending.jobId} has already been created. Confirm checks this task before continuing.` : ""}${operationError ? ` Error: ${operationError}` : ""}`}
         cancelLabel="Back"
         actionLabel="Confirm"
         actionVariant="primary"

@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from aoc_jetson.agent import Agent, Conflict, fresh
 from aoc_jetson.config import validate
+from aoc_jetson.modem import Modem
 from aoc_jetson.simulator import SimModem, SimNetwork
 
 
@@ -202,6 +203,53 @@ class AgentTests(unittest.TestCase):
         self.assertIn("prepare", self.network.calls)
         self.assertLessEqual(sum(call[0] == "cfun0" for call in self.modem.calls), 1)
         self.assertEqual(result["state"], "failed")
+
+    def test_uncertain_power_off_restores_in_setup_and_recovery_tasks(self):
+        for kind, cancel, restore_failure in (("setup", False, False), ("recover", False, False),
+                                              ("recover", True, False), ("recover", False, True)):
+            with self.subTest(kind=kind, cancel=cancel, restore_failure=restore_failure):
+                self.agent.store.set("last_reset", 0)
+                self.modem.functionality = 1
+                self.modem.registered = False
+                self.modem.active.clear()
+                self.modem.calls.clear()
+                adapter = Modem(self.config)
+                adapter.fingerprint = self.modem.fingerprint
+                simulated_write = self.modem.write
+
+                def exchange(command, timeout=3, optional=False):
+                    if command in ("AT+CFUN=0", "AT+CFUN=1"):
+                        operation = "cfun" + command[-1]
+                        if restore_failure and operation == "cfun1":
+                            self.modem.calls.append((operation, None))
+                            raise TimeoutError("Power restore transport failed")
+                        simulated_write(operation)
+                        if operation == "cfun0":
+                            if cancel:
+                                self.agent.cancel.set()
+                            raise TimeoutError("Power-off acknowledgement lost")
+                    return self.modem.query(command)
+
+                adapter.exchange = exchange
+                job = self.agent.create(kind, self.config["revision"])
+                with patch.object(self.modem, "write", side_effect=adapter.write):
+                    self.agent.execute(job)
+                result = self.agent.store.get_job(job["id"])
+                self.assertEqual(result["state"], "cancelled" if cancel else "failed")
+                self.assertIn("Power-off acknowledgement lost", result["error"])
+                if restore_failure:
+                    self.assertIn("power restoration failed", result["error"])
+                self.assertEqual(self.modem.functionality, 0 if restore_failure else 1)
+                self.assertEqual([call[0] for call in self.modem.calls], ["cfun0", "cfun1"])
+                self.assertTrue(self.agent.store.setting("recovery_paused"))
+                self.assertFalse(adapter.power_restore_authorized)
+                self.assertIsNone(self.agent.current)
+
+    def test_failed_management_guard_does_not_attempt_power_compensation(self):
+        with patch.object(self.network, "snapshot", return_value={"management_protected": False}), \
+                self.assertRaises(Conflict):
+            self.agent.write("cfun0")
+        self.assertEqual(self.modem.calls, [])
 
     def test_revision_conflict_maintenance_and_concurrency(self):
         with self.assertRaises(Conflict):

@@ -83,7 +83,16 @@ try {
       await primaryNavigation(page, viewport.width)
         .getByRole("link")
         .allTextContents(),
-      ["Overview", "gNB", "Core Network", "Devices", "Events"],
+      [
+        "Overview",
+        "gNB",
+        "Core Network",
+        "Devices",
+        "Events",
+        "Metric history",
+        "Operations",
+        "Diagnostics",
+      ],
     );
     if (viewport.width <= 760) {
       await page.keyboard.press("Escape");
@@ -112,7 +121,12 @@ try {
       assert.equal(page.url(), detailUrl);
       await page.getByRole("link", { name: "Devices", exact: true }).click();
       await page.getByLabel("Search devices").fill("no-such-device");
-      await page.getByText("No device evidence", { exact: true }).waitFor();
+      await page
+        .getByText(
+          "No matching devices. Adjust the filters to view other evidence.",
+          { exact: true },
+        )
+        .waitFor();
     }
 
     await page.goto(base + "/core");
@@ -146,15 +160,21 @@ try {
       0,
     );
     await page.waitForFunction(() =>
-      document.querySelector(".collection-status .badge.ok"),
+      document
+        .querySelector(".collection-status")
+        ?.textContent.includes("Live data"),
     );
     await page.evaluate(() => window.testStream.onerror());
     await page.waitForFunction(() =>
-      document.querySelector(".collection-status .badge.stale"),
+      document
+        .querySelector(".collection-status")
+        ?.textContent.includes("Evidence stale"),
     );
     await page.reload();
     await page.waitForFunction(() =>
-      document.querySelector(".collection-status .badge.ok"),
+      document
+        .querySelector(".collection-status")
+        ?.textContent.includes("Live data"),
     );
     const fresh = {
       schema_version: 4,
