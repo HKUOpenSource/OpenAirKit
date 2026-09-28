@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import Mock
 
-from aoc_jetson.modem import (active, address, context_address, contexts, registration,
+from aoc_jetson.modem import (Modem, active, address, context_address, contexts, registration,
                                   select_data, serving_cell)
 
 
@@ -45,6 +46,81 @@ class ModemParserTests(unittest.TestCase):
 
     def test_active_contexts_are_parsed_strictly(self):
         self.assertEqual(active(["+CGACT: 1,1", "+CGACT: 2,0", "+CGACT: 255,1"]), {1, 255})
+
+
+class ModemPowerTests(unittest.TestCase):
+    def setUp(self):
+        self.modem = Modem({"commissioned": True, "sim_sha256": "0" * 64,
+                            "network": {"data": DATA}})
+        self.functionality = 1
+        self.failures = set()
+        self.commands = []
+        self.modem.fingerprint = Mock(side_effect=self.fingerprint)
+        self.modem.exchange = self.exchange
+
+    def fingerprint(self):
+        if self.functionality == 0:
+            raise ValueError("SIM unavailable while powered down")
+        return "0" * 64, "Synthetic SIM"
+
+    def exchange(self, command, timeout=3, optional=False):
+        self.commands.append(command)
+        if command in ("AT+CFUN=0", "AT+CFUN=1"):
+            self.functionality = int(command[-1])
+            if command in self.failures:
+                raise TimeoutError("Lost acknowledgement for " + command)
+        elif command == "AT+CFUN?":
+            if "readback" + str(self.functionality) in self.failures:
+                raise TimeoutError("Lost power readback")
+            return ["+CFUN: " + str(self.functionality), "OK"]
+        return ["OK"]
+
+    def test_uncertain_power_off_restores_once_and_preserves_failure(self):
+        for failure in ("AT+CFUN=0", "readback0"):
+            with self.subTest(failure=failure):
+                self.setUp()
+                self.failures.add(failure)
+                with self.assertRaises(TimeoutError):
+                    self.modem.write("cfun0")
+                self.assertEqual(self.functionality, 1)
+                self.assertEqual([c for c in self.commands if "=" in c],
+                                 ["AT+CFUN=0", "AT+CFUN=1"])
+                self.assertFalse(self.modem.power_restore_authorized)
+                self.modem.fingerprint.assert_called_once()
+
+    def test_failed_compensation_is_bounded_and_revokes_authorization(self):
+        self.failures.update({"readback0", "readback1"})
+        with self.assertRaisesRegex(RuntimeError, "power restoration failed"):
+            self.modem.write("cfun0")
+        self.assertEqual(self.commands.count("AT+CFUN=1"), 1)
+        self.assertFalse(self.modem.power_restore_authorized)
+        self.modem.fingerprint.side_effect = ValueError("SIM identity mismatch")
+        with self.assertRaisesRegex(ValueError, "SIM identity mismatch"):
+            self.modem.write("cfun1")
+        self.assertEqual(self.commands.count("AT+CFUN=1"), 1)
+
+    def test_successful_power_cycle_does_not_query_disabled_sim(self):
+        self.modem.write("cfun0")
+        self.modem.write("cfun1")
+        self.assertEqual(self.functionality, 1)
+        self.modem.fingerprint.assert_called_once()
+        self.assertFalse(self.modem.power_restore_authorized)
+
+    def test_failed_normal_power_on_does_not_leave_identity_bypass(self):
+        self.modem.write("cfun0")
+        self.failures.add("readback1")
+        with self.assertRaises(TimeoutError):
+            self.modem.write("cfun1")
+        self.assertFalse(self.modem.power_restore_authorized)
+        self.assertEqual(self.commands.count("AT+CFUN=1"), 1)
+
+    def test_rejected_identity_does_not_authorize_or_attempt_power_restore(self):
+        self.modem.fingerprint.side_effect = None
+        self.modem.fingerprint.return_value = ("1" * 64, "Different synthetic SIM")
+        with self.assertRaisesRegex(ValueError, "SIM identity mismatch"):
+            self.modem.write("cfun0")
+        self.assertEqual(self.commands, [])
+        self.assertFalse(self.modem.power_restore_authorized)
 
 
 if __name__ == "__main__":

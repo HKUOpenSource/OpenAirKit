@@ -17,6 +17,13 @@ remains available during shutdown. Only the fixed `aoc-v2-*` stack units and the
 issued directly; all changes use the existing noninteractive `aoc-maintain` actions.
 Unrelated containers and persistent data are retained.
 
+Before changing services, start checks both IPv4 and IPv6 listeners on port 8877
+using `ss --cgroup`. An occupied port is accepted only when every listener belongs
+to the running Web unit's systemd control group and its health endpoint responds
+OK. Foreign or unverifiable ownership, inspection failure, or an unhealthy existing
+Web service stops startup before any changes. This requires kernel/iproute2 cgroup
+reporting and does not reserve the port against a later concurrent administrator action.
+
 Start requires all 12 core containers healthy, gNB active after its existing systemd
 startup checks, a successful N2 NG Setup from the Open5GS infoAPI, and a healthy
 monitor/collector. A running gNB alone is not sufficient. These checks do not certify UE
@@ -73,10 +80,19 @@ SSE loss marks live values stale or unknown. N3, N6 and bridge counters remain
 separate, and a readable counter is not proof of recent traffic or an accepted
 end-to-end path.
 
+Healthy SSE connections remain open, with session checks before every published
+snapshot. The web process retains a 10-second graceful-shutdown limit; routine
+15-second connection rotation is not expected. A recurring loss banner should be
+checked against service restarts, tunnel health and collector timestamps.
+
 The Devices page correlates identities only when explicit evidence exists.
 RNTI context and subscription session remain separate when correlation is
 uncertain. The Operations page shows task steps, failures, cleanup and audit
 history after a browser refresh.
+If the executor stream closes before a terminal result, the API queries the same
+task instead of resending the operation. An unknown task or unavailable executor
+is recorded as interrupted, releasing the API's task reservation; inspect service
+state before requesting another operation because the original action may have run.
 
 ## Stack lifecycle
 
@@ -94,3 +110,8 @@ Platform releases can be upgraded while the protocol stack remains running.
 Stop only the three platform units, verify/install the release, start them and
 check health and SSE. Rollback must restore the previous release and database
 backup without changing radio or core services.
+
+Database schema 6 indexes retained metric names for history menus. The installer
+backs up and migrates existing data before web startup. Allow time for the one-time
+backfill; subsequent menu reads use the index. Downgrading requires the matching
+database backup, since earlier code cannot open schema 6.

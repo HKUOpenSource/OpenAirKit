@@ -23,6 +23,7 @@ ETC = Path("/etc/aoc-v2-jetson")
 STATE = Path("/var/lib/aoc-v2-jetson")
 WEB_STATE = Path("/var/lib/aoc-v2-jetson-web")
 UNITS = ("aoc-v2-jetson-device.service", "aoc-v2-jetson-web.service")
+SYSTEMD = Path("/etc/systemd/system")
 
 
 def run(argv, timeout=30, check=True):
@@ -148,6 +149,9 @@ def backup():
             database_backup(source, target / name)
     if ETC.exists():
         shutil.copytree(ETC, target / "config")
+    (target / "units.json").write_text(json.dumps({
+        unit: (SYSTEMD / unit).read_text() if (SYSTEMD / unit).exists() else None
+        for unit in UNITS}))
     target.chmod(0o700)
     return target
 
@@ -216,7 +220,7 @@ def install(stage):
     link.symlink_to(release)
     os.replace(link, BASE / "current")
     for unit in UNITS:
-        shutil.copyfile(release / "deploy" / unit, Path("/etc/systemd/system") / unit)
+        shutil.copyfile(release / "deploy" / unit, SYSTEMD / unit)
     output(["systemctl", "daemon-reload"])
     output(["systemctl", "start", "aoc-v2-jetson-web.service"])
     print(json.dumps({"installed": manifest["release"], "backup": backup_record.name,
@@ -357,6 +361,13 @@ def rollback(identifier):
     release = Path((record / "release").read_text())
     if release.parent != BASE / "releases" or not release.is_dir():
         raise ValueError("Invalid rollback release")
+    # New checkpoints preserve the actual installed units, including site edits.
+    # Older checkpoints can restore the packaged units of their saved release.
+    unit_file = record / "units.json"
+    units = json.loads(unit_file.read_text()) if unit_file.exists() else {
+        unit: (release / "deploy" / unit).read_text() for unit in UNITS}
+    if set(units) != set(UNITS) or any(value is not None and not isinstance(value, str) for value in units.values()):
+        raise ValueError("Invalid rollback unit snapshot")
     stop(emit=False)
     for name, directory in (("device.db", STATE), ("auth.db", WEB_STATE)):
         if (record / name).exists():
@@ -371,6 +382,14 @@ def rollback(identifier):
     link = BASE / "current.new"
     link.symlink_to(release)
     os.replace(link, BASE / "current")
+    for unit, content in units.items():
+        path = SYSTEMD / unit
+        if content is None:
+            path.unlink(missing_ok=True)
+        else:
+            path.write_text(content)
+            path.chmod(0o644)
+    output(["systemctl", "daemon-reload"])
     output(["systemctl", "start", "aoc-v2-jetson-web.service"])
     print(json.dumps({"rolled_back": True, "release": release.name,
                       "device_started": False, "inspection_required": True}))

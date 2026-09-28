@@ -14,6 +14,7 @@ import {
   Table,
   Text,
 } from "@astryxdesign/core";
+import { useState } from "react";
 import { Download, Play, Square } from "lucide-react";
 import { api, download, number, Obj, terminal, when } from "./api";
 
@@ -75,11 +76,13 @@ export function MiniChart({
   field,
   label,
   unit,
+  hours = 24,
 }: {
   samples: Obj[];
   field: (sample: Obj) => number | null;
   label: string;
   unit: string;
+  hours?: number;
 }) {
   const data = samples
     .filter(
@@ -110,13 +113,17 @@ export function MiniChart({
           <Text>{valid.length ? number(valid.at(-1)?.value) : "--"}</Text>
         </Stack>
         <Text type="supporting" color="secondary">
-          {unit}
+          {unit} ·{" "}
+          {valid.length
+            ? `Last valid sample: ${when(valid.at(-1)!.at / 1000)}`
+            : "No valid samples"}
         </Text>
         {valid.length ? (
           <Chart
             title={label + " history"}
             data={data}
             xKey="at"
+            xDomain={[Date.now() - hours * 3600000, Date.now()]}
             series={[
               line("value", { label: unit, curve: "linear", dots: true }),
             ]}
@@ -132,7 +139,10 @@ export function MiniChart({
                   position="bottom"
                   maxTicks={3}
                   tickFormat={(value) =>
-                    new Date(Number(value)).toLocaleTimeString("en-GB", {
+                    new Date(Number(value)).toLocaleString("en-GB", {
+                      ...(hours > 24
+                        ? ({ month: "short", day: "numeric" } as const)
+                        : {}),
                       hour: "2-digit",
                       minute: "2-digit",
                     })
@@ -158,6 +168,7 @@ export function JobPanel({
   refresh: () => void;
   error: (value: string) => void;
 }) {
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   if (!job)
     return (
       <Card>
@@ -167,6 +178,8 @@ export function JobPanel({
       </Card>
     );
   async function perform(action: "run" | "cancel") {
+    if (pendingAction) return;
+    setPendingAction(action);
     try {
       await api(
         `jobs/${job!.id}/${action}`,
@@ -175,6 +188,8 @@ export function JobPanel({
       refresh();
     } catch (reason) {
       error(String(reason));
+    } finally {
+      setPendingAction(null);
     }
   }
   return (
@@ -245,6 +260,8 @@ export function JobPanel({
           {["ready", "paused"].includes(job.state) ? (
             <Button
               onClick={() => perform("run")}
+              isLoading={pendingAction === "run"}
+              isDisabled={Boolean(pendingAction)}
               label={
                 job.state === "paused" ? "Run next step" : "Confirm and run"
               }
@@ -255,6 +272,8 @@ export function JobPanel({
           {!terminal(job) ? (
             <Button
               onClick={() => perform("cancel")}
+              isLoading={pendingAction === "cancel"}
+              isDisabled={Boolean(pendingAction)}
               label={"Cancel"}
               icon={<Square size={15} />}
             ></Button>

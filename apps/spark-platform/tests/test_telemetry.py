@@ -119,7 +119,7 @@ class HistoryTests(unittest.TestCase):
                 self.assertEqual(db.execute("SELECT count(*) FROM sqlite_master WHERE name='switch_jobs'").fetchone()[0], 0)
                 db.execute('PRAGMA user_version=0')
             Store(store.path)
-            self.assertEqual(len(list(Path(root).glob('*.before-v5-*.db'))), 1)
+            self.assertEqual(len(list(Path(root).glob('*.before-v6-*.db'))), 1)
 
     def test_counter_direction_reset_and_v2_rules(self):
         counts = {'nftables': [{'counter': {'name': 'n3_ul', 'bytes': 100}},

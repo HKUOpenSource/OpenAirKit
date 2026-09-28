@@ -1,3 +1,4 @@
+import { activeDataSession } from "../freshness";
 import {
   proportional,
   Banner,
@@ -95,14 +96,7 @@ export function OverviewPage({ snapshot, stack, refresh }: PageProps) {
   const devices = (snapshot.devices || []).filter(
     (item) => item.stack === stack && item.source !== "ocudu_scheduler",
   );
-  const active = devices.filter(
-    (item) =>
-      item.status === "ok" &&
-      item.registration === "registered" &&
-      item.sessions.some(
-        (session) => session.dnn === "oai" && session.status === "ok",
-      ),
-  );
+  const active = devices.filter(activeDataSession);
   return (
     <Stack className="spark-page overview-page" gap={4}>
       <Banner

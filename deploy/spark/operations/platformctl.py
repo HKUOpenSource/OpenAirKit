@@ -126,7 +126,7 @@ def maintain(action):
 
 
 def units():
-    properties = ("Id", "LoadState", "ActiveState", "SubState", "MainPID", "ControlPID")
+    properties = ("Id", "LoadState", "ActiveState", "SubState", "MainPID", "ControlPID", "ControlGroup")
     output = run(["systemctl", "show", *UNITS, "--no-pager",
                   *["--property=" + key for key in properties]])
     result = {}
@@ -164,6 +164,32 @@ def health():
 
 def listening():
     return bool(run(["ss", "-H", "-ltn", f"sport = :{PORT}"]).strip())
+
+
+def listener_cgroups():
+    # Kernel cgroup attribution works without exposing other users' processes
+    # through ss -p. Inspect both address families, including wildcard binds.
+    rows = run(["ss", "-H", "-ltn", "--cgroup", f"sport = :{PORT}"]).splitlines()
+    result = []
+    for row in rows:
+        if not row.strip():
+            continue
+        owners = [field.removeprefix("cgroup:") for field in row.split() if field.startswith("cgroup:")]
+        result.append(owners[0] if len(owners) == 1 else None)
+    return result
+
+
+def check_web_listener(value):
+    owners = listener_cgroups()
+    web = value[MONITOR[-1]]
+    if owners:
+        group = web.get("ControlGroup")
+        if not running(web) or not group or any(owner != group for owner in owners):
+            raise RuntimeError(f"Web port {PORT} ownership is foreign or unverifiable; no startup changes made")
+        if health().get("status") != "ok":
+            raise RuntimeError("Owned Web service is unhealthy; no startup changes made")
+    elif running(web):
+        raise RuntimeError("Owned Web service has no listener; no startup changes made")
 
 
 def wait_for(check, description):
@@ -224,6 +250,7 @@ class Controller:
 
     def start(self):
         value = self.stable()
+        check_web_listener(value)
         existing = containers()
         if core_active(value[CORE]):
             if not core_healthy(existing):

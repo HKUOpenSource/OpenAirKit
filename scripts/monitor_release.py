@@ -255,6 +255,11 @@ def install(stage):
                        "database_backup": str(database_backup) if database_backup else None,
                        "web_config": previous_config}, mode=0o600)
             rollback_ready = True
+        # Complete history-index migration before the bounded service health wait.
+        if database.exists():
+            call([str(release / "venv/bin/python"), "-I", "-B", "-c",
+                  "import sys; sys.path.insert(0, sys.argv[1]); from aoc_spark.storage import Store; Store(sys.argv[2])",
+                  str(release / "backend"), str(database)])
         config = dict(database=str(database), snapshot="/run/aoc-observe/snapshot.json", auth_file=str(auth_path),
                       frontend=str(release / "frontend"), port=8877, retention_days=7,
                       event_retention_days=30, control_socket="/run/aoc-control/control.sock",

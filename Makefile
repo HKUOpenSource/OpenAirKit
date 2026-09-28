@@ -45,11 +45,16 @@ license-audit:
 	$(PYTHON) scripts/audit/license_audit.py
 shell-check:
 	find deploy scripts -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
-check: check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
+test-frontend-behavior:
+	node --test apps/jetson-console/frontend/test-behavior.mjs apps/spark-platform/frontend/tests/behavior.mjs
+
+check: test-frontend-behavior check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
 
 # One local/CI entry point; production builds already include TypeScript checks.
 # Release tests consume frontend artifacts, so finish builds before testing.
 ci: check-python build-jetson-frontend build-spark-frontend
-	$(MAKE) test-jetson-backend test-spark-backend test-stack docs-audit release-audit license-audit shell-check
+	$(MAKE) test-frontend-behavior test-jetson-backend test-spark-backend test-stack docs-audit release-audit license-audit shell-check
 
 .PHONY: test-stack
+
+.PHONY: test-frontend-behavior

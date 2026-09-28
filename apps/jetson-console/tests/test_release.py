@@ -134,9 +134,9 @@ class ReleaseTests(unittest.TestCase):
         manage = load_manage(ROOT / "deploy/jetson/manage.py")
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
-            paths = {name: root / name.lower() for name in ("BASE", "ETC", "STATE", "WEB_STATE")}
+            paths = {name: root / name.lower() for name in ("BASE", "ETC", "STATE", "WEB_STATE", "SYSTEMD")}
             with patch.multiple(manage, **paths), patch.object(manage, "stop"), \
-                    patch.object(manage, "output"), patch.object(manage.os, "chown"), \
+                    patch.object(manage, "output") as commands, patch.object(manage.os, "chown"), \
                     patch.object(manage.pwd, "getpwnam", return_value=SimpleNamespace(pw_uid=1, pw_gid=1)):
                 for path in paths.values():
                     path.mkdir()
@@ -148,7 +148,12 @@ class ReleaseTests(unittest.TestCase):
                 job = store.new_job("speed", "old", ["Download"], {})
                 with store.connect() as db:
                     db.execute("PRAGMA user_version=1")
+                original_units = {unit: f"[Service]\nEnvironment=VERSION=old-{index}\n" for index, unit in enumerate(manage.UNITS)}
+                for unit, content in original_units.items():
+                    (paths["SYSTEMD"] / unit).write_text(content)
                 record = manage.backup()
+                for unit in manage.UNITS:
+                    (paths["SYSTEMD"] / unit).write_text("[Service]\nEnvironment=VERSION=new\n")
                 Store(store.path)
                 (paths["ETC"] / "device.json").write_text(json.dumps({"schema_version": 3}))
                 manage.rollback(record.name)
@@ -158,6 +163,11 @@ class ReleaseTests(unittest.TestCase):
                     restored = json.loads(db.execute("SELECT payload FROM jobs WHERE id=?", (job["id"],)).fetchone()[0])
                 self.assertNotIn("retired", restored)
                 self.assertEqual((paths["BASE"] / "current").resolve(), old)
+                for unit, content in original_units.items():
+                    self.assertEqual((paths["SYSTEMD"] / unit).read_text(), content)
+                command_list = [entry.args[0] for entry in commands.call_args_list]
+                self.assertLess(command_list.index(["systemctl", "daemon-reload"]),
+                                command_list.index(["systemctl", "start", "aoc-v2-jetson-web.service"]))
 
     def test_units_are_v2_named_bounded_and_disabled_by_default(self):
         device = (ROOT / "deploy/jetson/aoc-v2-jetson-device.service").read_text()

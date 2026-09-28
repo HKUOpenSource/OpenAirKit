@@ -90,7 +90,11 @@ interrupted command; route preparation failure leaves maintenance enabled.
 
 Recovery first checks current state and repairs only owned routes. A task may
 perform one modem reconnect when needed and persists every step, cancellation
-and cleanup result. A timeout is followed by readback before any retry.
+and cleanup result. If CFUN=0 may have taken effect but its response or readback
+fails, the adapter attempts CFUN=1 once while retaining hardware ownership, even
+when cancellation is pending. The task keeps its original failure/cancellation;
+failed power restoration is reported explicitly. Temporary restoration authority
+is cleared after that attempt. Inspect state before another recovery request.
 
 After a network outage, automatic recovery waits 120 seconds, then permits at
 most two attempts with a 300-second cooldown. It runs only after a successful
@@ -107,7 +111,10 @@ See [UE access policy](ue-access-policy.md) for independent status meanings.
 
 Stop the platform, verify the new release, install it, start it and validate
 health before running device operations. Rollback restores both the previous
-release link and compatible database backup. If a workflow changed modem or
+release link, compatible database backup, configuration and saved systemd unit
+files, then reloads systemd before starting the web service. Older checkpoints
+without a unit snapshot use the saved release's packaged units. The device
+service remains stopped for inspection until explicitly started. If a workflow changed modem or
 network state, use its recorded recovery action as well; changing application
 code alone does not restore device state.
 

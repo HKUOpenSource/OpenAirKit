@@ -1,3 +1,4 @@
+import { useHistory } from "./history";
 import { Chart, ChartAxis, line } from "@astryxdesign/charts";
 import {
   Badge as AstryxBadge,
@@ -19,13 +20,7 @@ import {
 } from "@astryxdesign/core";
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "./api";
-import type {
-  Device,
-  MetricPoint,
-  Observation,
-  Session,
-  Snapshot,
-} from "./types";
+import type { Device, Observation, Session, Snapshot } from "./types";
 export const CollectionAvailable = createContext(false);
 export const CurrentSnapshot = createContext<Snapshot | null>(null);
 export function systemHealth(s: Snapshot | null, stack: string) {
@@ -374,9 +369,11 @@ export function Sessions({ sessions }: { sessions: Session[] }) {
 export function DeviceTable({
   devices,
   radio = false,
+  emptyTitle = "No device evidence",
 }: {
   devices: Device[];
   radio?: boolean;
+  emptyTitle?: string;
 }) {
   return (
     <Stack className="table-scroll" gap={4}>
@@ -466,7 +463,7 @@ export function DeviceTable({
           ))}
         </TableBody>
       </Table>
-      {!devices.length && <EmptyState title="No device evidence" isCompact />}
+      {!devices.length && <EmptyState title={emptyTitle} isCompact />}
     </Stack>
   );
 }
@@ -487,40 +484,15 @@ export function Trend({
 }) {
   const available = useContext(CollectionAvailable);
   const snapshot = useContext(CurrentSnapshot);
-  const [items, setItems] = useState<MetricPoint[]>([]),
-    [error, setError] = useState("");
-  const requestKey = `${kind}:${entity}:${hours}`;
-  const [loadedKey, setLoadedKey] = useState("");
+  const { items, error } = useHistory(kind, entity, hours, refresh);
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
-  useEffect(() => {
-    const controller = new AbortController();
-    const since = new Date(Date.now() - hours * 3600000).toISOString();
-    api<{
-      items: MetricPoint[];
-    }>(
-      `${kind}/${encodeURIComponent(entity)}/metrics?since=${since}&bucket=${Math.max(5, Math.ceil((hours * 3600) / 360))}`,
-      { signal: controller.signal },
-    )
-      .then((r) => {
-        setItems(r.items);
-        setLoadedKey(requestKey);
-        setError("");
-      })
-      .catch((e) => {
-        if (e.name !== "AbortError") {
-          setItems([]);
-          setError("Unable to load history");
-        }
-      });
-    return () => controller.abort();
-  }, [entity, hours, refresh, kind]);
   const first = now - hours * 3600000,
     last = now;
-  const samples = (loadedKey === requestKey ? items : [])
+  const samples = items
     .map((p) => ({
       at: Date.parse(p.at),
       o: p.metrics.find((m) => m.name === metric),
@@ -654,7 +626,10 @@ export function Trend({
                   position="bottom"
                   maxTicks={3}
                   tickFormat={(n) =>
-                    new Date(Number(n)).toLocaleTimeString("en-GB", {
+                    new Date(Number(n)).toLocaleString("en-GB", {
+                      ...(hours > 24
+                        ? ({ month: "short", day: "numeric" } as const)
+                        : {}),
                       hour: "2-digit",
                       minute: "2-digit",
                     })
@@ -668,7 +643,10 @@ export function Trend({
         )}
         <Stack className="chart-axis" direction="horizontal" justify="between">
           <Text type="supporting">
-            {new Date(first).toLocaleTimeString("en-GB", {
+            {new Date(first).toLocaleString("en-GB", {
+              ...(hours > 24
+                ? ({ month: "short", day: "numeric" } as const)
+                : {}),
               hour: "2-digit",
               minute: "2-digit",
             })}

@@ -2,6 +2,15 @@
 
 ## Jetson Console 0.6.0 / lifecycle improvements (unreleased)
 
+- Correct local-state filters, persistent operation feedback and retained-history access in both Astryx consoles.
+- Prioritize radio health and traffic, share chart queries, expose operations in navigation, and add responsive Setup assessments.
+- Restore saved Jetson systemd unit files and reload systemd before starting the rolled-back web service.
+- Index retained Spark metric names during ingestion; backfill schema 6 before monitor startup so history menus avoid scanning all samples.
+- Keep Spark live streams open instead of closing every 15 seconds; recheck sessions before publishing and retain bounded service shutdown.
+
+- Restore modem power once after an uncertain CFUN=0 result, preserving task failure and revoking temporary restoration authorization.
+- Reconcile Spark control tasks after executor EOF without repeating the requested operation.
+- Reject foreign or unverifiable Web listeners before Spark startup changes, using kernel cgroup ownership.
 - Replace cross-service takeover with independent commissioning through the installed runtime.
 - Prepare journaled data routes and resume observation on start; clean up owned routes on stop, including after device loss.
 - Keep management Wi-Fi as the preferred default and reject route/resource conflicts without modifying external services.

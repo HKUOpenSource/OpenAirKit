@@ -62,9 +62,9 @@ UHD receive/send frames `64/64`。最优近距离实测约为上行 11.55 Mbps�
 - [x] V2-P2-GATE 完成独立安装、真实数据、状态失效、操作和回滚验收。
 
 当前 Spark 源码与已安装版本为 `0.2.0`，配置监听 `127.0.0.1:8877`，默认不开机自启。
-9 月 27 日检查时本项目服务已停止，该端口由另一套平台使用；已安装开发候选包的
-来源与验证边界见
-[2026-09-27 开发准备审阅](acceptance/2026-09-27-development-readiness.zh-CN.md)。
+9 月 27 日 19:53 的只读检查确认本项目 core、radio 和 monitor 均运行，12 个核心网
+容器健康且 N2 建链成功。已安装包的来源、当前三设备状态与下一轮优先问题见
+[2026-09-27 三设备开发审阅](acceptance/2026-09-27-next-round-review.zh-CN.md)。
 
 ## 第三阶段：Jetson Console
 
@@ -93,6 +93,8 @@ Jetson 源码与两台实机安装均为 `0.6.0`，配置监听 `127.0.0.1:8878`
 独立安装与启停改进见 [0.6.0 开发验证](acceptance/2026-09-27-independent-lifecycle.zh-CN.md)；
 双设备升级、独立启停和数据验证见 [0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)。
 P3-15、P3-16、P3-17、P3-GATE 与 R06 仍需按完整条件核对，不因版本升级自动完成。
+同日 19:53 的[只读复核](acceptance/2026-09-27-next-round-review.zh-CN.md)确认两台
+Console 继续运行并报告新鲜连接证据；自动恢复暂停，尚未重新执行独立数据探测。
 历史 `0.3.0` 真实页面已显示
 `5G data connection verified`，实测测速约为下载 60.7 Mbps、上传 12.1 Mbps、
 延迟 26.9 ms、抖动 0.3 ms、丢包 0%；这些结果不代替尚未完成的故障与回滚任务。

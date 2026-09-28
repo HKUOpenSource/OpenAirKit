@@ -27,7 +27,8 @@ def state(name, active=False):
     core = name == SPARK.CORE
     return dict(Id=name, LoadState='loaded', ActiveState='active' if active else 'inactive',
                 SubState=('exited' if core else 'running') if active else 'dead',
-                MainPID='123' if active and not core else '0', ControlPID='0')
+                MainPID='123' if active and not core else '0', ControlPID='0',
+                ControlGroup='/system.slice/' + name if active else '')
 
 
 class Host:
@@ -38,6 +39,7 @@ class Host:
                            for name in SPARK.SERVICES]
         self.actions = []
         self.listener = active
+        self.listener_owner = '/system.slice/aoc-monitor-web.service'
         self.device_socket = active
         self.ue = dict(quality='ok', connected=False, maintenance=False, recovery_paused=True)
         self.n2 = True
@@ -81,6 +83,8 @@ class Host:
                             ('wait_for', self.waiting)]:
             stack.enter_context(patch.object(self.module, name, value))
         if self.module is SPARK:
+            stack.enter_context(patch.object(SPARK, 'listener_cgroups',
+                                             lambda: [self.listener_owner] if self.listener else []))
             stack.enter_context(patch.object(SPARK, 'containers', lambda: self.containers))
             stack.enter_context(patch.object(SPARK, 'n2_ready', lambda: self.n2))
         else:
@@ -106,6 +110,57 @@ class LifecycleTests(unittest.TestCase):
             ctl.stop()
             ctl.stop()
         self.assertEqual(host.actions, ['radio-stop', 'core-stop', 'stop'])
+
+    def test_foreign_or_unknown_listener_rejected_before_any_mutations(self):
+        for active in (False, True):
+            for owner in ('/system.slice/other-web.service', None):
+                with self.subTest(active=active, owner=owner):
+                    host = Host(SPARK, active)
+                    host.listener = True
+                    host.listener_owner = owner
+                    with host.patched(), self.assertRaisesRegex(RuntimeError, 'port 8877.*ownership'):
+                        SPARK.Controller().start()
+                    self.assertEqual(host.actions, [])
+
+    def test_stopped_web_cannot_claim_listener_even_with_matching_cgroup(self):
+        host = Host(SPARK)
+        host.listener = True
+        with host.patched(), self.assertRaisesRegex(RuntimeError, 'ownership'):
+            SPARK.Controller().start()
+        self.assertEqual(host.actions, [])
+
+    def test_additional_foreign_ipv6_listener_is_rejected(self):
+        host = Host(SPARK, True)
+        with host.patched(), patch.object(SPARK, 'listener_cgroups', return_value=[
+                host.listener_owner, '/system.slice/other-web.service']), \
+                self.assertRaisesRegex(RuntimeError, 'ownership'):
+            SPARK.Controller().start()
+        self.assertEqual(host.actions, [])
+
+    def test_occupied_port_inspection_failure_preserves_stopped_stack(self):
+        host = Host(SPARK)
+        with host.patched(), patch.object(SPARK, 'listener_cgroups', side_effect=RuntimeError('ss failed')), \
+                self.assertRaisesRegex(RuntimeError, 'ss failed'):
+            SPARK.Controller().start()
+        self.assertEqual(host.actions, [])
+
+    def test_owned_web_must_be_healthy_before_starting_other_components(self):
+        host = Host(SPARK)
+        host.listener = True
+        host.units[SPARK.MONITOR[-1]] = state(SPARK.MONITOR[-1], True)
+        host.health['status'] = 'failed'
+        with host.patched(), self.assertRaisesRegex(RuntimeError, 'Web.*unhealthy'):
+            SPARK.Controller().start()
+        self.assertEqual(host.actions, [])
+
+    def test_listener_cgroups_cover_ipv4_ipv6_and_unknown_ownership(self):
+        rows = ('LISTEN 0 2048 127.0.0.1:8877 0.0.0.0:* cgroup:/system.slice/aoc-monitor-web.service\n'
+                'LISTEN 0 2048 [::]:8877 [::]:* cgroup:/system.slice/foreign.service\n'
+                'LISTEN 0 2048 0.0.0.0:8877 0.0.0.0:*\n')
+        with patch.object(SPARK, 'run', return_value=rows) as command:
+            self.assertEqual(SPARK.listener_cgroups(), [
+                '/system.slice/aoc-monitor-web.service', '/system.slice/foreign.service', None])
+        command.assert_called_once_with(['ss', '-H', '-ltn', '--cgroup', 'sport = :8877'])
 
     def test_partial_start_does_not_restart_existing_components(self):
         host = Host(SPARK, True)

@@ -6,10 +6,12 @@ export async function api<T = any>(
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers },
   });
-  if (response.status === 401 && path !== "login")
+  if (response.status === 401 && path !== "login" && path !== "session")
     window.dispatchEvent(new Event("aoc-auth-expired"));
   const data = await response.json();
   if (!response.ok)
-    throw new Error(typeof data.detail === "string" ? data.detail : "Request failed");
+    throw new Error(
+      typeof data.detail === "string" ? data.detail : "Request failed",
+    );
   return data;
 }

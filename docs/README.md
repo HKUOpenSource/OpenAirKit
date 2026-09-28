@@ -20,7 +20,9 @@ the product.
 | Use the repository graph | [CodeGraph guide](coding-agent-codegraph.md) |
 | Check delivery status | [Roadmap](roadmap.md) |
 | Review real validation evidence | [Acceptance records](acceptance/README.md) |
-| Review the next development starting point | [2026-09-27 readiness review](acceptance/2026-09-27-development-readiness.md) |
+| Review the next development starting point | [2026-09-27 three-device review](acceptance/2026-09-27-next-round-review.md) |
+| Review Astryx UI changes | [UI fixes](acceptance/2026-09-27-ui-fixes.md) · [original review](acceptance/2026-09-27-ui-review.md) |
+| Review UI deployment | [Deployment and hardware checks](acceptance/2026-09-27-ui-deployment.md) |
 | Review dual-console platform switching results | [Full platform switch](acceptance/2026-09-27-full-platform-switch.md) |
 | Review independent installation and lifecycle changes | [Independent lifecycle](acceptance/2026-09-27-independent-lifecycle.md) |
 | Review 0.6.0 hardware deployment | [Independent lifecycle deployment](acceptance/2026-09-27-independent-lifecycle-deployment.md) |

@@ -248,6 +248,20 @@ try {
         return route.fulfill({ json: { csrf: "fixture" } });
       }
       if (path.endsWith("/snapshot")) return route.fulfill({ json: snapshot });
+      if (path.endsWith("/events/kinds"))
+        return route.fulfill({
+          json: { items: [...new Set(events.map((event) => event.kind))] },
+        });
+      if (path.endsWith("/history/catalog"))
+        return route.fulfill({
+          json: {
+            items: [...snapshot.components, ...snapshot.links].map((item) => ({
+              ...item,
+              apiKind: "components",
+            })),
+            next_cursor: null,
+          },
+        });
       if (path.includes("/events"))
         return route.fulfill({ json: { items: events, next_cursor: null } });
       if (path.endsWith("/devices"))
@@ -348,6 +362,12 @@ try {
       .getByRole("link", { name: "gNB", exact: true })
       .click();
     await page
+      .getByRole("button", {
+        name: "Runtime, RF configuration and hardware",
+        exact: true,
+      })
+      .click();
+    await page
       .getByRole("heading", { name: "RF configuration", exact: true })
       .waitFor();
     await page.goto(base + "/ran");
@@ -361,7 +381,7 @@ try {
       .getByRole("heading", { name: "SMF details", exact: true })
       .waitFor();
     await page.goto(base + "/devices");
-    await choose(page, "Device state", "Active");
+    await choose(page, "Data PDU", "Active data PDU");
     await page.getByText("001010000000137", { exact: true }).waitFor();
     await page
       .getByRole("link", { name: "001010000000137", exact: true })
@@ -375,9 +395,10 @@ try {
     await choose(page, "Event level", "Info");
     await page.getByRole("link", { name: "View metric history" }).click();
     await page.waitForURL("**/history");
-    await page.getByRole("button", { name: "Account", exact: true }).click();
-    await page
-      .getByRole("menuitem", { name: "Operations", exact: true })
+    if (viewport.width <= 760)
+      await page.getByRole("button", { name: "Open navigation" }).click();
+    await primaryNavigation(page, viewport.width)
+      .getByRole("link", { name: "Operations", exact: true })
       .click();
     await page
       .getByRole("heading", { name: "Independent stack control", exact: true })
@@ -389,7 +410,9 @@ try {
     await page.getByRole("button", { name: "Back", exact: true }).click();
     await page.evaluate(() => window.testStream.onerror());
     await page.waitForFunction(() =>
-      document.querySelector(".collection-status .badge.stale"),
+      document
+        .querySelector(".collection-status")
+        ?.textContent.includes("Evidence stale"),
     );
     assert.equal(
       await page.evaluate(
