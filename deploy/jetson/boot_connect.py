@@ -99,14 +99,31 @@ def rpc(request):
     return value['result']
 
 
+GATEWAY_CACHE_SECONDS = 15.0
+_GATEWAY_OK = {}
+
+
+def probe_gateway(wifi, gateway):
+    """Probe the management gateway, retrying with paced pings to tolerate ICMP rate-limiting."""
+    if not run(['ping', '-n', '-I', wifi, '-c', '1', '-W', '2', gateway], check=False).returncode:
+        return True
+    return not run(['ping', '-n', '-I', wifi, '-c', '3', '-i', '1', '-W', '2', gateway], timeout=15, check=False).returncode
+
+
 def management(config):
     from aoc_jetson.network import inspect_management
     state = inspect_management(config)
     wifi = state['wifi_interface']
     if not run(['nmcli', '-g', 'GENERAL.STATE', 'device', 'show', wifi]).stdout.startswith('100'):
+        _GATEWAY_OK.clear()
         raise ValueError('Management Wi-Fi disconnected')
-    if run(['ping', '-n', '-I', wifi, '-c', '1', '-W', '2', state['wifi_gateway']], check=False).returncode:
-        raise ValueError('Management gateway unreachable')
+    key = (wifi, state['wifi_gateway'])
+    last_ok = _GATEWAY_OK.get(key)
+    if last_ok is None or time.monotonic() - last_ok >= GATEWAY_CACHE_SECONDS:
+        if not probe_gateway(wifi, state['wifi_gateway']):
+            _GATEWAY_OK.pop(key, None)
+            raise ValueError('Management gateway unreachable')
+        _GATEWAY_OK[key] = time.monotonic()
     return state
 
 
@@ -116,6 +133,7 @@ def wait_ready(config, seconds=300):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         try:
+            _GATEWAY_OK.clear()
             management(config)
             found = discover(config)
             inspect(config, require_management=True)
@@ -198,6 +216,7 @@ class Serial:
         if 'selection' in report:
             raise ValueError('Selection intent already exists; do not replay')
         self.verify()
+        _GATEWAY_OK.clear()
         management(self.config)
         plmn = self.config['network']['plmn']
         if not re.fullmatch(r'\d{5,6}', plmn):
@@ -341,6 +360,7 @@ def connect(site, config):
         value = rpc({'op': 'status'})
         if value.get('active_job') or value.get('maintenance'):
             raise ValueError('Boot requires idle platform, not an earlier maintenance incident')
+        _GATEWAY_OK.clear()
         management(config)
         maintenance = True
         rpc({'op': 'maintenance', 'enabled': True})

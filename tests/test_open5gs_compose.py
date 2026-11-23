@@ -59,7 +59,8 @@ class BundleTests(unittest.TestCase):
             mongo = compose['services']['mongo']
             self.assertTrue(manifest['database_auth'])
             self.assertIn('--auth', mongo['command'])
-            self.assertTrue(all(key.endswith('_FILE') or key == 'MONGO_INITDB_DATABASE' for key in mongo['environment']))
+            self.assertTrue(all(key.endswith('_FILE') or key in {'MONGO_INITDB_DATABASE', 'GLIBC_TUNABLES'} for key in mongo['environment']))
+            self.assertEqual(mongo['environment']['GLIBC_TUNABLES'], 'glibc.pthread.rseq=1')
             password = json.loads((out / 'secrets/subscriber-db.json').read_text())['password']
             self.assertNotIn(password, (out / 'compose.json').read_text())
             self.assertNotIn(password, (out / 'bundle.json').read_text())
@@ -105,6 +106,7 @@ class BundleTests(unittest.TestCase):
             self.assertEqual(compose['volumes']['mongo-data']['name'], 'aoc-v2-test-mongo')
             self.assertEqual(compose['services']['upf']['cap_add'], ['NET_ADMIN'])
             self.assertEqual(compose['services']['mongo']['user'], 'mongodb')
+            self.assertEqual(compose['services']['mongo']['environment'], {'GLIBC_TUNABLES': 'glibc.pthread.rseq=1'})
             for name in ('amf', 'udm', 'udr', 'ausf', 'pcf', 'nssf', 'smf'):
                 self.assertIn('nrf', compose['services'][name]['depends_on'])
 

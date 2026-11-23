@@ -26,3 +26,4 @@ coverage/
 .coverage
 /apps/jetson-console/frontend/dist/
 /apps/spark-platform/frontend/dist/
+.codegraph/

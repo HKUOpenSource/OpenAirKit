@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+import signal
+import struct
+
+with open("/dev/cpu_dma_latency", "wb", buffering=0) as latency:
+    latency.write(struct.pack("i", 0))
+    signal.pause()

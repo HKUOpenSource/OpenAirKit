@@ -1,3 +1,4 @@
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -9,6 +10,12 @@ import subprocess
 from scripts.monitor_radio import load_renderer
 from scripts.aoclib.radio import PROFILE
 from scripts import monitor_release
+
+ROOT = Path(__file__).resolve().parents[3]
+metrics_spec = importlib.util.spec_from_file_location(
+    'enable_radio_json_metrics', ROOT / 'scripts/spark/enable_radio_json_metrics.py')
+radio_metrics = importlib.util.module_from_spec(metrics_spec)
+metrics_spec.loader.exec_module(radio_metrics)
 
 
 class MonitorRadioReleaseTests(unittest.TestCase):
@@ -120,6 +127,42 @@ class V2MonitorReleaseTests(unittest.TestCase):
         self.assertIn('"web_config"', source)
         self.assertIn('def stop_platform():', source)
         self.assertIn('/run/aoc-control/control.sock', source)
+
+    def test_radio_metrics_migrates_to_8879_and_stops_guard_on_restore(self):
+        self.assertEqual(radio_metrics.PORT, 8879)
+        guard_source = radio_metrics.GUARD_PROGRAM.decode()
+        self.assertIn('tcp dport 8879', guard_source)
+        self.assertNotIn('8001', guard_source)
+        disabled = (ROOT / 'deploy/spark/stack/runtime.py').read_bytes()
+        enabled = radio_metrics.transform(disabled)
+        self.assertIn(b"'port': 8879", enabled)
+        self.assertIn(b"'enable_json': True", enabled)
+        legacy = disabled.replace(radio_metrics.DISABLED, radio_metrics.LEGACY_ENABLED)
+        migrated = radio_metrics.transform(legacy)
+        self.assertIn(b"'port': 8879", migrated)
+        self.assertIn(b"'enable_json': True", migrated)
+        with tempfile.TemporaryDirectory() as temporary:
+            temp = Path(temporary)
+            base, state = temp / 'v2', temp / 'state'
+            backup = state / 'radio-json-metrics-1'
+            backup.mkdir(parents=True)
+            base.mkdir()
+            (backup / 'runtime.py').write_bytes(disabled)
+            (backup / 'release.json').write_text('{}\n')
+            (backup / 'transaction.json').write_text(json.dumps({
+                'existed': {'metrics.conf': False, 'guard': False, 'guard.service': False}}))
+            calls = []
+            def fake_run(argv, **kwargs):
+                calls.append(argv)
+                return subprocess.CompletedProcess(argv, 1, '', '')
+            with patch.multiple(radio_metrics, BASE=base, STATE=state,
+                                DROPIN=temp / 'metrics.conf', GUARD=temp / 'guard',
+                                GUARD_UNIT=temp / 'guard.service'), \
+                    patch.object(radio_metrics.subprocess, 'run', side_effect=fake_run), \
+                    patch.object(radio_metrics, 'run', lambda argv, *_: calls.append(argv) or ''):
+                radio_metrics.restore(backup)
+            self.assertEqual(calls[0], ['systemctl', 'stop', 'aoc-v2-metrics-guard.service'])
+            self.assertIn(['systemctl', 'daemon-reload'], calls)
 
 
 if __name__=='__main__':

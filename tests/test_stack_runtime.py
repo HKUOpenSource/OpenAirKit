@@ -75,6 +75,8 @@ class V2RuntimeTests(unittest.TestCase):
     def test_config_is_single_data_radio_without_telemetry(self):
         config = runtime.radio_config('123abc')
         self.assertEqual(config['cell_cfg']['dl_arfcn'], 643392)
+        self.assertEqual(config['ru_sdr']['rx_gain'], 54)
+        self.assertEqual(config['cell_cfg']['pusch'], {'max_ue_mcs': 24})
         self.assertEqual(config['cu_cp']['amf']['addrs'], '172.28.81.12')
         self.assertEqual(config['remote_control'], {'enabled': False})
         self.assertEqual(config['log']['all_level'], 'warning')

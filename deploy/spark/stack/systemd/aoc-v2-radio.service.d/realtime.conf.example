@@ -1,0 +1,4 @@
+[Service]
+# Host-specific CPU pinning template for co-located workloads (e.g. DGX Spark).
+CPUAffinity=5-9 15-18
+LimitRTPRIO=99

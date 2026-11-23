@@ -167,9 +167,10 @@ def radio_config(serial):
             'supported_tracking_areas': [{'tac': 1, 'plmn_list': [{'plmn': '46003', 'tai_slice_support_list': [{'sst': 1}]}]}]}},
         'cu_up': {'ngu': {'socket': [{'bind_addr': '172.28.81.1'}]}},
         'ru_sdr': {'device_driver': 'uhd', 'device_args': 'type=b200,serial=' + serial + ',num_recv_frames=64,num_send_frames=64',
-            'srate': 23.04, 'otw_format': 'sc12', 'clock': 'internal', 'sync': 'internal', 'tx_gain': 80, 'rx_gain': 68},
+            'srate': 23.04, 'otw_format': 'sc12', 'clock': 'internal', 'sync': 'internal', 'tx_gain': 80, 'rx_gain': 54},
         'cell_cfg': {'dl_arfcn': 643392, 'band': 78, 'channel_bandwidth_MHz': 20, 'common_scs': 30,
             'plmn': '46003', 'tac': 1, 'pci': 666, 'nof_antennas_dl': 1, 'nof_antennas_ul': 1,
+            'pusch': {'max_ue_mcs': 24},
             'tdd_ul_dl_cfg': {'dl_ul_tx_period': 10, 'nof_dl_slots': 7, 'nof_dl_symbols': 6, 'nof_ul_slots': 2, 'nof_ul_symbols': 4}},
         'remote_control': {'enabled': False},
         'log': {'filename': str(LOG), 'all_level': 'warning', 'cu_level': 'info',
@@ -195,7 +196,7 @@ def prepare(spec):
     if len(rows) != 1:
         raise ValueError('UHD probe returned no unique device')
     probe = rows[0]
-    for direction, gain in (('tx', 80), ('rx', 68)):
+    for direction, gain in (('tx', 80), ('rx', 54)):
         if not probe[direction + '_min'] <= gain <= probe[direction + '_max']:
             raise ValueError('Reviewed gain outside device range')
     previous = STATE / 'b210.json'

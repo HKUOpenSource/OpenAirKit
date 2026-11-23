@@ -1,0 +1,12 @@
+[Unit]
+Description=OCUDU radio CPU latency constraint
+PartOf=aoc-v2-radio.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/libexec/aoc-v2-cpu-latency
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+Restart=no

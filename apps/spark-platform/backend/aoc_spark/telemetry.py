@@ -11,6 +11,9 @@ import time
 
 from .domain import observation, utc, age_seconds
 
+METRICS_PORT = 8879
+METRICS_URL = f"ws://127.0.0.1:{METRICS_PORT}"
+
 
 def device_id(stack, identity):
     return stack + ":ue:" + hashlib.sha256(identity.encode()).hexdigest()[:20]
@@ -137,7 +140,7 @@ class SchedulerFeed:
         from websockets.sync.client import connect
         while True:
             try:
-                with connect("ws://127.0.0.1:8001", open_timeout=2, max_size=2**20, close_timeout=1) as connection:
+                with connect(METRICS_URL, open_timeout=2, max_size=2**20, close_timeout=1) as connection:
                     identities = RadioIdentity()
                     with self.lock:
                         epoch = self.epoch

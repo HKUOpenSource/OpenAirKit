@@ -55,9 +55,9 @@ Verify transfer hashes before execution. The same files can be copied over SSH;
 no checkout is needed on the device. They are included in 0.6.0 application releases
 and do not enable boot startup. Upgrade the application, approved maintenance bundle
 and shortcuts together; do not pair new shortcuts with an older manager. Do not put site addresses in these scripts.
-See the [2026-09-24 lifecycle acceptance](acceptance/2026-09-24-platform-lifecycle.md)
-for historical device checks. The two-device 0.6.0 upgrade and independent
-stop/start checks are in the [0.6.0 hardware acceptance](acceptance/2026-09-27-independent-lifecycle-deployment.md).
+See the [2026-09-24 lifecycle acceptance](acceptance/2026-09-24-platform-lifecycle.md),
+the [0.6.0 hardware acceptance](acceptance/2026-09-27-independent-lifecycle-deployment.md),
+and the [2026-11-23 alignment record](acceptance/2026-11-23-spark-ue-alignment.md).
 
 The underlying installed manager remains available to administrators:
 
@@ -77,10 +77,17 @@ before another process opens the modem.
 ## Device status and setup
 
 The Overview page separates SIM readiness, cell camping, 5GS registration,
-PDU activation, pool membership, RNDIS addressing and verified data path.
+PDU activation, pool membership, RNDIS/ECM addressing and verified data path.
 Device Setup previews every write and records a private baseline before it
 changes an allowed data context. Duplicate DNNs, conflicting CIDs or uncertain
 device identity stop the workflow.
+
+If opt-in boot coordination (`aoc-v2-jetson-boot.service` and `boot_connect.py`)
+is enabled, inspect redacted progress in
+`/var/lib/aoc-v2-jetson-boot/public/status.json`. Because `boot_connect.py`
+key-locks one operation ledger per Linux `boot_id`, do not manually replay
+`aoc-v2-jetson-boot.service` within the same boot after it has recorded a
+run; use standard UI Setup/Recover or `aoc-maintain ue-recover` instead.
 
 Maintenance mode waits for the current command, selects Wi-Fi fallback, suspends
 collection and recovery, and releases the serial port. Leaving maintenance rediscovers the

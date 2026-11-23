@@ -109,6 +109,58 @@ class ReleaseTests(unittest.TestCase):
             self.assertTrue((release / "module.py").is_file())
             self.assertTrue((release / "venv/bin/python").is_file())
 
+    def test_install_creates_venv_under_public_umask_even_when_caller_uses_077(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            stage = root / "stage"
+            stage.mkdir()
+            etc = root / "etc"
+            etc.mkdir()
+            (etc / "web.json").write_text("{}")
+            manifest = {"release": "newrel", "files": {}}
+            recorded = []
+
+            def fake_output(argv, timeout=30):
+                active_umask = os.umask(0o077)
+                os.umask(active_umask)
+                recorded.append((argv, active_umask))
+                if "check" in argv:
+                    raise RuntimeError("stop after umask check")
+                return ""
+
+            saved_umask = os.umask(0o077)
+            try:
+                with patch.multiple(manage, BASE=root / "base", ETC=etc), \
+                        patch.object(manage, "verify", return_value=manifest), \
+                        patch.object(manage, "unit_state", return_value="inactive"), \
+                        patch.object(manage, "preflight", return_value={}), \
+                        patch.object(manage, "backup", return_value=root / "checkpoint"), \
+                        patch.object(manage.os, "chown"), \
+                        patch.object(manage, "output", side_effect=fake_output):
+                    with self.assertRaisesRegex(RuntimeError, "stop after umask check"):
+                        manage.install(stage)
+                restored = os.umask(saved_umask)
+            finally:
+                os.umask(saved_umask)
+
+            self.assertEqual(len(recorded), 3)
+            self.assertEqual(recorded[0][1], 0o022)
+            self.assertEqual(recorded[1][1], 0o022)
+            self.assertEqual(recorded[2][1], 0o077)
+            self.assertEqual(restored, 0o077)
+
+    def test_private_write_preserves_group_read_mode_under_umask_077(self):
+        manage = load_manage(ROOT / "deploy/jetson/manage.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "web.json"
+            saved_umask = os.umask(0o077)
+            try:
+                manage.private_write(target, {"ok": True}, uid=os.getuid(), gid=os.getgid(), mode=0o640)
+            finally:
+                os.umask(saved_umask)
+            self.assertEqual(target.stat().st_mode & 0o777, 0o640)
+
     def test_release_contains_only_v2_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

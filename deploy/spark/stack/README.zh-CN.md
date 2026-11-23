@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`runtime.py`、`package.py`、`systemd/` 是独立 OCUDU/Open5GS 生命周期的现行源码，
+`runtime.py`、`package.py`、`libexec/` 与 `systemd/` 是独立 OCUDU/Open5GS 生命周期的现行源码，
 与 Spark Platform 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
 `aoc-v2ctl`。旧模板与安装器已经归档，不参与打包。
 
@@ -58,6 +58,13 @@ staging 检查 ARM64 ELF 头、gNB 哈希和固定源码版本、核心网文件
 infoAPI 确认 NG Setup 成功。启动失败保留现场；停止先核对无线退出再停止 core，
 不删除数据库卷。不要混用 CLI、Web、维护 helper 同时操作。
 
+生成的 `compose.json` 默认为 `mongo` 服务注入 `GLIBC_TUNABLES=glibc.pthread.rseq=1`
+以适配 Linux 7.0+ 内核与 MongoDB 8.0.30；`runtime.py` 默认生成 `tx_gain=80`、`rx_gain=54`
+及 `cell_cfg.pusch.max_ue_mcs=24` 的私有 `gnb.json` 配置。
+
 初始无线配置禁用遥测；另行安排 `scripts/spark/enable_radio_json_metrics.py` 事务
-安装回环访问保护并启用 JSON 指标，再验收采集。CPU 分配属于站点审阅策略，
-本包不复制特定主机的 CPU 亲和性。
+安装 `127.0.0.1:8879` 回环访问保护并启用 JSON 指标（已从 `8001` 迁移以避开共驻容器，且回滚时
+会自动停止 `aoc-v2-metrics-guard.service`），再验收采集。`/dev/cpu_dma_latency` 低时延守护
+（`libexec/aoc-v2-cpu-latency`、`systemd/aoc-v2-cpu-latency.service`、`cpu-latency.conf`）
+及实时 CPU 绑定模板（`systemd/aoc-v2-radio.service.d/realtime.conf.example`）按站点审阅策略
+配合 [协议栈服务定义](systemd/README.zh-CN.md) 使用。
