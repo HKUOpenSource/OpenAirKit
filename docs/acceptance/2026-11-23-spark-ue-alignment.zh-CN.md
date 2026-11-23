@@ -44,12 +44,12 @@
 
 ## 实机部署与联合验证结果
 
-- **Spark 端（`spark-75c3`）**：
+- **Spark 端**：
   - 安装 `/usr/local/sbin/aoc-maintain` 并将 Monitor 升级至 `599a67f4c4bfd503`，`aoc-v2-core.service` 全程未中断。
   - 首次尝试整文件覆盖 `/opt/agentic-ocudu/v2/runtime.py` 时因实机保留 schema 2 目录（`units/` 与历史备份）触发 `Unlisted release files`，事务自动完整回滚且未影响核心网。
   - 改为就地精准修补实机 `runtime.py`（`6aa11528...` -> `f1d7c2a2...`）后移除临时 `/run/systemd/system/aoc-v2-radio.service.d/90-rx-gain-test.conf`，将 `aoc-v2-metrics-guard` 迁至 `127.0.0.1:8879`，并通过 `gnb --dryrun` 后重启 `aoc-v2-radio.service` 与 `aoc-observe.service`。
   - 最终只读复核：7 个自有服务全部 `active`（`NRestarts=0`）、`127.0.0.1:8877/api/v1/health` 返回 `{"status":"ok","collector":"ok"}`、`127.0.0.1:8879` 已 `LISTEN` 并与采集器建立 `ESTAB` 连接、`8000–8002` 共驻容器不受影响、AMF N2 `setup_success: true`、gNB 日志持续显示 UE 正常通信（`CQI 15`、`DL MCS 26–27`、`UL MCS 24`、`0% BLER`）。
-- **UE 端（`zihao-desktop`）**：
+- **UE 端（Jetson）**：
   - 停止并禁用冲突的旧控制台服务（保留其目录供回滚），对齐 `at_interface_number="02"`，更新维护审批后安装 `18b45ddf1164a8ba`，并修正在 `umask 077` 下暴露的 `venv`/`web.json`/`boot-ready.conf` 目录权限。
   - 安装 `/opt/agentic-ocudu/jetson/boot_connect.py` 并完成 ECM 只读 AT/SIM/配置/USB 速率兼容性预检；在安装后生成 `/etc/aoc-v2-jetson/boot.json`，写入 `boot-ready.conf` 与 `aoc-v2-jetson-boot.service`，并启用 `web`、`device`、`boot` 三个单元开机自启。
   - 随 `aoc-maintain start` 实测 `boot_connect.py ready`、`site_guard.py`（`ttyUSB2`）与 `network_entry.py` 均一次通过；最终检查 `aoc-v2-jetson-web` 与 `aoc-v2-jetson-device` 均为 `active (running)`（`NRestarts=0`），`127.0.0.1:8878/api/v1/health` 返回 `{"status":"ok","web":"ok","device":"ok"}`，`aoc-maintain ue-status` 汇报 `quality="ok"`、`connected=true`、`registered=true`、`data_session_active=true`、`lab_policy_match=true`、`management_protected=true`（`maintenance=false`、`recovery_paused=true`）。

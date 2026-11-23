@@ -50,7 +50,7 @@ git commits on the branch (`dirty=true` in staged release manifests).
 
 ## Observed hardware deployment and verification
 
-- **Spark (`spark-75c3`)**:
+- **Spark host**:
   - Installed `/usr/local/sbin/aoc-maintain` and upgraded Spark Monitor to
     `599a67f4c4bfd503` without disturbing `aoc-v2-core.service`.
   - An initial attempt to replace live `/opt/agentic-ocudu/v2/runtime.py` with
@@ -67,7 +67,7 @@ git commits on the branch (`dirty=true` in staged release manifests).
     `127.0.0.1:8879` `LISTEN` + `ESTAB` WebSocket telemetry connection, AMF N2
     `setup_success: true`, and live UE traffic (`CQI 15`, `DL MCS 26–27`,
     `UL MCS 24`, `0% BLER`).
-- **UE (`zihao-desktop`)**:
+- **UE host (Jetson)**:
   - Disabled and stopped the conflicting legacy console unit (leaving its
     directory untouched for rollback), aligned `at_interface_number` to `"02"`,
     updated the maintenance approval, installed `18b45ddf1164a8ba`, and
