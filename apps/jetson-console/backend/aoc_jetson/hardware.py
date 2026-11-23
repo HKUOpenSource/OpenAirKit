@@ -45,9 +45,12 @@ def discover(config, sys_class=Path("/sys/class"), dev_root=Path("/dev")):
     if len(networks) != 1:
         raise ValueError("A unique RM520N data interface was not found")
     # RNDIS can occupy USB interfaces 00/01, shifting the four serial functions
-    # (DIAG, GNSS, AT, modem) to 02..05. Never open DIAG using the old AT number.
+    # (DIAG, GNSS, AT, modem) to 02..05. ECM (cdc_ether) places serial functions
+    # at 00..03 (AT at 02) and the data interface at 04 or 0a. Never open DIAG
+    # using the wrong AT number.
     layouts = {("00", ("02", "03", "04", "05")): "04",
-               ("04", ("00", "01", "02", "03")): "02"}
+               ("04", ("00", "01", "02", "03")): "02",
+               ("0a", ("00", "01", "02", "03")): "02"}
     numbers = tuple(sorted(item["interface_number"] or "" for item in ports))
     expected_at = layouts.get((networks[0]["interface_number"], numbers))
     if expected_at is None:

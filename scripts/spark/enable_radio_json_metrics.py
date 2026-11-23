@@ -19,21 +19,23 @@ UNIT = Path('/etc/systemd/system/aoc-v2-radio.service')
 DROPIN = Path('/etc/systemd/system/aoc-v2-radio.service.d/metrics.conf')
 GUARD = Path('/usr/local/libexec/aoc-v2-metrics-guard')
 GUARD_UNIT = Path('/etc/systemd/system/aoc-v2-metrics-guard.service')
+PORT = 8879
 DISABLED = b"'remote_control': {'enabled': False},"
-ENABLED = b"'remote_control': {'enabled': True, 'bind_addr': '127.0.0.1', 'port': 8001},"
+LEGACY_ENABLED = b"'remote_control': {'enabled': True, 'bind_addr': '127.0.0.1', 'port': 8001},"
+ENABLED = b"'remote_control': {'enabled': True, 'bind_addr': '127.0.0.1', 'port': 8879},"
 STDOUT_ONLY = b"'metrics': {'autostart_stdout_metrics': True},"
 JSON_METRICS = b"'metrics': {'enable_json': True, 'autostart_stdout_metrics': True},"
 GUARD_PROGRAM = b'''#!/usr/bin/python3
 import os, subprocess
 RULES = """table inet aoc_v2_metrics_guard {
  chain output { type filter hook output priority -10; policy accept;
-  ip daddr 127.0.0.1 tcp dport 8001 meta skuid != 0 reject
+  ip daddr 127.0.0.1 tcp dport 8879 meta skuid != 0 reject
  }
 }\n"""
 if os.geteuid() != 0: raise SystemExit("root required")
 old=subprocess.run(["nft","-nn","list","table","inet","aoc_v2_metrics_guard"],capture_output=True,text=True,timeout=5)
 if old.returncode == 0:
-    if "tcp dport 8001" not in old.stdout or "skuid != 0 reject" not in old.stdout: raise SystemExit("guard differs")
+    if "tcp dport 8879" not in old.stdout or "skuid != 0 reject" not in old.stdout: raise SystemExit("guard differs")
 else:
     subprocess.run(["nft","--check","-f","-"],input=RULES,text=True,check=True,timeout=5)
     subprocess.run(["nft","-f","-"],input=RULES,text=True,check=True,timeout=5)
@@ -65,9 +67,14 @@ def sha(data):
 
 
 def transform(runtime):
-    if runtime.count(DISABLED) != 1 or ENABLED in runtime:
-        raise ValueError('Expected exactly one disabled V2 remote-control block')
-    updated = runtime.replace(DISABLED, ENABLED)
+    if ENABLED in runtime:
+        raise ValueError('V2 remote-control metrics already use port %d' % PORT)
+    if runtime.count(DISABLED) == 1 and LEGACY_ENABLED not in runtime:
+        updated = runtime.replace(DISABLED, ENABLED)
+    elif runtime.count(LEGACY_ENABLED) == 1 and DISABLED not in runtime:
+        updated = runtime.replace(LEGACY_ENABLED, ENABLED)
+    else:
+        raise ValueError('Expected exactly one V2 remote-control block')
     if updated.count(STDOUT_ONLY) == 1:
         updated = updated.replace(STDOUT_ONLY, JSON_METRICS)
     elif JSON_METRICS not in updated:
@@ -105,6 +112,8 @@ def stopped():
 
 
 def remove_guard():
+    subprocess.run(['systemctl', 'stop', 'aoc-v2-metrics-guard.service'],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
     if subprocess.run(['nft', 'list', 'table', 'inet', 'aoc_v2_metrics_guard'],
                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5).returncode == 0:
         run(['nft', 'delete', 'table', 'inet', 'aoc_v2_metrics_guard'], 10)
@@ -128,7 +137,7 @@ def wait_endpoint():
     deadline = time.monotonic() + 180
     while time.monotonic() < deadline:
         try:
-            with socket.create_connection(('127.0.0.1', 8001), timeout=1):
+            with socket.create_connection(('127.0.0.1', PORT), timeout=1):
                 return
         except OSError:
             time.sleep(1)
@@ -139,14 +148,14 @@ def install():
     if not UNIT.is_file() or 'ExecStart=/opt/agentic-ocudu/v2/bin/gnb ' not in UNIT.read_text():
         raise ValueError('Unexpected V2 radio unit')
     with socket.socket() as listener:
-        listener.bind(('127.0.0.1', 8001))
+        listener.bind(('127.0.0.1', PORT))
     runtime = (BASE / 'runtime.py').read_bytes()
     updated = transform(runtime)
     release = json.loads((BASE / 'release.json').read_text())
     if release['files'].get('runtime.py') != sha(runtime):
         raise ValueError('Installed V2 runtime differs from release manifest')
     release['files']['runtime.py'] = sha(updated)
-    release['radio_json_metrics'] = {'version': 1, 'loopback': '127.0.0.1:8001', 'root_only': True}
+    release['radio_json_metrics'] = {'version': 1, 'loopback': f'127.0.0.1:{PORT}', 'root_only': True}
     encoded_release = (json.dumps(release, indent=2) + '\n').encode()
     backup = STATE / ('radio-json-metrics-' + str(time.time_ns()))
     backup.mkdir(mode=0o700, parents=True)
@@ -163,6 +172,7 @@ def install():
     if not stopped():
         raise RuntimeError('V2 radio did not stop cleanly')
     try:
+        remove_guard()
         atomic(BASE / 'runtime.py', updated)
         atomic(BASE / 'release.json', encoded_release)
         atomic(GUARD, GUARD_PROGRAM, 0o755)
@@ -177,7 +187,7 @@ def install():
         restore(backup)
         run(['systemctl', 'start', 'aoc-v2-radio.service'])
         raise
-    print(json.dumps({'installed': True, 'backup': str(backup), 'listen': '127.0.0.1:8001',
+    print(json.dumps({'installed': True, 'backup': str(backup), 'listen': f'127.0.0.1:{PORT}',
                       'access': 'root-only-loopback', 'radio_restarted': True}))
 
 

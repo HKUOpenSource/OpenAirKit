@@ -112,6 +112,8 @@ def render(output, subnet='172.28.81.0/24', project='aoc-v2-open5gs', database_a
         if nf == 'mongo':
             service.update({'user': 'mongodb', 'entrypoint': ['mongod'],
                             'command': ['--bind_ip', addr[nf], '--port', '27017'],
+                            # Avoid TCMalloc per-CPU rseq startup failures on newer Linux kernels (SERVER-125742).
+                            'environment': {'GLIBC_TUNABLES': 'glibc.pthread.rseq=1'},
                             'volumes': ['mongo-data:/data/db']})
             health['test'] = ['CMD', 'mongosh', '--host', addr[nf], '--quiet', '--eval',
                               'quit(db.adminCommand({ping:1}).ok === 1 ? 0 : 1)']
@@ -121,7 +123,8 @@ def render(output, subnet='172.28.81.0/24', project='aoc-v2-open5gs', database_a
                 service['command'] = ['mongod', '--auth', '--bind_ip', addr[nf] + ',127.0.0.1']
                 service['cap_add'] = ['CHOWN', 'SETUID', 'SETGID', 'DAC_OVERRIDE']
                 service['environment'] = {'MONGO_INITDB_ROOT_USERNAME_FILE': '/run/secrets/root-user',
-                    'MONGO_INITDB_ROOT_PASSWORD_FILE': '/run/secrets/root-password', 'MONGO_INITDB_DATABASE': 'open5gs'}
+                    'MONGO_INITDB_ROOT_PASSWORD_FILE': '/run/secrets/root-password', 'MONGO_INITDB_DATABASE': 'open5gs',
+                    'GLIBC_TUNABLES': 'glibc.pthread.rseq=1'}
                 service['volumes'] += ['./secrets/' + name + ':/run/secrets/' + name + ':ro'
                                        for name in ('root-user', 'root-password', 'subscriber-db.json')]
                 service['volumes'] += ['./init-db.js:/docker-entrypoint-initdb.d/aoc.js:ro',

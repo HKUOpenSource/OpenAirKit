@@ -63,6 +63,16 @@ class HardwareTests(unittest.TestCase):
         self.config["device"]["at_interface_number"] = "02"
         self.assertEqual(discover(self.config, self.sys_class)["at_port"], "/dev/ttyUSB2")
 
+    def test_ecm_interface_0a_selects_at_interface_02(self):
+        self.layout(self.usb("2-1"), 0, 0x0A, driver="cdc_ether")
+        self.config["device"]["at_interface_number"] = "02"
+        found = discover(self.config, self.sys_class)
+        self.assertEqual(found["at_port"], "/dev/ttyUSB2")
+        self.assertEqual(found["data_interface"], "modem0")
+        self.config["device"]["at_interface_number"] = "04"
+        with self.assertRaisesRegex(ValueError, "expected 02"):
+            discover(self.config, self.sys_class)
+
     def test_unknown_serial_layout_is_rejected(self):
         self.layout(self.usb("2-1"), 3, 0)
         with self.assertRaisesRegex(ValueError, "Unsupported RM520N USB interface layout"):

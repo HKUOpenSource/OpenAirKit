@@ -129,6 +129,7 @@ def private_write(path, value, uid=0, gid=0, mode=0o600):
             output_file.flush()
             os.fsync(output_file.fileno())
         os.chown(temporary, uid, gid)
+        os.chmod(temporary, mode)
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
@@ -182,9 +183,15 @@ def install(stage):
             path.chmod(0o755 if path.is_dir() else 0o644)
     try:
         if not existing:
-            output([sys.executable, "-m", "venv", str(release / "venv")])
-            output([str(release / "venv/bin/python"), "-m", "pip", "install", "--no-index",
-                    "--find-links", str(release / "wheels"), "-r", str(release / "requirements.lock")], 180)
+            # The web unit runs as an unprivileged service account; create its
+            # virtualenv with public read/exec permissions even under umask 077.
+            previous_umask = os.umask(0o022)
+            try:
+                output([sys.executable, "-m", "venv", str(release / "venv")])
+                output([str(release / "venv/bin/python"), "-m", "pip", "install", "--no-index",
+                        "--find-links", str(release / "wheels"), "-r", str(release / "requirements.lock")], 180)
+            finally:
+                os.umask(previous_umask)
         output([str(release / "venv/bin/python"), "-m", "pip", "check"])
         output([str(release / "venv/bin/python"), "-I", "-c", "import fastapi,serial,uvicorn"])
     except Exception:

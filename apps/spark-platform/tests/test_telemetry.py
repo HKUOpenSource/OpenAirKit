@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from aoc_spark.storage import Store
-from aoc_spark.telemetry import RadioEvents, RadioIdentity, SchedulerFeed, parse_control, parse_ocudu
+from aoc_spark.telemetry import METRICS_PORT, METRICS_URL, RadioEvents, RadioIdentity, SchedulerFeed, parse_control, parse_ocudu
 from aoc_spark.traffic import Traffic, rules
 from aoc_spark.domain import utc
 
@@ -93,6 +93,8 @@ class TelemetryTests(unittest.TestCase):
         self.assertEqual(values['rrc_peak_connections']['value'], 6)
 
     def test_restart_invalidates_scheduler_sample(self):
+        self.assertEqual(METRICS_PORT, 8879)
+        self.assertEqual(METRICS_URL, 'ws://127.0.0.1:8879')
         feed = SchedulerFeed()
         feed.started = True
         feed.epoch = 'first'
