@@ -47,5 +47,9 @@
 
 查看 `journalctl -u aoc-v2-jetson-boot.service` 与
 `/var/lib/aoc-v2-jetson-boot/public/status.json`。常见原因包括升级应用后未同步更新
-`/etc/aoc-v2-jetson/boot.json` 中的 `device_sha256` / `manifest_sha256`，或先前启动失败
-后出于安全考虑保留了 `maintenance=true` / `uncertain-selection.json` 等待人工核查。
+`/etc/aoc-v2-jetson/boot.json` 中的 `device_sha256` / `manifest_sha256`、先前启动失败
+后出于安全考虑保留了 `maintenance=true` / `uncertain-selection.json` 等待人工核查，
+或校园网管理网关触发 ICMP 限速。新版 `boot_connect.py` 在单包 `ping -c 1 -W 2`
+未收到回包时会自动改用 `ping -c 3 -i 1 -W 2` 重试，并对已通过的网关连通状态缓存 `15.0 s`
+（每次调用仍实时检查 `nmcli` 与 `inspect_management`）；若管理接口已关联但三包均被丢弃，
+请检查上联网关的 ICMP 限速策略或 Wi-Fi 关联状态。

@@ -85,14 +85,40 @@ git commits on the branch (`dirty=true` in staged release manifests).
     `registered=true`, `data_session_active=true`, `lab_policy_match=true`, and
     `management_protected=true` (`maintenance=false`, `recovery_paused=true`).
 
+## Cold-reboot verification & gateway ICMP fix
+
+- An initial unattended Jetson cold reboot exercised
+  `aoc-v2-jetson-boot.service` (`boot_connect.py ready` then `connect`) with
+  a cold-renamed USB ECM interface (`cdc_ether`, `480 Mbps`) and AT serial port.
+  `readiness` (`28.5 s`), `identity_and_registration` (`32.6 s`,
+  `configuration_differences: []`, `NR5G` registration in `~4.6 s`), and
+  `standard_setup` job dispatch (`37.2 s`) succeeded, bringing up
+  `aoc-v2-jetson-web`, `aoc-v2-jetson-device` (`NRestarts=0`), healthy
+  `/api/v1/health`, default IPv4 cellular routing (metric `10` over Wi-Fi metric
+  `30000`), and live Spark gNB scheduling (`CQI 15`, `DL MCS 27`, `UL MCS 24`,
+  `PUSCH SINR ~30 dB`, `0%` BLER).
+- Finding during `standard_setup`: `boot_connect.py` aborted with
+  `ValueError: Management gateway unreachable` on a single dropped
+  `ping -c 1 -W 2` reply while `NetworkManager` showed the management Wi-Fi and
+  management tunnel continuously online. Direct gateway probing confirmed
+  `66.7%` ICMP packet loss caused by campus Wi-Fi gateway ICMP rate-limiting.
+- Fix implemented after `677b1cc`: `deploy/jetson/boot_connect.py` now retries a
+  failed single-packet gateway probe with `ping -c 3 -i 1 -W 2`, caches
+  positive gateway reachability for `15.0 s` (`GATEWAY_CACHE_SECONDS`) while
+  retaining per-call `inspect_management` and `nmcli` checks, and clears the
+  cache before `wait_ready`, pre-maintenance `connect`, and `Serial.select_once`.
+  Unit coverage was added in `tests/test_jetson_boot.py` (`ManagementTests`).
+
 ## Regression verification and deferred checks
 
 - Verified on branch commit `a5965c7`: `test-frontend-behavior` (7/7),
   `test-jetson-backend` (109/109), `test-spark-backend` (72 ran, 1 Linux
   peer-cred skipped), `test-stack` (192/192), `typecheck`, `docs-audit`,
   `release-audit`, `license-audit`, and `shell-check` (loopback HTTP test in
-  `test-stack` executed outside the network sandbox).
-- Deferred hardware checks: an unattended real cold reboot of the Jetson host
-  to exercise `aoc-v2-jetson-boot.service` (`boot_connect.py connect`) was not
-  performed during this session; roadmap items `V2-P3-15`, `V2-P3-17`,
-  `V2-P3-GATE` and `V2-R06` remain open.
+  `test-stack` executed outside the network sandbox). Updated `boot_connect.py`
+  and `docs/` were subsequently re-verified with `test-jetson-boot`,
+  `test-stack`, and all repository audit targets.
+- Pending hardware check: after installing the updated `boot_connect.py` on the
+  Jetson host, perform one follow-up cold reboot to confirm `boot_connect.py`
+  reaches terminal `status="completed"`; roadmap items `V2-P3-15`, `V2-P3-17`,
+  `V2-P3-GATE`, and `V2-R06` remain open until that cold reboot completes.

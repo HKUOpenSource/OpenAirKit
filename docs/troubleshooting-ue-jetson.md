@@ -59,5 +59,10 @@ Inspect `journalctl -u aoc-v2-jetson-boot.service` and
 `/var/lib/aoc-v2-jetson-boot/public/status.json`. Common causes include
 `device_sha256` / `manifest_sha256` drift in `/etc/aoc-v2-jetson/boot.json`
 after an application upgrade (always refresh `boot.json` after `manage.py install`),
-or an interrupted prior run that left `maintenance=true` or `uncertain-selection.json`
-for operator review.
+an interrupted prior run that left `maintenance=true` or `uncertain-selection.json`
+for operator review, or upstream management Wi-Fi gateway ICMP rate-limiting.
+Current `boot_connect.py` tolerates transient ICMP drops by retrying a missed
+`-c 1 -W 2` probe with `ping -c 3 -i 1 -W 2` and caching positive gateway checks
+for `15.0 s` while still running `nmcli` and `inspect_management` on every call;
+if the gateway drops all packets despite a connected management interface, verify
+gateway ICMP policy or management Wi-Fi association on the host.

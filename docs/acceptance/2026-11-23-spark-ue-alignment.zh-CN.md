@@ -54,12 +54,32 @@
   - 安装 `/opt/agentic-ocudu/jetson/boot_connect.py` 并完成 ECM 只读 AT/SIM/配置/USB 速率兼容性预检；在安装后生成 `/etc/aoc-v2-jetson/boot.json`，写入 `boot-ready.conf` 与 `aoc-v2-jetson-boot.service`，并启用 `web`、`device`、`boot` 三个单元开机自启。
   - 随 `aoc-maintain start` 实测 `boot_connect.py ready`、`site_guard.py`（`ttyUSB2`）与 `network_entry.py` 均一次通过；最终检查 `aoc-v2-jetson-web` 与 `aoc-v2-jetson-device` 均为 `active (running)`（`NRestarts=0`），`127.0.0.1:8878/api/v1/health` 返回 `{"status":"ok","web":"ok","device":"ok"}`，`aoc-maintain ue-status` 汇报 `quality="ok"`、`connected=true`、`registered=true`、`data_session_active=true`、`lab_policy_match=true`、`management_protected=true`（`maintenance=false`、`recovery_paused=true`）。
 
+## 实机冷重启验证与网关探测限速修复
+
+- 首次实机无值守冷重启触发了 `aoc-v2-jetson-boot.service`（`boot_connect.py ready`
+  与 `connect`），在 USB ECM 网卡冷启重命名（`cdc_ether`、`480 Mbps`）与 AT 串口下完成：
+  `readiness`（`28.5 s`）、`identity_and_registration`（`32.6 s`，
+  `configuration_differences: []`，约 `4.6 s` 完成 `NR5G` 注册）及 `standard_setup`
+  建链任务派发（`37.2 s`）。最终 `aoc-v2-jetson-web`、`aoc-v2-jetson-device`（重启次数
+  `0`）、`/api/v1/health`、IPv4 蜂窝默认路由（跃点数 `10` 优于 Wi-Fi `30000`）与
+  Spark gNB 调度（`CQI 15`、`DL MCS 27`、`UL MCS 24`、`PUSCH SINR ~30 dB`、`0%` 误块率）均正常就绪。
+- `standard_setup` 阶段暴露问题：`NetworkManager` 显示管理 Wi-Fi 与管理隧道全程持续在线，
+  但 `boot_connect.py` 因每 3–4 秒单包 `ping -c 1 -W 2` 丢包一次而抛出
+  `ValueError: Management gateway unreachable` 中止；实测网关 ICMP 丢包率达
+  `66.7%`，确认为校园网网关 ICMP 限速所致。
+- `677b1cc` 之后补充修复：`deploy/jetson/boot_connect.py` 在单包探测失败后使用间隔探测
+  `ping -c 3 -i 1 -W 2` 重试，成功结果按 `GATEWAY_CACHE_SECONDS = 15.0` 缓存，同时保留每次调用的
+  `inspect_management` 与 `nmcli` 校验，并在 `wait_ready`、`connect` 进入维护态前与
+  `Serial.select_once` 边界强制清缓存重探；`tests/test_jetson_boot.py` 新增
+  `ManagementTests` 单元测试。
+
 ## 回归测试与遗留待测项
 
-- 在分支提交 `a5965c7` 完成验证：`test-frontend-behavior`（7/7）、
+- 在分支提交 `a5965c7` 完成基线验证：`test-frontend-behavior`（7/7）、
   `test-jetson-backend`（109/109）、`test-spark-backend`（72 项运行、1 项 Linux
   对端凭据测试按平台跳过）、`test-stack`（192/192，含回环 HTTP 沙箱外验证）、
-  `typecheck`、`docs-audit`、`release-audit`、`license-audit` 与 `shell-check` 全部通过。
-- 遗留实机验证项：本次未主动冷重启 Jetson，开机后由 `aoc-v2-jetson-boot.service` 触发
-  `boot_connect.py connect` 的无值守冷启闭环仍待实机冷重启确认；路线图中的 `V2-P3-15`、
-  `V2-P3-17`、`V2-P3-GATE` 与 `V2-R06` 保持未勾选。
+  `typecheck`、`docs-audit`、`release-audit`、`license-audit` 与 `shell-check` 全部通过；
+  `boot_connect.py` 与文档更新后已重跑 `test-jetson-boot`、`test-stack` 及全部审计项。
+- 遗留实机验证项：将更新后的 `boot_connect.py` 安装到 Jetson 主机后，仍需执行一次复测冷重启确认
+  `boot_connect.py` 终态写为 `status="completed"`；路线图中的 `V2-P3-15`、
+  `V2-P3-17`、`V2-P3-GATE` 与 `V2-R06` 暂保持未勾选。

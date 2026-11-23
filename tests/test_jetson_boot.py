@@ -259,5 +259,99 @@ class LifecycleTests(unittest.TestCase):
         self.assertNotIn('create', calls)
 
 
+class ManagementTests(unittest.TestCase):
+    def _fake_network(self):
+        pkg = types.ModuleType('aoc_jetson')
+        net = types.ModuleType('aoc_jetson.network')
+        net.inspect_management = lambda _cfg: {'wifi_interface': 'wlan0', 'wifi_gateway': '192.0.2.1'}
+        pkg.network = net
+        return {'aoc_jetson': pkg, 'aoc_jetson.network': net}
+
+    def test_retry_recovers_after_single_icmp_drop(self):
+        now = [1000.0]
+        calls = []
+
+        def fake_run(argv, timeout=15, check=True):
+            calls.append(list(argv))
+            if argv[0] == 'nmcli':
+                return types.SimpleNamespace(returncode=0, stdout='100 (connected)\n')
+            if argv[0] == 'ping':
+                return types.SimpleNamespace(returncode=0 if '3' in argv else 1, stdout='')
+            raise AssertionError(argv)
+
+        b._GATEWAY_OK.clear()
+        with patch.dict('sys.modules', self._fake_network()), \
+             patch.object(b.time, 'monotonic', lambda: now[0]), \
+             patch.object(b, 'run', side_effect=fake_run):
+            state = b.management({})
+        self.assertEqual(state['wifi_gateway'], '192.0.2.1')
+        pings = [c for c in calls if c[0] == 'ping']
+        self.assertEqual(len(pings), 2)
+        self.assertIn('-c', pings[0])
+        self.assertEqual(pings[0][pings[0].index('-c') + 1], '1')
+        self.assertEqual(pings[1][pings[1].index('-c') + 1], '3')
+        self.assertIn('-i', pings[1])
+        self.assertIn(('wlan0', '192.0.2.1'), b._GATEWAY_OK)
+
+    def test_gateway_probe_cached_while_nmcli_checked_each_call(self):
+        now = [1000.0]
+        calls = []
+
+        def fake_run(argv, timeout=15, check=True):
+            calls.append(argv[0])
+            if argv[0] == 'nmcli':
+                return types.SimpleNamespace(returncode=0, stdout='100 (connected)\n')
+            if argv[0] == 'ping':
+                return types.SimpleNamespace(returncode=0, stdout='')
+            raise AssertionError(argv)
+
+        b._GATEWAY_OK.clear()
+        with patch.dict('sys.modules', self._fake_network()), \
+             patch.object(b.time, 'monotonic', lambda: now[0]), \
+             patch.object(b, 'run', side_effect=fake_run):
+            b.management({})
+            now[0] += b.GATEWAY_CACHE_SECONDS - 1.0
+            b.management({})
+            self.assertEqual(calls.count('nmcli'), 2)
+            self.assertEqual(calls.count('ping'), 1)
+            now[0] += 1.0
+            b.management({})
+            self.assertEqual(calls.count('nmcli'), 3)
+            self.assertEqual(calls.count('ping'), 2)
+
+    def test_gateway_failure_evicts_cache_and_wifi_drop_never_cached(self):
+        now = [1000.0]
+        state_flags = {'ping_rc': 0, 'nmcli_state': '100 (connected)\n'}
+
+        def fake_run(argv, timeout=15, check=True):
+            if argv[0] == 'nmcli':
+                return types.SimpleNamespace(returncode=0, stdout=state_flags['nmcli_state'])
+            if argv[0] == 'ping':
+                return types.SimpleNamespace(returncode=state_flags['ping_rc'], stdout='')
+            raise AssertionError(argv)
+
+        b._GATEWAY_OK.clear()
+        with patch.dict('sys.modules', self._fake_network()), \
+             patch.object(b.time, 'monotonic', lambda: now[0]), \
+             patch.object(b, 'run', side_effect=fake_run):
+            b.management({})
+            self.assertIn(('wlan0', '192.0.2.1'), b._GATEWAY_OK)
+
+            state_flags['ping_rc'] = 1
+            now[0] += b.GATEWAY_CACHE_SECONDS
+            with self.assertRaisesRegex(ValueError, 'Management gateway unreachable'):
+                b.management({})
+            self.assertNotIn(('wlan0', '192.0.2.1'), b._GATEWAY_OK)
+
+            state_flags['ping_rc'] = 0
+            b.management({})
+            self.assertIn(('wlan0', '192.0.2.1'), b._GATEWAY_OK)
+
+            state_flags['nmcli_state'] = '30 (disconnected)\n'
+            with self.assertRaisesRegex(ValueError, 'Management Wi-Fi disconnected'):
+                b.management({})
+            self.assertEqual(b._GATEWAY_OK, {})
+
+
 if __name__ == '__main__':
     unittest.main()
