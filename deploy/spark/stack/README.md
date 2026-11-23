@@ -2,10 +2,11 @@
 
 [简体中文](README.zh-CN.md)
 
-`runtime.py`, `package.py` and `systemd/` are the supported source for the independent
-OCUDU/Open5GS lifecycle. They install separately from Spark Platform. The source
-CLI is `python3 scripts/aocctl --help`; the installed CLI is `aoc-v2ctl`.
-Retired templates and installers are archived and are not package inputs.
+`runtime.py`, `package.py`, `libexec/` and `systemd/` are the supported source for
+the independent OCUDU/Open5GS lifecycle. They install separately from Spark
+Platform. The source CLI is `python3 scripts/aocctl --help`; the installed CLI
+is `aoc-v2ctl`. Retired templates and installers are archived and are not package
+inputs.
 
 ## Prepare a private candidate
 
@@ -70,8 +71,17 @@ requires both current SCTP and successful NG Setup from infoAPI. Failed startup
 retains state for diagnosis. Stop checks radio exit before stopping core and never
 removes the database volume. Do not mix CLI, Web and maintenance-helper operations.
 
+The generated `compose.json` includes `GLIBC_TUNABLES=glibc.pthread.rseq=1` on
+`mongo` for Linux 7.0+ kernels (MongoDB 8.0.30 compatibility). `runtime.py`
+generates the private `gnb.json` with B210 `tx_gain=80`, `rx_gain=54` and
+`cell_cfg.pusch.max_ue_mcs=24`.
+
 Telemetry is disabled in the initial radio configuration. The separate
-`scripts/spark/enable_radio_json_metrics.py` transaction installs the loopback
-access guard and enables JSON metrics; schedule it with the monitor setup before
-accepting collector telemetry. CPU placement remains a site-reviewed policy;
-this package does not copy a particular host's CPU affinity.
+`scripts/spark/enable_radio_json_metrics.py` transaction installs the root-only
+nftables guard on `127.0.0.1:8879` (avoiding `8000–8002` co-located services;
+migrating legacy `8001` setups cleanly and stopping `aoc-v2-metrics-guard.service`
+on rollback) and enables JSON metrics before accepting collector telemetry.
+Low-latency `/dev/cpu_dma_latency` clamping (`libexec/aoc-v2-cpu-latency`,
+`systemd/aoc-v2-cpu-latency.service`, and `cpu-latency.conf`) and CPU placement
+(`systemd/aoc-v2-radio.service.d/realtime.conf.example`) are site-reviewed
+assets documented alongside [the systemd units](systemd/README.md).

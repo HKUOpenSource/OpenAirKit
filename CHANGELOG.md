@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Upstream live Spark stack safeguards (`GLIBC_TUNABLES=glibc.pthread.rseq=1` in Open5GS MongoDB compose, `rx_gain=54`, `cell_cfg.pusch.max_ue_mcs=24`, and `aoc-v2-cpu-latency` helper/systemd drop-ins).
+- Move OCUDU loopback JSON metrics and `aoc-v2-metrics-guard` from `127.0.0.1:8001` to `127.0.0.1:8879` (supporting migration from `8001` and stopping the `RemainAfterExit=yes` guard unit during rollback/reinstall) to avoid co-located `8000–8002` services.
+- Support Quectel RM520N ECM (`cdc_ether` on `bInterfaceNumber=0a` with serial functions `00..03` -> AT `02`) in `aoc_jetson.hardware.discover()`, enforce `os.umask(0o022)` during `venv` creation in `deploy/jetson/manage.py` and `os.chmod(..., mode)` in `private_write()`, and align Spark (`0.2.1` / `599a67f4c4bfd503`) and Jetson (`0.6.2` / `18b45ddf1164a8ba`, including opt-in `boot_connect.py`) live hardware deployments.
+- Refactor paired English and Simplified Chinese documentation (`README`, `docs/`, `deploy/spark/stack/`, `stacks/`) to match the current codebase and aligned hardware baseline.
+
 ## Jetson 0.6.2
 
 - Automatically prefer verified cellular IPv4 after two fresh successful probe samples, and fall back to Wi-Fi on failures or expired evidence independently of modem recovery permission.

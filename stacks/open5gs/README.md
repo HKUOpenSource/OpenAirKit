@@ -10,7 +10,7 @@ This module is the core-network boundary for Agentic-OCUDU. The current release 
 
 IMS, `ims` DNN, SIP, P-CSCF and a second PDU are intentionally outside this release. A modem may retain vendor or IMS contexts; the executor does not delete them or treat their absence as a data failure.
 
-Open5GS 2.8.0 and MongoDB 8.0.30 are pinned in the source and artifact locks. Build and Compose tooling is kept in this stack directory; production data and generated images are never committed.
+Open5GS 2.8.0 and MongoDB 8.0.30 are pinned in the source and artifact locks. `stacks/open5gs/compose/render.py` injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` on `mongo` so MongoDB 8.0.30 avoids TCMalloc per-CPU rseq allocation failures on Linux 7.0+ kernels (`7.0.0-1019-nvidia`). Build and Compose tooling is kept in this stack directory; production data and generated images are never committed.
 
 ## Ownership
 

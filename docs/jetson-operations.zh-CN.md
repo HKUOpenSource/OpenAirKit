@@ -45,8 +45,9 @@ install -m 0755 deploy/jetson/start.sh deploy/jetson/stop.sh \
 执行前核对传输哈希，也可通过 SSH 复制这些文件，设备不需要完整仓库。脚本包含在 0.6.0
 发布包中，不开启开机自启。应用、维护批准包和快捷脚本须一起升级，不将新脚本与旧
 管理器混用。脚本中不要加入站点地址。
-历史实机结果见 [2026-09-24 启停验收](acceptance/2026-09-24-platform-lifecycle.zh-CN.md)；
-新版双设备升级与独立启停结果见 [0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)。
+历史实机结果见 [2026-09-24 启停验收](acceptance/2026-09-24-platform-lifecycle.zh-CN.md)、
+[0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)以及
+[2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md)。
 
 管理员仍可使用底层已安装管理器：
 
@@ -64,9 +65,15 @@ sudo /opt/agentic-ocudu/jetson/current/venv/bin/python -I \
 
 ## 设备状态与配置
 
-Overview 分别展示 SIM、驻留、5GS 注册、PDU 激活、地址池、RNDIS 地址和真实
+Overview 分别展示 SIM、驻留、5GS 注册、PDU 激活、地址池、RNDIS/ECM 地址和真实
 数据路径。Device Setup 在写入前展示变更，并保存私有基线。重复 DNN、CID 冲突
 或设备身份不确定都会停止流程。
+
+若已启用可选开机协调器（`aoc-v2-jetson-boot.service` 与 `boot_connect.py`），
+可从 `/var/lib/aoc-v2-jetson-boot/public/status.json` 只读查看脱敏状态。
+由于 `boot_connect.py` 按内核 `boot_id` 防止单次开机重放，同一启动周期内已有记录后
+不要手工重复触发 `aoc-v2-jetson-boot.service`，常规维护请使用界面 Setup/Recover
+或 `aoc-maintain ue-recover`。
 
 维护模式会等待当前命令结束，切换到 Wi-Fi 回退，暂停采集和恢复，并释放串口。退出维护后重新发现
 设备，准备配置的数据路由并读取现场状态，不重放中断命令；路由准备失败时保持维护模式。

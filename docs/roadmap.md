@@ -39,11 +39,12 @@
 - [x] V2-P1-14 验证 AMF、核心网和无线服务恢复后 UE 可重新接入。
 - [x] V2-P1-GATE 完成数据网络、生命周期、恢复和性能实机验收。
 
-当前正式无线基线：n78、20 MHz、30 kHz SCS、1T1R、TX/RX gain `80/68`、
-UHD receive/send frames `64/64`。最优近距离实测约为上行 11.55 Mbps、下行
-58.96 Mbps；结果受天线位置与信号质量影响，不能作为固定吞吐保证。依据见
+当前正式无线基线：n78、20 MHz、30 kHz SCS、1T1R、TX/RX gain `80/54`、`cell_cfg.pusch.max_ue_mcs=24`、
+UHD receive/send frames `64/64`，Open5GS MongoDB 在 Linux 7.0+ 内核注入 `GLIBC_TUNABLES=glibc.pthread.rseq=1`，
+并启用 `aoc-v2-cpu-latency.service` 固定 `/dev/cpu_dma_latency=0`。早期近距离参考基线见
 [无线策略记录](acceptance/2026-09-11-radio-realtime-policy.md)和
-[真实数据记录](acceptance/2026-09-09-v2-live-data.md)。
+[真实数据记录](acceptance/2026-09-09-v2-live-data.md)，2026 年 11 月实机对齐结果见
+[2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md)。
 
 ## 第二阶段：Spark Platform
 
@@ -61,11 +62,12 @@ UHD receive/send frames `64/64`。最优近距离实测约为上行 11.55 Mbps�
 - [x] V2-P2-12 完成统一英文信息架构、桌面/移动导航和页面交互验收。
 - [x] V2-P2-GATE 完成独立安装、真实数据、状态失效、操作和回滚验收。
 
-当前 Spark 源码与实机均为 `0.2.1`，配置监听 `127.0.0.1:8877`，默认不开机自启。
-9 月 28 日修复部署完成升级、前版本回滚与重新安装，28/28 个包内文件校验通过。
-monitor、core、radio 均运行，12 个核心网容器健康，N2 和两台 UE 的活动数据会话验证通过。
-本轮应用部署未重启协议栈。详见 [2026-09-28 部署验收](acceptance/2026-09-28-review-deployment.zh-CN.md)，
-该运行状态更新了当天较早审阅中的停机快照。
+当前 Spark 源码与实机均为 `0.2.1`（发布 ID `599a67f4c4bfd503`），Web 监听 `127.0.0.1:8877`，
+OCUDU 环回 JSON 指标由 `8001` 迁至 `127.0.0.1:8879`（带 `aoc-v2-metrics-guard` `nftables` 守护，
+避开共驻容器），并已安装 `/usr/local/sbin/aoc-maintain`，默认不开机自启。
+9 月 28 日曾完成 `0.2.1` 升级、前版本回滚与重新安装验收（见[2026-09-28 部署验收](acceptance/2026-09-28-review-deployment.zh-CN.md)）；
+11 月 23 日实机对齐完成指标迁移、射频参数持久化与动态网桥/低时延协同验证，核心网全程不断线，
+详见[2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md)。
 
 ## 第三阶段：Jetson Console
 
@@ -88,15 +90,15 @@ monitor、core、radio 均运行，12 个核心网容器健康，N2 和两台 UE
 - [ ] V2-P3-17 完成五次停止/启动与重新接入循环，确认始终只有一个模组控制者。
 - [ ] V2-P3-GATE 完成独立发布、数据业务、恢复、故障矩阵与可逆停用验收。
 
-Jetson 源码与两台实机均为 `0.6.1`，配置监听 `127.0.0.1:8878`，服务运行且不开机自启。
-两台均实际回滚至 `0.6.0` 并验证蜂窝连通，再安装回 `0.6.1`；51/51 个包内文件分别匹配，
-管理连接保留。最终 65.35 秒、7 次联合采样通过，观察启用、自动恢复暂停。
-详见 [0.6.1 实机部署与回滚验收](acceptance/2026-09-28-review-deployment.zh-CN.md)。
-原有独立安装与启停依据见 [0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)。
-本次完成 P3-16；P3-15、P3-17、P3-GATE 与 R06 保持未完成，不由本轮升级替代其完整验收条件。
-历史 `0.3.0` 真实页面已显示
-`5G data connection verified`，实测测速约为下载 60.7 Mbps、上传 12.1 Mbps、
-延迟 26.9 ms、抖动 0.3 ms、丢包 0%；这些结果不代替尚未完成的故障与回滚任务。
+Jetson 源码与已对齐实机为 `0.6.2`（发布 ID `18b45ddf1164a8ba`），监听 `127.0.0.1:8878`；
+`hardware.discover()` 已覆盖 RM520N RNDIS（`00/01 -> AT 04`）与 ECM `cdc_ether`
+（`04` 或 `0a -> AT 02`）拓扑，并修复了 `manage.py` 在 `umask 077` 下建 `venv` 与写 `web.json` 的权限缺陷。
+实机已完成 `boot_connect.py` 只读 AT 预检并启用 `web`/`device`/`boot` 开机自启
+（`boot_connect.py ready` 已随启动实测通过；`boot_connect.py connect` 待安排真实冷重启闭环验证）。
+详见[2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md)、
+[2026-09-28 部署验收](acceptance/2026-09-28-review-deployment.zh-CN.md)与
+[0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)。
+P3-15、P3-17、P3-GATE 与 R06 保持未完成，不由本轮升级替代其完整验收条件。
 
 ## 工程与文档整理
 
