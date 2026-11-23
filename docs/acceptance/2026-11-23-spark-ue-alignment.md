@@ -102,12 +102,31 @@ git commits on the branch (`dirty=true` in staged release manifests).
   `ping -c 1 -W 2` reply while `NetworkManager` showed the management Wi-Fi and
   management tunnel continuously online. Direct gateway probing confirmed
   `66.7%` ICMP packet loss caused by campus Wi-Fi gateway ICMP rate-limiting.
-- Fix implemented after `677b1cc`: `deploy/jetson/boot_connect.py` now retries a
+- Fix implemented in `7e4b726`: `deploy/jetson/boot_connect.py` now retries a
   failed single-packet gateway probe with `ping -c 3 -i 1 -W 2`, caches
   positive gateway reachability for `15.0 s` (`GATEWAY_CACHE_SECONDS`) while
   retaining per-call `inspect_management` and `nmcli` checks, and clears the
   cache before `wait_ready`, pre-maintenance `connect`, and `Serial.select_once`.
   Unit coverage was added in `tests/test_jetson_boot.py` (`ManagementTests`).
+- Follow-up unattended cold reboot after installing `boot_connect.py` from
+  `7e4b726`: `aoc-v2-jetson-boot.service` completed end-to-end (`active (exited)`,
+  `Result=success`, `NRestarts=0`), `/var/lib/aoc-v2-jetson-boot/public/status.json`
+  reached `status="completed"`, `stage="complete"`, `job_state="complete"`,
+  `maintenance_retained=false`, `cellular_default=true`,
+  `management_verified=true`, `automatic_recovery_active=true`,
+  `fresh_probe_sets=13`, `healthy_seconds=122.2`, `usb_speed_mbps="480"`,
+  `configuration_differences=[]`, and `observed_network_mode=[["mode_pref","NR5G"]]`
+  (timeline: `readiness` `28.3 s`, `identity_and_registration` `32.4 s`,
+  `standard_setup` `37.0 s`, `bound_data_acceptance` `61.7 s`, `complete`
+  `220.6 s`).
+- Steady-state post-reboot checks passed on both hosts: Jetson `web` and
+  `device` services remained `active (running)` (`NRestarts=0`),
+  `127.0.0.1:8878/api/v1/health` returned `{"status":"ok","web":"ok","device":"ok"}`,
+  and default IPv4 routing preferred the cold-renamed ECM cellular interface; on
+  Spark, `127.0.0.1:8877/api/v1/health` returned `{"status":"ok","collector":"ok"}`,
+  `aoc-v2-radio.service`, `aoc-v2-core.service`, and `aoc-v2-cpu-latency.service`
+  remained `active`, and live OCUDU gNB logs showed active UE scheduling
+  (`CQI 15`, `DL MCS 26–27`, `UL MCS 24`, `PUSCH SINR 29.0–30.6 dB`, `0%` BLER).
 
 ## Regression verification and deferred checks
 
@@ -116,9 +135,9 @@ git commits on the branch (`dirty=true` in staged release manifests).
   peer-cred skipped), `test-stack` (192/192), `typecheck`, `docs-audit`,
   `release-audit`, `license-audit`, and `shell-check` (loopback HTTP test in
   `test-stack` executed outside the network sandbox). Updated `boot_connect.py`
-  and `docs/` were subsequently re-verified with `test-jetson-boot`,
-  `test-stack`, and all repository audit targets.
-- Pending hardware check: after installing the updated `boot_connect.py` on the
-  Jetson host, perform one follow-up cold reboot to confirm `boot_connect.py`
-  reaches terminal `status="completed"`; roadmap items `V2-P3-15`, `V2-P3-17`,
-  `V2-P3-GATE`, and `V2-R06` remain open until that cold reboot completes.
+  (`7e4b726`) and `docs/` were subsequently re-verified with `test-jetson-boot`
+  (22/22), `test-stack` (195/195), and all repository audit targets.
+- Remaining roadmap gates: the unattended Jetson cold-reboot check is now
+  complete; roadmap items `V2-P3-15`, `V2-P3-17`, `V2-P3-GATE`, and `V2-R06`
+  remain open for their broader fault-matrix, multi-cycle start/stop, and
+  post-migration ARM64 rollback acceptance criteria.

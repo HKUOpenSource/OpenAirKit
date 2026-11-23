@@ -93,8 +93,9 @@ OCUDU 环回 JSON 指标由 `8001` 迁至 `127.0.0.1:8879`（带 `aoc-v2-metrics
 Jetson 源码与已对齐实机为 `0.6.2`（发布 ID `18b45ddf1164a8ba`），监听 `127.0.0.1:8878`；
 `hardware.discover()` 已覆盖 RM520N RNDIS（`00/01 -> AT 04`）与 ECM `cdc_ether`
 （`04` 或 `0a -> AT 02`）拓扑，并修复了 `manage.py` 在 `umask 077` 下建 `venv` 与写 `web.json` 的权限缺陷。
-实机已完成 `boot_connect.py` 只读 AT 预检并启用 `web`/`device`/`boot` 开机自启
-（`boot_connect.py ready` 已随启动实测通过；`boot_connect.py connect` 待安排真实冷重启闭环验证）。
+实机已完成 `boot_connect.py` 只读 AT 预检并启用 `web`/`device`/`boot` 开机自启；
+针对网关 ICMP 限速提交 `7e4b726` 修复并更新后，Jetson 已完成无值守真实冷重启通过 `boot_connect.py connect` 闭环验证
+（`status="completed"`、`healthy_seconds=122.2`、`cellular_default=true`、`management_verified=true`、`automatic_recovery_active=true`）。
 详见[2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md)、
 [2026-09-28 部署验收](acceptance/2026-09-28-review-deployment.zh-CN.md)与
 [0.6.0 实机验收](acceptance/2026-09-27-independent-lifecycle-deployment.zh-CN.md)。

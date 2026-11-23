@@ -67,11 +67,27 @@
   但 `boot_connect.py` 因每 3–4 秒单包 `ping -c 1 -W 2` 丢包一次而抛出
   `ValueError: Management gateway unreachable` 中止；实测网关 ICMP 丢包率达
   `66.7%`，确认为校园网网关 ICMP 限速所致。
-- `677b1cc` 之后补充修复：`deploy/jetson/boot_connect.py` 在单包探测失败后使用间隔探测
+- 提交 `7e4b726` 修复：`deploy/jetson/boot_connect.py` 在单包探测失败后使用间隔探测
   `ping -c 3 -i 1 -W 2` 重试，成功结果按 `GATEWAY_CACHE_SECONDS = 15.0` 缓存，同时保留每次调用的
   `inspect_management` 与 `nmcli` 校验，并在 `wait_ready`、`connect` 进入维护态前与
   `Serial.select_once` 边界强制清缓存重探；`tests/test_jetson_boot.py` 新增
   `ManagementTests` 单元测试。
+- 安装 `7e4b726` 版 `boot_connect.py` 后的冷重启复测通过：`aoc-v2-jetson-boot.service`
+  一次运行完成（`active (exited)`、`Result=success`、`NRestarts=0`），
+  `/var/lib/aoc-v2-jetson-boot/public/status.json` 终态写入
+  `status="completed"`、`stage="complete"`、`job_state="complete"`、
+  `maintenance_retained=false`、`cellular_default=true`、`management_verified=true`、
+  `automatic_recovery_active=true`、`fresh_probe_sets=13`、`healthy_seconds=122.2`、
+  `usb_speed_mbps="480"`、`configuration_differences=[]` 与
+  `observed_network_mode=[["mode_pref","NR5G"]]`（阶段耗时节点：`readiness` `28.3 s`、
+  `identity_and_registration` `32.4 s`、`standard_setup` `37.0 s`、
+  `bound_data_acceptance` `61.7 s`、`complete` `220.6 s`）。
+- 冷启后双端稳态一致通过：Jetson 侧 `web` 与 `device` 服务保持 `active (running)`（`NRestarts=0`），
+  `127.0.0.1:8878/api/v1/health` 返回 `{"status":"ok","web":"ok","device":"ok"}`，默认 IPv4
+  路由指向冷启重命名的 ECM 蜂窝网卡；Spark 侧 `127.0.0.1:8877/api/v1/health` 返回
+  `{"status":"ok","collector":"ok"}`，`aoc-v2-radio.service`、`aoc-v2-core.service` 与
+  `aoc-v2-cpu-latency.service` 均为 `active`，实时 OCUDU gNB 调度显示 UE 保持活跃
+  （`CQI 15`、`DL MCS 26–27`、`UL MCS 24`、`PUSCH SINR 29.0–30.6 dB`、`0%` 误块率）。
 
 ## 回归测试与遗留待测项
 
@@ -79,7 +95,7 @@
   `test-jetson-backend`（109/109）、`test-spark-backend`（72 项运行、1 项 Linux
   对端凭据测试按平台跳过）、`test-stack`（192/192，含回环 HTTP 沙箱外验证）、
   `typecheck`、`docs-audit`、`release-audit`、`license-audit` 与 `shell-check` 全部通过；
-  `boot_connect.py` 与文档更新后已重跑 `test-jetson-boot`、`test-stack` 及全部审计项。
-- 遗留实机验证项：将更新后的 `boot_connect.py` 安装到 Jetson 主机后，仍需执行一次复测冷重启确认
-  `boot_connect.py` 终态写为 `status="completed"`；路线图中的 `V2-P3-15`、
-  `V2-P3-17`、`V2-P3-GATE` 与 `V2-R06` 暂保持未勾选。
+  `boot_connect.py`（`7e4b726`）与文档更新后已重跑 `test-jetson-boot`（22/22）、
+  `test-stack`（195/195）及全部仓库审计项。
+- 遗留路线图项：Jetson 无值守冷重启闭环验证已完成；路线图中的 `V2-P3-15`、`V2-P3-17`、
+  `V2-P3-GATE` 与 `V2-R06` 仍因各自的故障矩阵、五次启停循环及目录迁移后 ARM64 回滚验收条件保持未勾选。
