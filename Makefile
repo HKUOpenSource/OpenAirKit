@@ -1,4 +1,4 @@
-.PHONY: check-python install-dev test-jetson-backend test-spark-backend typecheck build-jetson-frontend build-spark-frontend build-jetson-release build-spark-release e2e-jetson e2e-spark docs-audit release-audit license-audit shell-check check ci
+.PHONY: check-python install-dev test-jetson-backend test-jetson-boot test-spark-backend typecheck build-jetson-frontend build-spark-frontend build-jetson-release build-spark-release e2e-jetson e2e-spark docs-audit release-audit license-audit shell-check check ci
 VENV ?= .venv
 PYTHON ?= $(VENV)/bin/python
 BOOTSTRAP_PYTHON ?= python3
@@ -18,6 +18,8 @@ test-stack:
 	$(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 test-jetson-backend:
 	PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend $(PYTHON) -m unittest discover -s apps/jetson-console/tests -p 'test_*.py'
+test-jetson-boot:
+	$(PYTHON) -m unittest discover -s tests -p 'test_jetson_boot.py'
 test-spark-backend:
 	PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend $(PYTHON) -m unittest discover -s apps/spark-platform/tests -p 'test_*.py'
 typecheck:

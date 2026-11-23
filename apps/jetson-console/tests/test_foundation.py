@@ -43,6 +43,15 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(candidate)
 
+    def test_at_interface_is_explicit_and_limited_to_supported_layouts(self):
+        candidate = configuration(self.root)
+        self.assertEqual(validate(candidate)["device"]["at_interface_number"], "04")
+        candidate["device"]["at_interface_number"] = "02"
+        self.assertEqual(validate(candidate)["device"]["at_interface_number"], "02")
+        candidate["device"]["at_interface_number"] = "03"
+        with self.assertRaisesRegex(ValueError, "modem discovery contract"):
+            validate(candidate)
+
     def test_schema_two_migration_preserves_radio_and_removes_benchmark_port(self):
         old = configuration(self.root)
         old["schema_version"] = 2

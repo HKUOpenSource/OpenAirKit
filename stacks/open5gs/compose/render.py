@@ -90,6 +90,9 @@ def render(output, subnet='172.28.81.0/24', project='aoc-v2-open5gs', database_a
         (output / 'mongo-health.js').write_text("try { const c=JSON.parse(require('fs').readFileSync('/run/secrets/subscriber-db.json','utf8'));\n"
             "const d=db.getSiblingDB('open5gs'); if(!d.auth(c.username,c.password)) quit(1);\n"
             "quit(d.runCommand({ping:1}).ok===1?0:1); } catch (_) { quit(1); }\n")
+        # MongoDB drops privileges before reading these individual file mounts.
+        for name in ('init-db.js', 'mongo-health.js'):
+            (output / name).chmod(0o644)
         for nf in ('udr', 'pcf'):
             configs[nf]['db_uri'] = 'mongodb://' + credentials['username'] + ':' + credentials['password'] + '@' + addr['mongo'] + ':27017/open5gs'
     for nf, doc in configs.items():

@@ -42,7 +42,7 @@ def integer(value, low, high, label):
 
 
 DEVICE = {"usb_vendor_id": "2c7c", "usb_product_id": "0801",
-          "at_interface_number": "02", "serial_lock": "/var/lib/agentic-ocudu/v2-ue/serial.lock"}
+          "at_interface_number": "04", "serial_lock": "/var/lib/agentic-ocudu/v2-ue/serial.lock"}
 
 
 def revision(value):
@@ -96,7 +96,9 @@ def validate(value):
         raise ValueError("Unknown recovery field")
     for key, low, high in (("natural_wait_seconds", 30, 600), ("cooldown_seconds", 300, 3600), ("max_attempts", 1, 3)):
         integer(recovery[key], low, high, key)
-    if result.get("device") != DEVICE:
+    device = result.get("device", {})
+    if not isinstance(device, dict) or device.get("at_interface_number") not in ("02", "04") or device != {
+            **DEVICE, "at_interface_number": device.get("at_interface_number")}:
         raise ValueError("Unexpected modem discovery contract")
     management = result.get("management", {})
     if management.get("wifi_interface") != "auto":

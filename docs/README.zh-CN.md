@@ -8,6 +8,7 @@
 | 理解组件和信任边界 | [架构](architecture.zh-CN.md) |
 | 安装 Jetson Console | [Jetson 安装](setup-ue-jetson.zh-CN.md) |
 | 安装 Spark Platform 与协议栈 | [Spark 安装](setup-bs-spark.zh-CN.md) |
+| 查阅已验证的 TB01 SIM 烧录方法 | [TB01 SIM 烧录](sim-programming-tb01.zh-CN.md) |
 | 操作或恢复 Jetson | [Jetson 运维](jetson-operations.zh-CN.md) |
 | 操作 RAN、核心网和监测平台 | [Spark 运维](spark-operations.zh-CN.md) |
 | 排查 UE 侧故障 | [Jetson 故障排查](troubleshooting-ue-jetson.zh-CN.md) |

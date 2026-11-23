@@ -202,6 +202,10 @@ def install(stage):
         call(["useradd", "--system", "--gid", "aoc-web", "--no-create-home", "--shell", "/usr/sbin/nologin", "aoc-web"])
     gid = grp.getgrnam("aoc-web").gr_gid
     root_directory(CONFIG, 0o750, gid)
+    # A stack installed with umask 077 may have created this shared parent as
+    # 0700. The unprivileged web service must traverse it to reach its release.
+    # Individual stack and credential directories retain their private modes.
+    root_directory(INSTALL.parent)
     root_directory(INSTALL)
     root_directory(INSTALL / "releases")
     auth_path = CONFIG / "auth.json"
@@ -224,8 +228,14 @@ def install(stage):
         if path.is_symlink() or path.stat().st_uid != 0 or path.stat().st_mode & 0o022 or sha(path) != expected:
             raise ValueError("Installed release checksum or ownership differs")
     if not (release / "venv").exists():
-        call(["/usr/bin/python3", "-m", "venv", str(release / "venv")])
-        call([str(release / "venv/bin/pip"), "install", "--no-index", "--find-links", str(stage / "wheels"), "-r", str(release / "requirements.lock")])
+        # The service runs as aoc-web, even when the administrator uses umask
+        # 077. Only public runtime files are created in this scoped block.
+        previous_umask = os.umask(0o022)
+        try:
+            call(["/usr/bin/python3", "-m", "venv", str(release / "venv")])
+            call([str(release / "venv/bin/pip"), "install", "--no-index", "--find-links", str(stage / "wheels"), "-r", str(release / "requirements.lock")])
+        finally:
+            os.umask(previous_umask)
     previous = (INSTALL / "current").resolve() if (INSTALL / "current").exists() else None
     for unit in UNITS:
         target = Path("/etc/systemd/system") / unit

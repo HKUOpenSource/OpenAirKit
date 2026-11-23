@@ -7,13 +7,25 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from aoc_spark.collector import n2_associated
+from aoc_spark.collector import bridge_interface, n2_associated
 from aoc_spark.domain import SCHEMA_VERSION, fresh_snapshot, observation, rate, utc
 from aoc_spark.storage import Store
 from aoc_spark.web import create_app, password_hash, redacted_diagnostics
 
 
 class ObservationTests(unittest.TestCase):
+    def test_core_network_resolves_actual_bridge_interface(self):
+        network = 'aoc-v2-open5gs-core'
+        info = dict(Name=network, Driver='bridge', Id='a1' * 32, Options={})
+        self.assertEqual(bridge_interface(json.dumps([info]), network), 'br-a1a1a1a1a1a1')
+        info['Options']['com.docker.network.bridge.name'] = 'aoc-core0'
+        self.assertEqual(bridge_interface(json.dumps([info]), network), 'aoc-core0')
+        for changes in ({'Name': 'foreign'}, {'Driver': 'host'},
+                        {'Options': {'com.docker.network.bridge.name': '../other'}},
+                        {'Options': {}, 'Id': 'invalid'}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                bridge_interface(json.dumps([{**info, **changes}]), network)
+
     def test_contract_version_and_quality_reason(self):
         self.assertEqual(SCHEMA_VERSION, 4)
         self.assertEqual(observation('ran', 'ocudu', 'cqi', status='unavailable')['reason'], 'sample_unavailable')

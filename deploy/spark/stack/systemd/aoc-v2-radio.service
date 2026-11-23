@@ -6,6 +6,7 @@ After=aoc-v2-core.service
 
 [Service]
 Type=simple
+Environment=HOME=/root
 ExecStartPre=/usr/bin/python3 -I /opt/agentic-ocudu/v2/runtime.py prepare
 ExecStart=/opt/agentic-ocudu/v2/bin/gnb -c /var/lib/agentic-ocudu/v2/gnb.json
 ExecStartPost=/usr/bin/python3 -I /opt/agentic-ocudu/v2/runtime.py radio-health

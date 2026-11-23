@@ -18,7 +18,7 @@ from .open5gs import Open5GS
 
 STACKS = {
     "ocudu": {"unit": "aoc-v2-radio.service", "local": "172.28.81.1", "amf": "172.28.81.12",
-              "bridge": "aoc-v2-open5gs-core",
+              "network": "aoc-v2-open5gs-core",
               "containers": {n: "aoc-v2-open5gs-" + n + "-1" for n in
                              ("mongo", "nrf", "amf", "smf", "upf", "ausf", "udm", "udr",
                               "pcf", "bsf", "nssf", "ext-dn")}},
@@ -37,6 +37,23 @@ def n2_associated(raw, local, peer):
 
 def systemd(raw):
     return {k: v for line in raw.splitlines() if "=" in line for k, v in [line.split("=", 1)]}
+
+
+def bridge_interface(raw, network):
+    rows = json.loads(raw)
+    if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict)
+            or rows[0].get('Name') != network or rows[0].get('Driver') != 'bridge'):
+        raise ValueError('unexpected_core_network')
+    info = rows[0]
+    name = (info.get('Options') or {}).get('com.docker.network.bridge.name')
+    if name is None:
+        identifier = info.get('Id', '')
+        if not isinstance(identifier, str) or not re.fullmatch(r'[a-f0-9]{64}', identifier):
+            raise ValueError('invalid_core_network_id')
+        name = 'br-' + identifier[:12]
+    if not isinstance(name, str) or not re.fullmatch(r'(?!\.{1,2}$)[A-Za-z0-9_.-]{1,15}', name):
+        raise ValueError('invalid_core_bridge_interface')
+    return name
 
 
 def atomic_json(path, value):
@@ -71,6 +88,7 @@ class Collector:
         self.feed = SchedulerFeed()
         self.open5gs = Open5GS()
         self.devices = {}
+        self.bridges = {}
         self.reachability = Reachability()
         self.pool = ThreadPoolExecutor(max_workers=4)
 
@@ -206,7 +224,8 @@ class Collector:
         values.extend(self.resources.host())
         for stack in STACKS:
             components.append(dict(id=stack + ':bridge', stack=stack, name='Core bridge (diagnostic)', kind='interface',
-                                   state='unknown', observed_at=utc(), details={'interface': STACKS[stack]['bridge']},
+                                   state='unknown', observed_at=utc(), details={'network': STACKS[stack]['network'],
+                                                                            'interface': self.bridges.get(stack)},
                                    metrics=[v for v in values if v['entity'] == stack and v['name'].startswith('bridge_')]))
         if self.diagnostic_icmp and stack_state in STACKS:
             self.reachability.collect(devices, stack_state, properties.get(stack_state, {}).get('InvocationID'))
@@ -259,13 +278,21 @@ class Collector:
             values.append(obs("host", "spark", "memory_used", mem["MemTotal"] - mem["MemAvailable"], "byte"))
             values.append(obs("host", "spark", "memory_total", mem["MemTotal"], "byte"))
             for stack, spec in STACKS.items():
+                try:
+                    bridge = bridge_interface(run(['docker', 'network', 'inspect', spec['network']]), spec['network'])
+                except (OSError, ValueError, TypeError, AttributeError, subprocess.SubprocessError):
+                    bridge = None
+                self.bridges[stack] = bridge
                 for direction in ("rx", "tx"):
-                    path = Path("/sys/class/net") / spec["bridge"] / "statistics" / (direction + "_bytes")
+                    if bridge is None:
+                        values.append(obs("host", stack, "bridge_" + direction, unit="bit/s", status="unavailable", reason="network_inspection_failed"))
+                        continue
+                    path = Path("/sys/class/net") / bridge / "statistics" / (direction + "_bytes")
                     if not path.exists():
                         values.append(obs("host", stack, "bridge_" + direction, unit="bit/s", status="unavailable", reason="interface_absent"))
                         continue
                     count = int(path.read_text())
-                    key = (stack, direction)
+                    key = (stack, bridge, direction)
                     old = self.previous.get(key)
                     speed = rate(old[0], count, now - old[1]) if old else None
                     self.previous[key] = (count, now)

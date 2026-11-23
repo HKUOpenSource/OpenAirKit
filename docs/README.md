@@ -12,6 +12,7 @@ the product.
 | Understand components and trust boundaries | [Architecture](architecture.md) |
 | Install the Jetson Console | [Jetson setup](setup-ue-jetson.md) |
 | Install the Spark Platform and stack | [Spark setup](setup-bs-spark.md) |
+| Review the validated TB01 SIM programming method | [TB01 SIM programming](sim-programming-tb01.md) |
 | Operate or recover the Jetson side | [Jetson operations](jetson-operations.md) |
 | Operate the RAN, core and monitor | [Spark operations](spark-operations.md) |
 | Diagnose a UE-side fault | [Jetson troubleshooting](troubleshooting-ue-jetson.md) |

@@ -8,6 +8,20 @@ Spark 管理地址；模组必须取得自己的 RNDIS DHCP 地址。OCUDU 验�
 不会替换管理员拥有的默认路由，也不会停止外部服务。端口 `127.0.0.1:8878`
 及发现的 AT 串口必须空闲。
 
+取得 RNDIS DHCP 地址、且 `CGACT` 上下文已激活，并不代表主机数据已能转发。
+对于已验证的 RM520N QMAP 固件，应检查默认 WWAN 及 MPDN 规则、连接状态是否
+关联到所选数据 profile。当前 Console 配置数据上下文，但不创建 QMAP 规则，
+也不开启自动拨号总开关。应分别读取 `AT+QMAPWAC?` 和每条规则的自动拨号标志。
+缺少关联时应按厂商手册单独审核，保留既有 profile 与其他规则。下方验证记录
+说明了已注册但数据不通的实测现象及受限站点修复流程。
+
+commissioning 前，须将 `device.at_interface_number` 与实际 USB 布局对齐。
+示例使用 `04`：RNDIS 占用 `00/01`，其后的 `02..05` 依次为 DIAG、GNSS、AT
+和 modem 串口。如果四个串口位于 `00..03`、数据接口为 `04`，则 AT 接口使用
+`02`。发现逻辑在打开串口前检查该拓扑，拒绝配置不匹配或未知的布局；不能仅凭
+Linux 的 `ttyUSB` 编号确定 AT 功能。
+实测布局与待验证项见 [RNDIS 发现验证记录](acceptance/2026-10-16-jetson-rndis-at.zh-CN.md)。
+
 必要时先一次性配置站点 NetworkManager 连接。通过
 `nmcli -f NAME,UUID,TYPE,DEVICE connection show --active` 检查活动连接，保持
 管理 Wi-Fi 默认路由可用。既有默认路由的 metric 必须大于 10；metric 5、10 和
@@ -65,3 +79,28 @@ sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py s
 通过 SSH 隧道打开 `127.0.0.1:8878`，分别检查服务、当前采集证据、SIM、注册、
 PDU 及模组接口绑定的数据探测。正式使用前验证一次完整 OCUDU 停止/启动，包括
 路由清理。除非管理员明确调整，两个服务均保持开机启动 disabled。
+
+## 可选的开机协调
+
+只启用两项平台服务并不足以完成开机验收：执行器退出时会主动暂停自动模组恢复，
+systemd 初次启动执行器时，USB 枚举和 DHCP 也可能尚未就绪。可选的
+[`boot_connect.py`](../deploy/jetson/boot_connect.py) 协调器支持经过审阅的现场
+管理员安装，与固定发布并存；默认安装器不启用它。
+
+执行器须先等待支持的 USB 拓扑、RNDIS DHCP、管理 Wi-Fi 和 Tailscale 就绪，
+再执行原有启动检查。专用 NetworkManager 连接应按 RNDIS 驱动匹配，去掉失效的
+网卡名或 MAC 绑定，启用自动连接并保持 `ipv4.never-default=yes`。蜂窝提升和
+Wi-Fi 回退仍由平台根据有效探测负责。须避免 ModemManager 占用这台专用实验
+模组，保留 NetworkManager 和 Wi-Fi 连接配置。
+
+root 私有的 `/etc/aoc-v2-jetson/boot.json` 保存已批准的发布/设备配置哈希、SIM
+身份承诺、USB 速率及受保护模组设置，不包含 SIM 鉴权密钥。开机协调器核对身份
+和设置，先等待自然注册，必要时最多显式选择实验网一次，再执行一次标准 Device
+Setup，要求自动恢复启用、蜂窝网口/源地址绑定的新鲜数据证据连续有效 120 秒。
+它不重启整机，不改 USB 速率、SIM 文件、频段或 QMAP。命令完成状态不明时停止
+后续发送；每次开机有持久化私有记录，脱敏状态可从
+`/var/lib/aoc-v2-jetson-boot/public/status.json` 读取。
+
+真实重启后须核对服务、boot ID、实际 USB 速率、实验网注册/会话、蜂窝普通出口
+及独立 Wi-Fi 管理通路。两台 UE 应一次只配置和重启一台，通过验收后再处理另一台。
+不能把服务 enable 成功等同于已验证开机恢复。

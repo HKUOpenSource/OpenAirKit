@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -14,6 +15,25 @@ runtime_spec.loader.exec_module(runtime)
 
 
 class BundleTests(unittest.TestCase):
+    def test_mongo_mounts_readable_under_private_umask(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / 'bundle'
+            previous = os.umask(0o077)
+            try:
+                render.render(out, project='aoc-v2-private-umask', database_auth=True)
+            finally:
+                os.umask(previous)
+            compose = json.loads((out / 'compose.json').read_text())
+            self.assertEqual(out.stat().st_mode & 0o777, 0o700)
+            self.assertEqual((out / 'secrets').stat().st_mode & 0o777, 0o700)
+            mounts = compose['services']['mongo']['volumes']
+            files = [out / mount.split(':')[0] for mount in mounts if mount.startswith('./')]
+            self.assertEqual(len(files), 5)
+            for path in files:
+                with self.subTest(mount=path.name):
+                    self.assertTrue(path.is_file())
+                    self.assertEqual(path.stat().st_mode & 0o777, 0o644)
+
     def test_n6_is_opt_in_and_uses_separate_pinned_image(self):
         with tempfile.TemporaryDirectory() as temp:
             out = Path(temp) / 'bundle'

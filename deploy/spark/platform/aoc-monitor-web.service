@@ -30,7 +30,7 @@ RestrictSUIDSGID=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 IPAddressDeny=any
 IPAddressAllow=localhost
-InaccessiblePaths=-/run/docker.sock -/var/run/docker.sock -/run/dbus/system_bus_socket -/run/systemd/private /etc/agentic-ocudu /var/lib/agentic-ocudu
+InaccessiblePaths=-/run/docker.sock -/var/run/docker.sock -/run/dbus/system_bus_socket -/run/systemd/private -/etc/agentic-ocudu -/var/lib/agentic-ocudu
 ReadWritePaths=/var/lib/aoc-web
 
 [Install]

@@ -18,7 +18,7 @@
   "device": {
     "usb_vendor_id": "2c7c",
     "usb_product_id": "0801",
-    "at_interface_number": "02",
+    "at_interface_number": "04",
     "serial_lock": "/var/lib/agentic-ocudu/v2-ue/serial.lock"
   },
   "management": {
