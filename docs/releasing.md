@@ -2,9 +2,10 @@
 
 [简体中文](releasing.zh-CN.md)
 
-**Jetson Console** (`0.6.2`) and **Spark Console** (`0.2.1`) maintain
-independent semantic versions, source boundaries, and release archives. Cut and
-audit one platform release at a time.
+**Jetson Console** and **Spark Console** share the unified repository version
+(`1.0.0`, defined in the root `VERSION` file) while maintaining independent
+source boundaries and offline release archives. Cut and audit one platform
+release at a time.
 
 ## Release Boundary Policy
 
@@ -22,8 +23,9 @@ Every release archive must pass the following boundary checks:
 
 ## Pre-Release Checklist
 
-1. Synchronize version strings across backend `__version__`, frontend package
-   manifests, `CHANGELOG.md`, and `RELEASE-VERSION`.
+1. Synchronize version strings across root `VERSION`, backend `__version__`,
+   frontend package manifests, `README.md` / `README.zh-CN.md` badges,
+   `docs/releasing*.md`, and `CHANGELOG.md` (enforced by `make version-audit`).
 2. Verify Python requirement locks, npm lockfiles, pinned upstream commits, and
    container image digests.
 3. Run `make ci` to verify backend test suites, production frontend builds, and

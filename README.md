@@ -10,8 +10,8 @@
 
 <p>
   <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Console: 0.2.1" src="https://img.shields.io/badge/Spark_Console-0.2.1-blue">
-  <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-blue">
+  <img alt="Spark Console: 1.0.0" src="https://img.shields.io/badge/Spark_Console-1.0.0-blue">
+  <img alt="Jetson Console: 1.0.0" src="https://img.shields.io/badge/Jetson_Console-1.0.0-blue">
   <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
 </p>
 
