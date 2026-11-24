@@ -21,7 +21,7 @@ Use the symptom-based checks below when diagnosing issues on **Jetson Orin**.
 ## Registration or Data PDU Failure
 
 - Inspect Overview layers in sequence: SIM -> serving cell -> `C5GREG` registration -> context definition -> PDU activation -> interface IPv4 address.
-- If a registered modem with an active IPv4 address forwards no traffic, inspect QMAP WWAN / MPDN bindings per [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap--mpdn-firmware-check).
+- If a registered modem with an active IPv4 address forwards no traffic, inspect QMAP WWAN / MPDN bindings per [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap-and-mpdn-firmware-check).
 
 ## Data Path or Diagnostic Target Failure
 

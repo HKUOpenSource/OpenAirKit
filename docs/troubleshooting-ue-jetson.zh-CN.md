@@ -21,7 +21,7 @@
 ## 注册或数据 PDU 失败
 
 - 按 Overview 分层顺序逐级排查：SIM -> 服务小区 -> `C5GREG` 注册 -> 上下文定义 -> PDU 激活 -> 网卡 IPv4 地址。
-- 若已注册且分配了 IPv4 地址但主机流量不通，按[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#rm520n-gl-qmap--mpdn-固件核查)核查 QMAP WWAN 与 MPDN 规则关联。
+- 若已注册且分配了 IPv4 地址但主机流量不通，按[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#rm520n-gl-qmap-与-mpdn-固件核查)核查 QMAP WWAN 与 MPDN 规则关联。
 
 ## 数据通路或诊断探测失败
 

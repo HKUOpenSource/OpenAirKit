@@ -21,7 +21,7 @@ Use the symptom-based checks below when diagnosing issues on **DGX Spark**.
 ## Open5GS Core Unhealthy
 
 - Inspect the specific failing container (`docker ps -a`, `docker logs`) for exit codes or OOM events. Check N2, N3, N4, and N6 independently.
-- If `mongo` fails on Linux 7.0+ kernels due to TCMalloc `rseq` allocation, verify `GLIBC_TUNABLES=glibc.pthread.rseq=1` is present in the rendered `compose.json` (see [Hardware Notes](reference/hardware-notes.md#host-os--kernel-compatibility-notes)).
+- If `mongo` fails on Linux 7.0+ kernels due to TCMalloc `rseq` allocation, verify `GLIBC_TUNABLES=glibc.pthread.rseq=1` is present in the rendered `compose.json` (see [Hardware Notes](reference/hardware-notes.md#host-os-and-kernel-compatibility-notes)).
 
 ## UE Shown Stale or Disconnected
 

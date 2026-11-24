@@ -25,7 +25,7 @@ services are stopped if your RM520N-GL firmware switches between RNDIS and ECM.
 If opt-in boot coordination is enabled, refresh `/etc/aoc-v2-jetson/boot.json`
 after changing `device.json`.
 
-## Quectel RM520N-GL QMAP / MPDN Firmware Check
+## Quectel RM520N-GL QMAP and MPDN Firmware Check
 
 On RM520N-GL QMAP firmware, a modem DHCP lease and active `CGACT` context
 require a matching default WWAN and MPDN rule binding for host data forwarding.
@@ -45,7 +45,7 @@ AT+QNWPREFCFG="nr5g_disable_mode"
 AT+QNWPREFCFG="mode_pref"
 ```
 
-## Host OS & Kernel Compatibility Notes
+## Host OS and Kernel Compatibility Notes
 
 - **DGX Spark Linux 7.0+ kernels + MongoDB 8.0**: `stacks/open5gs/compose/render.py` automatically sets `GLIBC_TUNABLES=glibc.pthread.rseq=1` on the `mongo` container so TCMalloc per-CPU `rseq` allocation initializes cleanly on newer Linux kernels.
 - **Jetson `ModemManager` exclusion**: Stop, disable, and mask `ModemManager.service` so it never contends with `aoc-v2-jetson-device.service` for the RM520N-GL AT serial interface.

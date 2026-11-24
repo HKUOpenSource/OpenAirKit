@@ -21,7 +21,7 @@ Linux 内核兼容性说明以及 **TB01** 可编程 USIM 卡的 APDU 协议参�
 `/etc/aoc-v2-jetson/device.json` 中的 `device.at_interface_number`；若启用了
 开机协调器，请同步刷新 `/etc/aoc-v2-jetson/boot.json`。
 
-## RM520N-GL QMAP / MPDN 固件核查
+## RM520N-GL QMAP 与 MPDN 固件核查
 
 在采用 QMAP 固件的 RM520N-GL 上，主机能获得蜂窝转发能力需要默认 WWAN 与 MPDN
 规则关联到对应的数据 profile。Jetson Console 负责配置 `oai` 数据上下文并保留既有 QMAP

@@ -56,5 +56,3 @@ the [Spark stack deployment guide](../../../deploy/spark/stack/README.md).
 
 N6 tests bind source `10.0.0.1` inside UPF. They verify NAT and ext-DN traffic only;
 they do not traverse GTP-U, an RAN, a Jetson or a real UE session.
-
-See the [Spark acceptance record](../../../docs/acceptance/2026-09-09-v2-p1-04-compose.md).

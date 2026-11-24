@@ -85,23 +85,51 @@ def check_pairs() -> None:
                 raise SystemExit(f"missing documentation pair: {path.relative_to(ROOT)}")
 
 
+def github_slug(heading: str) -> str:
+    slug = heading.strip().lower()
+    slug = slug.replace("`", "")
+    slug = re.sub(r"[^\w\s\-\u4e00-\u9fff]", "", slug)
+    return re.sub(r"\s+", "-", slug)
+
+
+def heading_anchors(path: Path) -> set[str]:
+    anchors: set[str] = set()
+    counts: dict[str, int] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r"^#{1,6}\s+(.+)$", line)
+        if not match:
+            continue
+        slug = github_slug(match.group(1))
+        count = counts.get(slug, 0)
+        counts[slug] = count + 1
+        anchors.add(slug if count == 0 else f"{slug}-{count}")
+    return anchors
+
+
 def check_links(path: Path, text: str) -> None:
+    rel_path = str(path.relative_to(ROOT))
+    check_fragments = not any(rel_path.startswith(prefix) for prefix in HYGIENE_EXEMPT_PREFIXES)
     for raw_target in LINK.findall(text):
         target = raw_target.strip().split()[0].strip("<>")
-        if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+        if not target or target.startswith(("http://", "https://", "mailto:")):
             continue
-        relative = unquote(target.split("#", 1)[0])
-        if not relative:
-            continue
-        resolved = (path.parent / relative).resolve()
+        relative, _, fragment = target.partition("#")
+        relative = unquote(relative)
+        resolved = path if not relative else (path.parent / relative).resolve()
         try:
             resolved.relative_to(ROOT)
         except ValueError as error:
             raise SystemExit(f"documentation link escapes repository: {path}: {target}") from error
         if not resolved.exists():
             raise SystemExit(
-                f"broken documentation link: {path.relative_to(ROOT)} -> {target}"
+                f"broken documentation link: {rel_path} -> {target}"
             )
+        if check_fragments and fragment and resolved.is_file():
+            decoded_fragment = unquote(fragment)
+            if decoded_fragment not in heading_anchors(resolved):
+                raise SystemExit(
+                    f"broken documentation anchor: {rel_path} -> {target}"
+                )
 
 
 def check_public_hygiene(rel: str, text: str) -> None:

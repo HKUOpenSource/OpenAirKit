@@ -9,9 +9,7 @@ it must not override component appearance. Do not add a parallel control library
 copy Astryx component implementations, or draw replacement controls in CSS/SVG.
 
 Each app's `UIProvider` connects the official theme and `LinkProvider` to React
-Router. Both frontend lock files pin the same Astryx revision. See the
-[migration record](../../docs/acceptance/2026-09-23-astryx-ui.md) for component
-mapping, compatibility and validation.
+Router, and both frontend lock files pin the same Astryx revision.
 
 `licenses.mjs` is a build-only Vite plugin that emits `THIRD_PARTY_NOTICES.txt`
 for dependencies included in the bundle. Existing release staging copies this

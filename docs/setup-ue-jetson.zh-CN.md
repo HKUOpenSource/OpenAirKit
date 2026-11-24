@@ -51,7 +51,7 @@ sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py s
 
 如需开启无人值守冷重启自连（将 `deploy/jetson/boot_connect.py` 部署至 `/opt/agentic-ocudu/jetson/boot_connect.py`）：
 
-1. **在 `aoc-v2-jetson-device.service` 停止时完成只读 AT 预检**：核对[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#rm520n-gl-qmap--mpdn-固件核查)列出的 AT 查询与 USB 速率检查均正常返回。
+1. **在 `aoc-v2-jetson-device.service` 停止时完成只读 AT 预检**：核对[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#rm520n-gl-qmap-与-mpdn-固件核查)列出的 AT 查询与 USB 速率检查均正常返回。
 2. **在安装应用后生成 `/etc/aoc-v2-jetson/boot.json`（`0600`，root 持有）**：确保其中 `device_sha256`、`manifest_sha256`、`sim_sha256`、`usb_speed_mbps` 与 `modem_configuration` 与现役安装一致（不含任何 SIM 密钥），并创建 `/var/lib/aoc-v2-jetson-boot/private`（`0700`）与 `public`（`0755`）。
 3. **部署 systemd drop-in 与开机一次性服务**：
    - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`：设置 `TimeoutStartSec=360`，以 `ExecStartPre=` 重置后依次执行 `boot_connect.py ready` -> `site_guard.py` -> `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback`，确保 USB 枚举、模组 DHCP、Wi-Fi 与 `tailscale0` 就绪后再启动 `device_entry.py`。

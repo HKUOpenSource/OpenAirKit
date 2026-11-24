@@ -51,5 +51,5 @@ documented in the [REST & SSE API Reference](reference/api-reference.md).
 
 ### Research & Extension Directions
 
-- **On DGX Spark (gNB/Core side)**: Co-locate an LLM ops/diagnostic agent on `8000–8002` consuming Spark SSE, events, and KPI time series (`devices/{id}/metrics`, `components/{id}/metrics`), or build RAN anomaly and multi-UE scheduling analyzers.
+- **On DGX Spark (gNB/Core side)**: Co-locate an LLM ops/diagnostic agent on `8000–8002` consuming Spark SSE, events, and KPI time series (`devices/{identifier}/metrics`, `components/{identifier}/metrics`), or build RAN anomaly and multi-UE scheduling analyzers.
 - **On Jetson Orin (UE side)**: Build link-aware edge inference applications that adapt local execution vs. 5G offloading to Spark using `/api/v1/status` and `/api/v1/events/stream`, or layer domain-specific recovery policies on top of `/api/v1/jobs`.

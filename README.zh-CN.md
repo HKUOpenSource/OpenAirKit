@@ -100,8 +100,6 @@ flowchart TB
 - `scripts/` 与 `config/`：离线 ARM64 发布脚本、指标守护工具、仓库审计与网络契约。
 - `docs/`：中英文配对文档、技术参考附录（`docs/reference/`）与实机基线档案（`docs/acceptance/`）。
 
-退役实现与历史站点迁移工具统一存放在 `archive/` 中，不参与构建或发布。
-
 ## 从源码构建与验证
 
 需准备 Python `3.10–3.12` 与 Node.js `22`。

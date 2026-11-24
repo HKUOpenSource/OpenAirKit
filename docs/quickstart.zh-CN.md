@@ -127,5 +127,5 @@ flowchart TD
    - **Spark Platform（`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`）**：确认实时遥测、在线 UE 上下文、活动 PDU 会话及 N3/N6 网桥计数均正常更新。
 2. **按需配置进阶功能**：
    - 启用免密快捷运维脚本（`~/aoc-ops/*/start.sh`）：参见[维护助手指南](../deploy/maintenance/README.zh-CN.md)。
-   - 启用冷重启自动入网（`boot_connect.py`）：参见[Jetson 安装](setup-ue-jetson.zh-CN.md#可选的开机协调)。
+   - 启用冷重启自动入网（`boot_connect.py`）：参见[Jetson 安装](setup-ue-jetson.zh-CN.md#3-可选的开机协调)。
    - 基于双端预留算力开展 AI 定制：参见[双端 AI 定制指南](ai-customization.zh-CN.md)。

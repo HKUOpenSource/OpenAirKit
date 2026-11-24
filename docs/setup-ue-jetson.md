@@ -59,7 +59,7 @@ and follow [Jetson Operations](jetson-operations.md).
 To enable unattended cold-boot attachment (`deploy/jetson/boot_connect.py`
 installed at `/opt/agentic-ocudu/jetson/boot_connect.py`):
 
-1. **Confirm read-only AT compatibility** while `aoc-v2-jetson-device.service` is stopped using the AT commands and USB checks documented in [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap--mpdn-firmware-check).
+1. **Confirm read-only AT compatibility** while `aoc-v2-jetson-device.service` is stopped using the AT commands and USB checks documented in [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap-and-mpdn-firmware-check).
 2. **Generate `/etc/aoc-v2-jetson/boot.json` (`0600`, root-owned)** *after* completing application installation so `device_sha256`, `manifest_sha256`, `sim_sha256`, `usb_speed_mbps`, and `modem_configuration` match the installed runtime (containing zero SIM keys). Create `/var/lib/aoc-v2-jetson-boot/private` (`0700`) and `/var/lib/aoc-v2-jetson-boot/public` (`0755`).
 3. **Install the systemd drop-in and oneshot boot unit**:
    - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`: sets `TimeoutStartSec=360`, resets `ExecStartPre=`, and chains `boot_connect.py ready` -> `site_guard.py` -> `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback` so USB enumeration, modem DHCP, Wi-Fi, and `tailscale0` are ready before `device_entry.py` starts.

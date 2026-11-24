@@ -43,5 +43,5 @@ flowchart LR
 
 ### 典型 DIY 扩展方向
 
-- **DGX Spark（基站 / 核心网侧）**：在 `8000–8002` 共驻部署 LLM 运维诊断助手，消费 Spark SSE、事件流与组件/设备时序 KPI（`devices/{id}/metrics`、`components/{id}/metrics`）；或研发无线异常检测与多 UE 调度分析模块。
+- **DGX Spark（基站 / 核心网侧）**：在 `8000–8002` 共驻部署 LLM 运维诊断助手，消费 Spark SSE、事件流与组件/设备时序 KPI（`devices/{identifier}/metrics`、`components/{identifier}/metrics`）；或研发无线异常检测与多 UE 调度分析模块。
 - **Jetson Orin（UE 侧）**：基于 `/api/v1/status` 与 `/api/v1/events/stream` 实时感知 5G 链路质量，实现本地边缘推理与 5G 卸载至 Spark 推理之间的自适应调度，或构建贴合业务场景的恢复策略。

@@ -130,5 +130,5 @@ Run on **Jetson Orin**:
    - **Spark Platform (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`)**: confirms live telemetry, attached UE context, active PDU session, and N3/N6 bridge counters.
 2. **Optional next configurations**:
    - Enable passwordless operator shortcuts (`~/aoc-ops/*/start.sh`) via [Maintenance Helper](../deploy/maintenance/README.md).
-   - Enable unattended cold-boot attachment (`boot_connect.py`) via [Jetson Setup](setup-ue-jetson.md#opt-in-boot-coordination).
+   - Enable unattended cold-boot attachment (`boot_connect.py`) via [Jetson Setup](setup-ue-jetson.md#3-opt-in-boot-coordination).
    - Build custom AI extensions per [DIY AI Customization](ai-customization.md).
