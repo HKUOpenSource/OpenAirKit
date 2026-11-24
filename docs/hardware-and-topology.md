@@ -26,23 +26,36 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="150" alt="DGX Spark" /><br/><sub><b>gNB / 5GC Host: DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="150" alt="USRP B210" /><br/><sub><b>SDR Front-End: Ettus USRP B210</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/dgx-spark.webp" width="150" alt="DGX Spark" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/usrp-b210.webp" width="150" alt="USRP B210" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>gNB / 5GC Host: DGX Spark</b></sub></td>
+    <td align="center" valign="top"><sub><b>SDR Front-End: Ettus USRP B210</b></sub></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="150" alt="Jetson Orin Nano" /><br/><sub><b>UE Host: Jetson Orin Nano</b></sub></td>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="96" alt="Waveshare SIM8262E-M2 5G for Jetson Orin" /><br/><sub><b>Carrier: Waveshare M.2 5G</b></sub></td>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="96" alt="Quectel RM520N-GL" /><br/><sub><b>5G Modem: Quectel RM520N-GL</b></sub></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="150" alt="Jetson Orin Nano" /></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="96" alt="Waveshare SIM8262E-M2 5G for Jetson Orin" /></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="96" alt="Quectel RM520N-GL" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>UE Host: Jetson Orin Nano</b></sub></td>
+    <td align="center" valign="top"><sub><b>Carrier: Waveshare M.2 5G</b></sub></td>
+    <td align="center" valign="top"><sub><b>5G Modem: Quectel RM520N-GL</b></sub></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="Programmable 5G USIM" /><br/><sub><b>SIM Card: Programmable 5G USIM</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC Smartcard Reader" /><br/><sub><b>Programmer: PC/SC Smartcard Reader</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="Programmable 5G USIM" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC Smartcard Reader" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>SIM Card: Programmable 5G USIM</b></sub></td>
+    <td align="center" valign="top"><sub><b>Programmer: PC/SC Smartcard Reader</b></sub></td>
   </tr>
 </table>
 

@@ -10,8 +10,12 @@ Quectel RM520N-GL** attachment.
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="90" alt="Programmable 5G USIM" /><br/><sub><b>Programmable 5G USIM</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="90" alt="PC/SC Smartcard Reader" /><br/><sub><b>USB CCID / PC/SC Reader</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="90" alt="Programmable 5G USIM" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="90" alt="PC/SC Smartcard Reader" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>Programmable 5G USIM</b></sub></td>
+    <td align="center" valign="top"><sub><b>USB CCID / PC/SC Reader</b></sub></td>
   </tr>
 </table>
 
