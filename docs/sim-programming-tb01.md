@@ -2,6 +2,21 @@
 
 [简体中文](sim-programming-tb01.zh-CN.md)
 
+## Quick Role in End-to-End Setup
+
+Before inserting a SIM card into a Jetson UE (see [Quickstart](quickstart.md)):
+
+1. Provision a **separate subscriber per UE** in Open5GS (`stacks/open5gs/subscriber.py`)
+   with independent **IMSI**, **Ki** and **OPc**, `sqn=0`, single IPv4 PDU,
+   `dnn=oai`, `sst=1` and `five_qi=9` (aligning with [UE Access Policy](ue-access-policy.md)).
+2. Keep exported `sim.json` / subscriber material in private local storage
+   outside Git (`chmod 0700` directories, `chmod 0600` files).
+3. Program the TB01 USIM with the reviewed `GRSIMWrite 4.4.9+` adapter
+   contract below (PC/SC `T=0`, exact TB01 ATR, **Milenage selector `00`**)
+   and confirm both IMSI readback and AUTS MAC-S match before booting the UE.
+
+## Background and scope
+
 This document records the programming performed locally on 2026-10-16,
 including a fault discovered and corrected during verification. Its scope is
 the reviewed GRSIMWrite 4.4.9+ binary and the card used in this session;

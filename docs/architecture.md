@@ -1,19 +1,39 @@
 # Architecture
 
+[简体中文](architecture.zh-CN.md)
+
 ## Product boundary
 
-Agentic-OCUDU provides one 5G SA data network. OCUDU supplies the RAN and
-Open5GS supplies the 5G core. The Spark Platform observes and operates the base
-station. The Jetson Console observes and operates the UE modem. IMS, SIP and
-voice services are outside the current product boundary.
+Agentic-OCUDU provides one reproducible 5G SA data network with decoupled
+management consoles at both ends. OCUDU supplies the RAN and Open5GS supplies
+the 5G core. The Spark Platform observes and operates the base station. The
+Jetson Console observes and operates the UE modem. IMS, SIP and voice services
+are outside the current product boundary.
+
+## Three-plane overview
 
 ```text
-Jetson Console (127.0.0.1:8878) -> RM520N modem -> B210 / OCUDU gNB -> Open5GS -> external DN
-                                                        |
-                                        127.0.0.1:8879 (JSON metrics, root-only nftables guard)
-                                                        |
-                                          Spark Platform (127.0.0.1:8877)
+Jetson Console (127.0.0.1:8878) -> RM520N-GL modem -> B210 / OCUDU gNB -> Open5GS -> external DN
+        |                                                     |
+[UE DIY AI Headroom]                          127.0.0.1:8879 (JSON metrics, root-only nftables guard)
+(Jetson Orin Compute)                                         |
+                                                Spark Platform (127.0.0.1:8877)
+                                                              |
+                                               [gNB DIY AI Headroom]
+                                               (DGX Spark, 8000-8002 free)
 ```
+
+1. **5G SA Radio & Core Plane**: OCUDU gNB (`B210`, Band `n78`) and Open5GS 5GC
+   (`12` containers + `ext-DN`) carry the data plane and follow [Hardware & Topology](hardware-and-topology.md).
+2. **Local Management & Self-Recovery Plane**: **Spark Platform** (`0.2.1`) and
+   **Jetson Console** (`0.6.2`) track only local host/device state, verify
+   evidence quality, and perform bounded lifecycle, failover and recovery tasks.
+3. **Reserved Dual-End AI Compute & Extension Plane**: No built-in AI models
+   are shipped in this repository today. Instead, **DGX Spark** and **Jetson Orin**
+   reserve local compute capacity at both ends while port isolation (`8879`
+   keeping `8000–8002` free), real-time CPU pinning (`aoc-v2-cpu-latency`) and
+   authenticated REST/SSE endpoints allow custom DIY AI modules to integrate
+   cleanly. See [DIY AI Customization](ai-customization.md).
 
 ## Component ownership
 

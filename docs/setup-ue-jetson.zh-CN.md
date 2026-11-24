@@ -1,9 +1,17 @@
 # Jetson Console 安装
 
+[English](setup-ue-jetson.md)
+
+> [!TIP]
+> 关于 UE 侧硬件清单（含使用 **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)**
+> 载板安装 **Quectel RM520N-GL** 模组）与 0→1 联调顺序，请先阅读
+> [硬件清单与拓扑](hardware-and-topology.zh-CN.md)与[端到端快速搭建指南](quickstart.zh-CN.md)。
+
 ## 前提
 
 使用 Linux ARM64、Ubuntu 22.04、Python 3.10、systemd、NetworkManager 和受支持的
-Quectel RM520N。Wi-Fi 必须有唯一地址和唯一的 IPv4 回退网关；Tailscale 必须能路由到
+**Quectel RM520N-GL**（安装在上述 Waveshare Jetson Orin M.2 5G 扩展载板上，经 USB 3.0
+接入 Jetson）。Wi-Fi 必须有唯一地址和唯一的 IPv4 回退网关；Tailscale 必须能路由到
 配置的 Spark 管理地址；模组必须取得自己的 RNDIS 或 ECM（`cdc_ether`）DHCP 地址。
 OCUDU 验证这些条件，不会替换管理员拥有的默认路由，也不会停止外部服务。端口
 `127.0.0.1:8878` 及发现的 AT 串口必须空闲（如有冲突的旧控制台服务或 ModemManager

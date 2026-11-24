@@ -1,5 +1,44 @@
 # Spark Platform 运维
 
+[English](spark-operations.md)
+
+## Web 控制台导览
+
+Spark Platform（`0.2.1`）在回环地址 `127.0.0.1:8877` 提供本地 Astryx Web 控制台，
+建议从工作站通过 SSH 端口转发访问：
+
+```sh
+ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>
+```
+
+| 页面 | 路由 | 观测与管控内容 |
+| --- | --- | --- |
+| Overview | `/` | 系统健康总览、证据新鲜度、RAN/核心网状态与在线 UE 概览 |
+| gNB | `/gnb` | OCUDU 进程代次、USRP B210 状态、射频参数基线与 `8879` 实时指标 |
+| Core Network | `/core` | Open5GS 12 容器状态、N2 NG Setup 就绪情况与 N3/N6/动态网桥计数 |
+| Devices | `/devices` | 带明确证据关联的 RNTI 上下文与活动 PDU 会话（`/devices/{id}` 查看单台明细） |
+| Events | `/events` | 可筛选的无线、核心网与采集器事件流 |
+| Metric history | `/history` | 按时间窗口回溯的持久化指标历史曲线 |
+| Operations | `/operations` | 受限协议栈/平台控制任务、分步执行状态、取消与审计记录 |
+| Diagnostics | `/diagnostics` | 子系统探测状态、采集时间戳与接口诊断明细 |
+
+## REST 与 SSE 接口速查
+
+除 `/api/v1/health` 与登录接口外，其余端点均需携带 `/api/v1/login` 返回的会话
+Cookie 与 CSRF Token。这些本机接口同样可用于扩展基站侧 DIY AI 模块（参见
+[双端 AI 定制指南](ai-customization.zh-CN.md)）。
+
+| 接口端点 | 方法 | 用途说明 |
+| --- | --- | --- |
+| `/api/v1/health` | `GET` | 服务存活检查（无需鉴权） |
+| `/api/v1/login`、`/api/v1/session`、`/api/v1/logout` | `POST` / `GET` | 登录会话与 CSRF Token 管理 |
+| `/api/v1/snapshot`、`/api/v1/stream` | `GET` | 当前完整快照与实时 SSE 推送流 |
+| `/api/v1/devices`、`/api/v1/devices/{identifier}` | `GET` | 已关联 UE 列表与单台设备详情 |
+| `/api/v1/devices/{identifier}/metrics`、`/api/v1/components/{identifier}/metrics` | `GET` | 单台设备与单组件时序 KPI |
+| `/api/v1/history`、`/api/v1/history/catalog` | `GET` | 历史指标数据与可用指标目录 |
+| `/api/v1/events`、`/api/v1/events/kinds`、`/api/v1/diagnostics` | `GET` | 结构化事件查询与子系统诊断报告 |
+| `/api/v1/control`、`/api/v1/control/{identifier}`、`/api/v1/control/{identifier}/cancel`、`/api/v1/audit` | `GET` / `POST` | 受限运维操作、任务取消与审计日志 |
+
 ## 整套系统一键启停
 
 使用已完成配置的 SSH 用户在设备本地执行：

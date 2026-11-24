@@ -1,5 +1,44 @@
 # Spark Platform operations
 
+[简体中文](spark-operations.zh-CN.md)
+
+## Web Console Overview
+
+Spark Platform (`0.2.1`) serves a local-only Astryx web console on
+`127.0.0.1:8877`. Access it from your workstation over an SSH tunnel:
+
+```sh
+ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>
+```
+
+| Page | Route | What It Shows & Manages |
+| --- | --- | --- |
+| Overview | `/` | System health summary, evidence freshness, RAN/core status and active UE count |
+| gNB | `/gnb` | OCUDU process generation, USRP B210 state, RF baseline and live `8879` JSON metrics |
+| Core Network | `/core` | Open5GS 12-container status, N2 NG Setup readiness and N3/N6/dynamic bridge counters |
+| Devices | `/devices` | Correlated RNTI contexts and active PDU sessions (`/devices/{id}` for per-UE drilldown) |
+| Events | `/events` | Filterable RAN, core and collector event timeline |
+| Metric history | `/history` | Retained time-series telemetry charts across configurable time windows |
+| Operations | `/operations` | Bounded stack/service control tasks, step logs, cancellation and audit trail |
+| Diagnostics | `/diagnostics` | Subsystem probes, collector timestamps and interface diagnostics |
+
+## REST and SSE API Summary
+
+All authenticated endpoints require a session cookie and CSRF token obtained from
+`/api/v1/login`. These local endpoints also serve as the integration surface for
+DIY gNB-side monitoring or AI agents (see [DIY AI Customization](ai-customization.md)).
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/api/v1/health` | `GET` | Unauthenticated liveness check (`127.0.0.1:8877`) |
+| `/api/v1/login`, `/api/v1/session`, `/api/v1/logout` | `POST` / `GET` | Session authentication and CSRF token lifecycle |
+| `/api/v1/snapshot`, `/api/v1/stream` | `GET` | Full current snapshot and real-time SSE updates |
+| `/api/v1/devices`, `/api/v1/devices/{identifier}` | `GET` | Correlated UE device list and per-device state |
+| `/api/v1/devices/{identifier}/metrics`, `/api/v1/components/{identifier}/metrics` | `GET` | Per-device and per-component KPI time series |
+| `/api/v1/history`, `/api/v1/history/catalog` | `GET` | Historical metric series and available metric catalog |
+| `/api/v1/events`, `/api/v1/events/kinds`, `/api/v1/diagnostics` | `GET` | Event feed and subsystem diagnostic reports |
+| `/api/v1/control`, `/api/v1/control/{identifier}`, `/api/v1/control/{identifier}/cancel`, `/api/v1/audit` | `GET` / `POST` | Bounded operational actions, task cancellation and audit log |
+
 ## One-command full-stack lifecycle
 
 Run locally as the commissioned SSH user:

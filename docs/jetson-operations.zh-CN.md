@@ -1,5 +1,39 @@
 # Jetson Console 运维
 
+[English](jetson-operations.md)
+
+## Web 控制台导览
+
+Jetson Console（`0.6.2`）在回环地址 `127.0.0.1:8878` 提供本地 Astryx Web 控制台，
+负责 **Quectel RM520N-GL** 模组发现、Wi-Fi/蜂窝双路径路由保护、有界故障恢复及可选开机自连。
+建议从工作站通过 SSH 端口转发访问：
+
+```sh
+ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>
+```
+
+| 页面 | 路由 | 观测与管控内容 |
+| --- | --- | --- |
+| Overview | `/` | 独立展示 SIM、驻留、5GS 注册、IPv4 PDU、地址池、RNDIS/ECM 接口、绑定探测、`management_protected` 与普通 IPv4 出口 |
+| Device Setup | `/setup` | 在写入前预览上下文与基线校验，并执行 Setup、Recover 与维护模式切换 |
+| History | `/history` | 被动接口收发速率曲线、探测时延与历史任务记录 |
+| Settings | `/settings` | 查看 schema 3 网络契约预期、只读选网观测策略、探测目标与自动恢复冷却参数 |
+
+## REST 与 SSE 接口速查
+
+除 `/api/v1/health` 与登录接口外，其余端点均需携带 `/api/v1/auth/login` 返回的会话
+Cookie 与 CSRF Token。这些本机接口同时是 UE 侧 DIY AI 模块接入 Jetson 状态的唯一边界
+（参见[双端 AI 定制指南](ai-customization.zh-CN.md)）。
+
+| 接口端点 | 方法 | 用途说明 |
+| --- | --- | --- |
+| `/api/v1/health` | `GET` | Web 与设备执行器存活检查（无需鉴权） |
+| `/api/v1/auth/login`、`/api/v1/auth/session`、`/api/v1/auth/logout` | `POST` / `GET` | 登录会话与 CSRF Token 管理 |
+| `/api/v1/status`、`/api/v1/config` | `GET` | 当前 UE 状态快照（含证据质量）与现役 schema 3 配置 |
+| `/api/v1/events/stream` | `GET` | 实时状态与任务 SSE 推送流 |
+| `/api/v1/metrics`、`/api/v1/history`、`/api/v1/diagnostics` | `GET` | 被动收发计数、历史探测与接口诊断信息 |
+| `/api/v1/jobs`、`/api/v1/jobs/{identifier}`、`/api/v1/jobs/{identifier}/run`、`/api/v1/jobs/{identifier}/cancel`、`/api/v1/maintenance` | `GET` / `POST` | 受限 Setup、Recover、任务取消与维护模式控制 |
+
 ## 服务生命周期
 
 日常在设备本地执行独立部署的快捷脚本：

@@ -1,5 +1,12 @@
 # Spark 系统安装
 
+[English](setup-bs-spark.md)
+
+> [!TIP]
+> 硬件 BOM、端口规划（`8877`、`8879` 及留空 `8000–8002` 供 DIY AI 使用）以及
+> 0→1 联调主线请先阅读[硬件清单与拓扑](hardware-and-topology.zh-CN.md)与
+> [端到端快速搭建指南](quickstart.zh-CN.md)。
+
 ## 前提
 
 目标机应为 ARM64、Ubuntu 24.04、Python 3.12，并提供 systemd、Docker Compose 和通过 USB 3

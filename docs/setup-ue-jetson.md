@@ -1,9 +1,19 @@
 # Jetson Console setup
 
+[简体中文](setup-ue-jetson.zh-CN.md)
+
+> [!TIP]
+> For hardware BOM (including mounting the **Quectel RM520N-GL** on the
+> **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)**
+> carrier board) and the 0-to-1 bring-up sequence, start with
+> [Hardware & Topology](hardware-and-topology.md) and the
+> [End-to-End Quickstart](quickstart.md).
+
 ## Prerequisites
 
 Use Linux ARM64, Ubuntu 22.04, Python 3.10, systemd, NetworkManager and the
-supported Quectel RM520N modem. Wi-Fi must have a unique address and one
+supported **Quectel RM520N-GL** modem (mounted on the Waveshare Jetson Orin
+M.2 5G carrier board over USB 3.0). Wi-Fi must have a unique address and one
 fallback IPv4 gateway; Tailscale must route the configured Spark management
 address. The modem must obtain its own RNDIS or ECM (`cdc_ether`) DHCP address.
 OCUDU validates these prerequisites and never replaces an administrator-owned

@@ -1,5 +1,13 @@
 # Spark system setup
 
+[简体中文](setup-bs-spark.zh-CN.md)
+
+> [!TIP]
+> For hardware BOM, port allocation (`8877`, `8879`, and keeping `8000–8002`
+> free for DIY AI workloads) and the 0-to-1 bring-up order, start with
+> [Hardware & Topology](hardware-and-topology.md) and the
+> [End-to-End Quickstart](quickstart.md).
+
 ## Prerequisites
 
 Use an ARM64 host with Ubuntu 24.04, Python 3.12, systemd, Docker Compose and a

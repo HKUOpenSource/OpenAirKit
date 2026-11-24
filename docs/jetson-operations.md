@@ -1,5 +1,40 @@
 # Jetson Console operations
 
+[简体中文](jetson-operations.zh-CN.md)
+
+## Web Console Overview
+
+Jetson Console (`0.6.2`) serves a local-only Astryx web console on
+`127.0.0.1:8878` and coordinates **Quectel RM520N-GL** discovery, dual-path
+Wi-Fi/cellular route selection, bounded recovery and optional cold-boot
+attachment. Access the console from your workstation over an SSH tunnel:
+
+```sh
+ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>
+```
+
+| Page | Route | What It Shows & Manages |
+| --- | --- | --- |
+| Overview | `/` | Independent readiness for SIM, camping, 5GS registration, IPv4 PDU, pool match, RNDIS/ECM interface, bound data probes, `management_protected` and IPv4 egress |
+| Device Setup | `/setup` | Previews and applies bounded APN/PDU verification, baseline capture, Recover and Maintenance actions |
+| History | `/history` | Passive RX/TX throughput samples, probe latency history and recent job records |
+| Settings | `/settings` | Inspects schema 3 network expectations, selection observation mode, diagnostics and recovery timers |
+
+## REST and SSE API Summary
+
+Authenticated endpoints use the session cookie and CSRF token from
+`/api/v1/auth/login`. These local interfaces also serve as the integration
+boundary for DIY UE-side AI applications (see [DIY AI Customization](ai-customization.md)).
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/api/v1/health` | `GET` | Unauthenticated web and device-executor liveness check (`127.0.0.1:8878`) |
+| `/api/v1/auth/login`, `/api/v1/auth/session`, `/api/v1/auth/logout` | `POST` / `GET` | Session authentication and CSRF lifecycle |
+| `/api/v1/status`, `/api/v1/config` | `GET` | Current UE state snapshot (with evidence quality) and active schema 3 config |
+| `/api/v1/events/stream` | `GET` | Real-time SSE state and job stream |
+| `/api/v1/metrics`, `/api/v1/history`, `/api/v1/diagnostics` | `GET` | Retained passive counters, probe history and interface diagnostics |
+| `/api/v1/jobs`, `/api/v1/jobs/{identifier}`, `/api/v1/jobs/{identifier}/run`, `/api/v1/jobs/{identifier}/cancel`, `/api/v1/maintenance` | `GET` / `POST` | Bounded Device Setup, Recover, cancellation and Maintenance mode transitions |
+
 ## Service lifecycle
 
 For normal local operation, use the separately deployed shortcuts:

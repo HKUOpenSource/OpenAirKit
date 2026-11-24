@@ -1,18 +1,34 @@
 # 架构
 
+[English](architecture.md)
+
 ## 产品边界
 
-Agentic-OCUDU 提供一套 5G SA 数据网络：OCUDU 提供 RAN，Open5GS 提供 5G
-核心网；Spark Platform 负责基站侧监测与受限操作；Jetson Console 负责 UE
-模组监测与受限操作。IMS、SIP 和语音服务不属于当前产品范围。
+Agentic-OCUDU 提供一套可复现的 5G SA 数据网络与双端解耦管理平台：OCUDU 提供
+RAN，Open5GS 提供 5G 核心网；Spark Platform 负责基站侧监测与受限操作；Jetson
+Console 负责 UE 模组监测与受限操作。IMS、SIP 和语音服务不属于当前产品范围。
+
+## 三平面总览
 
 ```text
-Jetson Console (127.0.0.1:8878) -> RM520N 模组 -> B210 / OCUDU gNB -> Open5GS -> 外部数据网
-                                                        |
-                                        127.0.0.1:8879（JSON 指标，仅 root 可访问 nftables 守护）
-                                                        |
-                                          Spark Platform (127.0.0.1:8877)
+Jetson Console (127.0.0.1:8878) -> RM520N-GL 模组 -> B210 / OCUDU gNB -> Open5GS -> 外部数据网
+        |                                                                   |
+[UE 侧预留 DIY AI 算力]                                     127.0.0.1:8879（JSON 指标，仅 root 可访问）
+(Jetson Orin 边缘算力)                                                      |
+                                                              Spark Platform (127.0.0.1:8877)
+                                                                            |
+                                                            [gNB 侧预留 DIY AI 算力]
+                                                            (DGX Spark，8000-8002 留空)
 ```
+
+1. **5G SA 无线与核心网平面**：OCUDU gNB（`B210`、`n78` 频段）与 Open5GS 5GC
+   （12 个核心网容器 + `ext-DN`）负责空口与核心网数据面，物理组成见[硬件清单与拓扑](hardware-and-topology.zh-CN.md)。
+2. **本地管理与自愈平面**：**Spark Platform**（`0.2.1`）与 **Jetson Console**
+   （`0.6.2`）各自只管理本机状态、校验证据新鲜度，并执行有界启停、双路径切回与模组恢复任务。
+3. **双端预留 AI 算力与扩展平面**：当前仓库暂未内置 AI 模型，而是通过 **DGX Spark** 与
+   **Jetson Orin** 在通信两端预留本地算力，并依托端口隔离（`8879` 留空 `8000–8002`）、
+   实时低时延保障（`aoc-v2-cpu-latency`）和鉴权 REST/SSE 接口为后续 DIY AI 扩展提供安全边界。
+   详见[双端 AI 定制指南](ai-customization.zh-CN.md)。
 
 ## 组件归属
 

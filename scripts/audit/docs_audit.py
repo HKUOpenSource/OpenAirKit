@@ -21,6 +21,9 @@ ROOT_DOCUMENTS = (
 PAIRED_DOCUMENTS = (
     "README",
     "architecture",
+    "hardware-and-topology",
+    "quickstart",
+    "ai-customization",
     "coding-agent-codegraph",
     "setup-ue-jetson",
     "setup-bs-spark",

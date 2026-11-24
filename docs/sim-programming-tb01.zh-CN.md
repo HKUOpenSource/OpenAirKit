@@ -2,6 +2,19 @@
 
 [English](sim-programming-tb01.md)
 
+## 在端到端搭建中的快速定位
+
+在将物理 SIM 卡插入 Jetson UE 之前（参见[端到端快速搭建指南](quickstart.zh-CN.md)）：
+
+1. 在 Open5GS 中为**每台 UE 创建独立订阅**（`stacks/open5gs/subscriber.py`），使用各自独立的
+   **IMSI**、**Ki** 与 **OPc**，`sqn=0`、单 IPv4 PDU、`dnn=oai`、`sst=1`、`five_qi=9`
+   （需与[UE 接入与实验室策略](ue-access-policy.zh-CN.md)对齐）。
+2. 将导出的 `sim.json` 与订阅密钥存放在 Git 之外的私密目录中（目录 `0700`、文件 `0600`）。
+3. 按下文经核验的 `GRSIMWrite 4.4.9+` 协议细节烧录 TB01 白卡（PC/SC 显式 `T=0`、精确
+   TB01 ATR、**Milenage 选择值 `00`**），并核对 IMSI 读回与本地 AUTS MAC-S 一致后再上卡测试。
+
+## 背景与适用范围
+
 本文记录 2026-10-16 在本机完成的一次实际烧录，以及过程中发现并修正的问题。
 适用范围是已核对的 GRSIMWrite 4.4.9+ 软件和本次 TB01 卡片，不代表其他
 TB01 固件或其他型号也兼容。烧录适配器保存在本机私密工作目录中，尚未作为
