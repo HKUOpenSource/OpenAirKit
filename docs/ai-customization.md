@@ -48,13 +48,15 @@ in [Ports & Runtime Reference](reference/ports-and-runtime.md).
 
 ## Closed-Loop Integration Pattern & API Surface
 
-```mermaid
-flowchart LR
-  OBS["Subscribe via REST / SSE"] --> VAL["Gate on Telemetry Freshness"]
-  VAL --> INF["Execute Local Inference (Spark / Jetson)"]
-  INF --> ACT["Invoke Bounded Control / Job API"]
-  ACT --> AUD["Audit Execution & History"]
-```
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/ai-closed-loop-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/ai-closed-loop-en-light.svg">
+  <img src="assets/diagrams/ai-closed-loop-en-light.svg" alt="OpenAirKit Closed-Loop Integration Pattern" width="840">
+</picture>
+
+</div>
 
 Authenticated telemetry feeds (`GET /api/v1/stream`, `GET /api/v1/snapshot`,
 `GET /api/v1/status`, `GET /api/v1/events/stream`) and bounded control endpoints

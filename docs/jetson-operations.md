@@ -25,19 +25,15 @@ in [REST & SSE API Reference](reference/api-reference.md#jetson-console-api-1270
 
 ## Dual-Path Routing & Self-Recovery State Machine
 
-```mermaid
-stateDiagram-v2
-  [*] --> WiFi_Fallback: "Start / Boot (recovery paused)"
-  WiFi_Fallback --> Cellular_Preferred: "2 current probes pass"
-  Cellular_Preferred --> WiFi_Fallback: "2 failures, stale sample, or PDU lost"
-  Cellular_Preferred --> Natural_Wait_120s: "Outage (when automation active)"
-  WiFi_Fallback --> Natural_Wait_120s: "Outage (when automation active)"
-  Natural_Wait_120s --> Bounded_Recover: "Still disconnected after 120s"
-  Bounded_Recover --> WiFi_Fallback: "Recovery ends or budget exhausted"
-  WiFi_Fallback --> Maintenance_Mode: "Enter maintenance"
-  Cellular_Preferred --> Maintenance_Mode: "Enter maintenance (Wi-Fi active)"
-  Maintenance_Mode --> WiFi_Fallback: "Exit maintenance"
-```
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/jetson-state-machine-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/jetson-state-machine-en-light.svg">
+  <img src="assets/diagrams/jetson-state-machine-en-light.svg" alt="Jetson Dual-Path Routing and Self-Recovery State Machine" width="880">
+</picture>
+
+</div>
 
 - **IPv4 failover & egress**: Two consecutive valid bound cellular probes
   promote the cellular default route (`metric 10`) for general IPv4 traffic;

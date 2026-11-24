@@ -51,40 +51,15 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
 
 ## Physical Wiring and Access Topology
 
-```mermaid
-flowchart LR
-  classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef net fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef ctrl fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+<div align="center">
 
-  subgraph DEV["Workstation"]
-    OP["SSH Client & Browser"]:::ctrl
-    SCR["PC/SC SIM Reader"]:::hw
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/hardware-topology-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/hardware-topology-en-light.svg">
+  <img src="assets/diagrams/hardware-topology-en-light.svg" alt="OpenAirKit Physical Wiring and Access Topology" width="880">
+</picture>
 
-  subgraph UE["UE Node (Jetson Orin)"]
-    JET["Jetson Orin"]:::ctrl
-    WIFI["Wi-Fi + tailscale0"]:::net
-    CAR["Waveshare M.2 Carrier"]:::hw
-    MOD["Quectel RM520N-GL + Nano-SIM"]:::hw
-    JET --- WIFI
-    JET -- "USB 3.0" --> CAR
-    CAR --- MOD
-  end
-
-  subgraph BS["Base Station Node (DGX Spark)"]
-    SPK["DGX Spark"]:::ctrl
-    TS["Management / tailscale0"]:::net
-    B210["USRP B210"]:::hw
-    SPK --- TS
-    SPK -- "USB 3.0 Type-B" --> B210
-  end
-
-  MOD <== "5G NR SA RF" ==> B210
-  WIFI -. "Management Tunnel" .-> TS
-  OP -. "SSH Tunnel :8878" .-> WIFI
-  OP -. "SSH Tunnel :8877" .-> TS
-```
+</div>
 
 <!-- ASSET_SLOT: docs/assets/hardware/spark-b210-wiring.jpg | 16:9 close-up of DGX Spark connected to USRP B210 with antennas/attenuators -->
 <!-- ASSET_SLOT: docs/assets/hardware/jetson-waveshare-rm520n.jpg | 16:9 close-up of Jetson Orin + Waveshare M.2 5G carrier with Quectel RM520N-GL, Nano-SIM and 4 antennas -->

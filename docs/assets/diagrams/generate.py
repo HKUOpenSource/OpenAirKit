@@ -214,6 +214,80 @@ class SvgBuilder:
             )
         self.nodes.append("\n  ".join(parts))
 
+    def add_frame(self, x: int, y: int, w: int, h: int, rx: int = 12) -> None:
+        t = self.theme
+        self.layers.append(
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" ry="{rx}" '
+            f'fill="{t.band_bg}" stroke="{t.band_border}" stroke-width="1.2" />'
+        )
+
+    def add_titled_container(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        header_h: int,
+        title: str,
+        align: str = "left",
+    ) -> None:
+        t = self.theme
+        self._clip_idx += 1
+        clip_id = f"container-clip-{self._clip_idx}"
+        self.defs.append(
+            f'<clipPath id="{clip_id}">'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" ry="10" />'
+            f"</clipPath>"
+        )
+        tx = x + 18 if align == "left" else x + w - 18
+        anchor = "start" if align == "left" else "end"
+        parts = [
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" ry="10" '
+            f'fill="{t.band_bg}" stroke="{t.band_border}" stroke-width="1.2" />',
+            f'<rect x="{x}" y="{y}" width="{w}" height="{header_h}" '
+            f'fill="{t.rail_bg}" clip-path="url(#{clip_id})" />',
+            f'<line x1="{x}" y1="{y + header_h}" x2="{x + w}" y2="{y + header_h}" '
+            f'stroke="{t.band_border}" stroke-width="1" />',
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" ry="10" '
+            f'fill="none" stroke="{t.band_border}" stroke-width="1.2" />',
+            f'<text x="{tx}" y="{y + header_h / 2 + 4.5:.1f}" text-anchor="{anchor}" '
+            f'font-family="{FONT_FAMILY}" font-size="13" font-weight="600" '
+            f'fill="{t.rail_text}">{escape(title)}</text>',
+        ]
+        self.layers.append("\n  ".join(parts))
+
+    def add_step_card(
+        self, x: int, y: int, w: int, h: int, style_key: str, step_num: str, lines: list[str]
+    ) -> None:
+        fill, stroke, text_color, dasharray = self.theme.styles[style_key]
+        dash_attr = f' stroke-dasharray="{dasharray}"' if dasharray else ""
+        cx = x + w / 2
+        parts = [
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" ry="8" '
+            f'fill="{fill}" stroke="{stroke}" stroke-width="1.6"{dash_attr} />',
+            f'<text x="{cx:.1f}" y="{y + 19:.1f}" text-anchor="middle" '
+            f'font-family="{FONT_FAMILY}" font-size="10.5" font-weight="700" '
+            f'letter-spacing="0.8" fill="{stroke}">{escape(step_num)}</text>',
+        ]
+        line_step = 17
+        first_y = y + 40 if len(lines) == 2 else y + 48
+        for i, line in enumerate(lines):
+            ly = first_y + i * line_step
+            parts.append(
+                f'<text x="{cx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+                f'font-family="{FONT_FAMILY}" font-size="13" font-weight="600" '
+                f'fill="{text_color}">{escape(line)}</text>'
+            )
+        self.nodes.append("\n  ".join(parts))
+
+    def add_start_dot(self, cx: float, cy: float) -> None:
+        t = self.theme
+        self.nodes.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="11" fill="none" '
+            f'stroke="{t.solid_line}" stroke-width="1.4" />\n  '
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="7" fill="{t.solid_line}" />'
+        )
+
     def add_line(
         self,
         x1: float,
@@ -578,11 +652,257 @@ def build_deployment_flow(lang: str, theme: Theme) -> str:
     return svg.render()
 
 
+def build_hardware_topology(lang: str, theme: Theme) -> str:
+    zh = lang == "zh"
+    svg = SvgBuilder(
+        940,
+        532,
+        theme,
+        "Physical Wiring and Access Topology" if not zh else "物理接线与访问拓扑",
+    )
+
+    svg.add_band(16, 16, 908, 84, 174, ["工作站"] if zh else ["Workstation"])
+    svg.add_titled_container(
+        16, 164, 380, 352, 38, "UE 节点（Jetson Orin）" if zh else "UE Node (Jetson Orin)", "left"
+    )
+    svg.add_titled_container(
+        544,
+        164,
+        380,
+        352,
+        38,
+        "基站与核心网节点（DGX Spark）" if zh else "Base Station Node (DGX Spark)",
+        "right",
+    )
+
+    # Workstation nodes
+    svg.add_node(
+        370,
+        32,
+        200,
+        52,
+        "mgmt",
+        ["SSH 客户端与浏览器"] if zh else ["SSH Client & Browser"],
+    )
+    svg.add_node(
+        726,
+        32,
+        180,
+        52,
+        "hw",
+        ["PC/SC 智能卡读卡器"] if zh else ["PC/SC SIM Reader"],
+    )
+
+    # UE nodes
+    svg.add_node(34, 224, 126, 52, "mgmt", ["Jetson Orin"])
+    svg.add_node(
+        204,
+        224,
+        174,
+        52,
+        "stack",
+        ["Wi-Fi 管理口 +", "tailscale0"] if zh else ["Wi-Fi +", "tailscale0"],
+    )
+    svg.add_node(
+        34,
+        334,
+        178,
+        52,
+        "hw",
+        ["Waveshare", "M.2 载板"] if zh else ["Waveshare", "M.2 Carrier"],
+    )
+    svg.add_node(166, 436, 212, 52, "hw", ["Quectel RM520N-GL", "+ Nano-SIM"])
+
+    # BS nodes
+    svg.add_node(
+        562,
+        224,
+        174,
+        52,
+        "stack",
+        ["管理网口 /", "tailscale0"] if zh else ["Management /", "tailscale0"],
+    )
+    svg.add_node(780, 224, 126, 52, "mgmt", ["DGX Spark"])
+    svg.add_node(562, 436, 164, 52, "hw", ["USRP B210"])
+
+    # Intra-UE links
+    svg.add_line(160, 250, 204, 250, kind="solid")
+    svg.add_line(97, 276, 97, 334, kind="solid", arrow_end=True)
+    svg.add_pill(97, 305, "USB 3.0")
+    svg.add_path("M 123 386 L 123 450 Q 123 462 135 462 L 166 462", kind="solid", arrow_end=False)
+
+    # Intra-BS links
+    svg.add_line(736, 250, 780, 250, kind="solid")
+    svg.add_path("M 843 276 L 843 450 Q 843 462 831 462 L 728 462", kind="solid", arrow_end=True)
+    svg.add_pill(843, 368, "USB 3.0 Type-B")
+
+    # Cross-host links
+    svg.add_path("M 370 58 L 303 58 Q 291 58 291 70 L 291 222", kind="dashed", arrow_end=True)
+    svg.add_pill(291, 132, "SSH 隧道 :8878" if zh else "SSH Tunnel :8878")
+
+    svg.add_path("M 570 58 L 637 58 Q 649 58 649 70 L 649 222", kind="dashed", arrow_end=True)
+    svg.add_pill(649, 132, "SSH 隧道 :8877" if zh else "SSH Tunnel :8877")
+
+    svg.add_line(378, 250, 562, 250, kind="dashed", arrow_end=True)
+    svg.add_pill(470, 250, "管理隧道" if zh else "Management Tunnel")
+
+    svg.add_line(378, 462, 562, 462, kind="rf", arrow_start=True, arrow_end=True)
+    svg.add_pill(470, 462, "5G NR SA 空口" if zh else "5G NR SA RF")
+
+    return svg.render()
+
+
+def build_ai_closed_loop(lang: str, theme: Theme) -> str:
+    zh = lang == "zh"
+    svg = SvgBuilder(
+        880,
+        276,
+        theme,
+        "Closed-Loop Integration Pattern & API Surface" if not zh else "闭环集成模式与接口",
+    )
+
+    svg.add_frame(16, 16, 848, 244)
+
+    svg.add_step_card(
+        40,
+        38,
+        230,
+        74,
+        "mgmt",
+        "01",
+        ["通过 REST / SSE", "订阅状态"] if zh else ["Subscribe via", "REST / SSE"],
+    )
+    svg.add_step_card(
+        325,
+        38,
+        230,
+        74,
+        "stack",
+        "02",
+        ["核验时间戳与", "数据时效性"] if zh else ["Gate on Telemetry", "Freshness"],
+    )
+    svg.add_step_card(
+        610,
+        38,
+        230,
+        74,
+        "ai",
+        "03",
+        ["在 Spark / Jetson", "本地执行推理"] if zh else ["Execute Local Inference", "(Spark / Jetson)"],
+    )
+    svg.add_step_card(
+        530,
+        164,
+        250,
+        74,
+        "mgmt",
+        "04",
+        ["调用受限控制 /", "任务接口"] if zh else ["Invoke Bounded", "Control / Job API"],
+    )
+    svg.add_step_card(
+        100,
+        164,
+        250,
+        74,
+        "hw",
+        "05",
+        ["核查审计与", "历史执行结果"] if zh else ["Audit Execution", "& History"],
+    )
+
+    # Clockwise closed-loop edges
+    svg.add_line(270, 75, 325, 75, kind="solid", arrow_end=True)
+    svg.add_line(555, 75, 610, 75, kind="solid", arrow_end=True)
+    svg.add_line(725, 112, 725, 164, kind="solid", arrow_end=True)
+    svg.add_line(530, 201, 350, 201, kind="solid", arrow_end=True)
+    svg.add_line(155, 164, 155, 112, kind="dashed", arrow_end=True)
+    svg.add_pill(155, 138, "持续闭环" if zh else "Closed Loop")
+
+    return svg.render()
+
+
+def build_jetson_state_machine(lang: str, theme: Theme) -> str:
+    zh = lang == "zh"
+    svg = SvgBuilder(
+        960,
+        448,
+        theme,
+        "Dual-Path Routing & Self-Recovery State Machine"
+        if not zh
+        else "双路径路由与有界自愈状态机",
+    )
+
+    svg.add_frame(16, 16, 928, 416)
+
+    svg.add_start_dot(136, 58)
+    svg.add_node(444, 30, 196, 54, "mgmt", ["Maintenance_Mode"])
+    svg.add_node(82, 186, 220, 64, "hw", ["WiFi_Fallback"])
+    svg.add_node(658, 186, 220, 64, "stack", ["Cellular_Preferred"])
+    svg.add_node(82, 360, 220, 54, "ai", ["Bounded_Recover"])
+    svg.add_node(658, 360, 220, 54, "ai", ["Natural_Wait_120s"])
+
+    # 1. [*] -> WiFi_Fallback
+    svg.add_line(136, 69, 136, 186, kind="solid", arrow_end=True)
+    svg.add_pill(136, 128, "启动 / 开机默认（暂停自愈）" if zh else "Start / Boot (recovery paused)")
+
+    # 2. Maintenance_Mode -> WiFi_Fallback
+    svg.add_path("M 444 40 L 266 40 Q 254 40 254 52 L 254 184", kind="solid", arrow_end=True)
+    svg.add_pill(349, 40, "退出维护模式" if zh else "Exit maintenance")
+
+    # 3. WiFi_Fallback -> Maintenance_Mode
+    svg.add_path("M 286 186 L 286 86 Q 286 74 298 74 L 442 74", kind="solid", arrow_end=True)
+    svg.add_pill(365, 74, "进入维护模式" if zh else "Enter maintenance")
+
+    # 4. Cellular_Preferred -> Maintenance_Mode
+    svg.add_path("M 768 186 L 768 69 Q 768 57 756 57 L 642 57", kind="solid", arrow_end=True)
+    svg.add_pill(
+        768, 122, "进入维护模式（切回 Wi-Fi）" if zh else "Enter maintenance (Wi-Fi active)"
+    )
+
+    # 5. WiFi_Fallback -> Cellular_Preferred
+    svg.add_line(302, 200, 658, 200, kind="solid", arrow_end=True)
+    svg.add_pill(480, 200, "连续 2 次有效探测通过" if zh else "2 current probes pass")
+
+    # 6. Cellular_Preferred -> WiFi_Fallback
+    svg.add_line(658, 236, 302, 236, kind="solid", arrow_end=True)
+    svg.add_pill(
+        480,
+        236,
+        "2 次失败、样本过期或 PDU 丢失" if zh else "2 failures, stale sample, or PDU lost",
+    )
+
+    # 7. Bounded_Recover -> WiFi_Fallback
+    svg.add_line(148, 360, 148, 250, kind="solid", arrow_end=True)
+    svg.add_pill(
+        148, 305, "恢复完成或重试配额耗尽" if zh else "Recovery ends or budget exhausted"
+    )
+
+    # 8. WiFi_Fallback -> Natural_Wait_120s
+    svg.add_path(
+        "M 276 250 L 276 293 Q 276 305 288 305 L 684 305 Q 696 305 696 317 L 696 358",
+        kind="solid",
+        arrow_end=True,
+    )
+    svg.add_pill(486, 305, "链路中断（已启用自动恢复）" if zh else "Outage (automation active)")
+
+    # 9. Cellular_Preferred -> Natural_Wait_120s
+    svg.add_line(802, 250, 802, 360, kind="solid", arrow_end=True)
+    svg.add_pill(802, 305, "链路中断（已启用自动恢复）" if zh else "Outage (automation active)")
+
+    # 10. Natural_Wait_120s -> Bounded_Recover
+    svg.add_line(658, 387, 302, 387, kind="solid", arrow_end=True)
+    svg.add_pill(480, 387, "120 秒后仍未恢复" if zh else "Still disconnected after 120s")
+
+    return svg.render()
+
+
 def main() -> None:
     builders = {
         "system-architecture": build_system_architecture,
         "three-plane-architecture": build_three_plane_architecture,
         "deployment-flow": build_deployment_flow,
+        "hardware-topology": build_hardware_topology,
+        "ai-closed-loop": build_ai_closed_loop,
+        "jetson-state-machine": build_jetson_state_machine,
     }
     generated = 0
     for stem, builder in builders.items():
