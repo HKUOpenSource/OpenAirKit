@@ -8,35 +8,34 @@
 ## 跨主机全链路部署流程
 
 ```mermaid
-flowchart TD
+flowchart LR
   classDef ws fill:#f1f5f9,stroke:#475569,color:#0f172a
   classDef spark fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef jetson fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
 
-  subgraph WS["工作站"]
-    S0["构建离线发布包"]:::ws
-    S2B["烧录 5G USIM"]:::ws
+  subgraph WS1["1. 工作站"]
+    S0["构建 ARM64<br/>离线发布包"]:::ws
   end
 
-  subgraph SPARK["DGX Spark"]
-    S1A["构建并安装 5G 协议栈"]:::spark
-    S1B["安装 Spark Console"]:::spark
-    S1C["启用指标并启动服务"]:::spark
-    S2A["Open5GS 添加独立订阅"]:::spark
-    S1A --> S1B --> S1C --> S2A
+  subgraph SPARK["2. DGX Spark"]
+    S1["部署 5G 协议栈与<br/>Spark Console"]:::spark
+    S2A["Open5GS 添加<br/>独立订阅"]:::spark
+    S1 --> S2A
   end
 
-  subgraph JETSON["Jetson Orin"]
-    S3A["装配模组并确认管理网络"]:::jetson
-    S3B["安装、初始化并启动服务"]:::jetson
-    S4["执行 Device Setup 并联合验收"]:::jetson
-    S3A --> S3B --> S4
+  subgraph WS2["3. 工作站"]
+    S2B["烧录并校验<br/>5G USIM"]:::ws
   end
 
-  S0 --> S1A
-  S0 --> S3A
-  S2A --> S2B
-  S2B --> S3A
+  subgraph JETSON["4. Jetson Orin"]
+    S3["安装并初始化<br/>Jetson Console"]:::jetson
+    S4["执行 Device Setup<br/>并端到端验收"]:::jetson
+    S3 --> S4
+  end
+
+  S0 --> S1
+  S0 -. "Jetson 发布包" .-> S3
+  S2A --> S2B --> S3
 ```
 
 ## 前置准备

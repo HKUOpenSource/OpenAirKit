@@ -9,35 +9,34 @@ assembled hardware to a verified **5G SA** IPv4 data connection supervised by
 ## Deployment Flow Across Hosts
 
 ```mermaid
-flowchart TD
+flowchart LR
   classDef ws fill:#f1f5f9,stroke:#475569,color:#0f172a
   classDef spark fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef jetson fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
 
-  subgraph WS["Workstation"]
-    S0["Build Release Archives"]:::ws
-    S2B["Program 5G USIM"]:::ws
+  subgraph WS1["1. Workstation"]
+    S0["Build ARM64<br/>Release Archives"]:::ws
   end
 
-  subgraph SPARK["DGX Spark"]
-    S1A["Build & Install 5G Stack"]:::spark
-    S1B["Install Spark Console"]:::spark
-    S1C["Enable Telemetry & Start"]:::spark
-    S2A["Add Open5GS Subscriber"]:::spark
-    S1A --> S1B --> S1C --> S2A
+  subgraph SPARK["2. DGX Spark"]
+    S1["Deploy 5G Stack &<br/>Spark Console"]:::spark
+    S2A["Add Open5GS<br/>Subscriber"]:::spark
+    S1 --> S2A
   end
 
-  subgraph JETSON["Jetson Orin"]
-    S3A["Assemble Modem & Network"]:::jetson
-    S3B["Install, Commission & Start"]:::jetson
-    S4["Run Device Setup & Verify"]:::jetson
-    S3A --> S3B --> S4
+  subgraph WS2["3. Workstation"]
+    S2B["Program & Verify<br/>5G USIM"]:::ws
   end
 
-  S0 --> S1A
-  S0 --> S3A
-  S2A --> S2B
-  S2B --> S3A
+  subgraph JETSON["4. Jetson Orin"]
+    S3["Install & Commission<br/>Jetson Console"]:::jetson
+    S4["Run Device Setup<br/>& Verify E2E"]:::jetson
+    S3 --> S4
+  end
+
+  S0 --> S1
+  S0 -. "Jetson archive" .-> S3
+  S2A --> S2B --> S3
 ```
 
 ## Prerequisites
