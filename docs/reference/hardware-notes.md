@@ -2,17 +2,17 @@
 
 [简体中文](hardware-notes.zh-CN.md)
 
-This appendix consolidates device-specific USB topology rules, Quectel
-RM520N-GL firmware checks, Linux kernel notes, and the TB01 USIM APDU
-reference.
+This appendix consolidates modem USB interface topology mappings, Quectel
+RM520N-GL firmware diagnostics, Linux kernel compatibility notes, and the TB01
+USIM APDU reference.
 
 ## Quectel RM520N-GL USB Interface Layouts
 
-When mounted on the **Waveshare SIM8262E-M2 5G for Jetson Orin**
-expansion board over USB 3.0, the RM520N-GL enumerates either an **RNDIS** or
-**ECM (`cdc_ether`)** topology. Jetson Console verifies the USB interface
-descriptors before opening any serial port and rejects mismatches (`ttyUSB`
-numbers alone are non-deterministic):
+When mounted on the **Waveshare SIM8262E-M2 5G for Jetson Orin** expansion
+board over USB 3.0, the RM520N-GL enumerates under either an **RNDIS** or **ECM
+(`cdc_ether`)** USB layout. Jetson Console validates USB interface descriptors
+before opening any serial device and rejects mismatches (`ttyUSB` node numbering
+alone is non-deterministic):
 
 | USB Data Driver | Data `bInterfaceNumber` | Serial `bInterfaceNumber` (`DIAG / GNSS / AT / Modem`) | Required `device.at_interface_number` |
 | --- | --- | --- | --- |
@@ -20,19 +20,19 @@ numbers alone are non-deterministic):
 | `cdc_ether` (ECM) | `04` | `00`, `01`, `02`, `03` | `"02"` |
 | `cdc_ether` (ECM) | `0a` | `00`, `01`, `02`, `03` | `"02"` |
 
-Update `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json` while
-services are stopped if your RM520N-GL firmware switches between RNDIS and ECM.
-If opt-in boot coordination is enabled, refresh `/etc/aoc-v2-jetson/boot.json`
-after changing `device.json`.
+If your RM520N-GL firmware switches between RNDIS and ECM, stop services first
+and update `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json`.
+Regenerate `/etc/aoc-v2-jetson/boot.json` afterward if opt-in boot coordination
+is active.
 
 ## Quectel RM520N-GL QMAP and MPDN Firmware Check
 
-On RM520N-GL QMAP firmware, a modem DHCP lease and active `CGACT` context
-require a matching default WWAN and MPDN rule binding for host data forwarding.
-Jetson Console configures the `oai` data context while preserving existing
-QMAP rules. If a registered modem with an IPv4 address passes no host traffic,
-stop `aoc-v2-jetson-device.service` and inspect the read-only AT state against
-the vendor manual:
+On RM520N-GL QMAP firmware, host packet forwarding requires an active default
+WWAN and MPDN rule binding matching the modem DHCP lease and `CGACT` context.
+Jetson Console configures the `oai` data context while preserving pre-existing
+QMAP bindings. If a registered modem with an IPv4 lease passes no host traffic,
+stop `aoc-v2-jetson-device.service` and run the read-only AT checks below
+against vendor documentation:
 
 ```text
 AT+CGDCONT?
@@ -47,28 +47,29 @@ AT+QNWPREFCFG="mode_pref"
 
 ## Host OS and Kernel Compatibility Notes
 
-- **DGX Spark Linux 7.0+ kernels + MongoDB 8.0**: `stacks/open5gs/compose/render.py` automatically sets `GLIBC_TUNABLES=glibc.pthread.rseq=1` on the `mongo` container so TCMalloc per-CPU `rseq` allocation initializes cleanly on newer Linux kernels.
-- **Jetson `ModemManager` exclusion**: Stop, disable, and mask `ModemManager.service` so it never contends with `aoc-v2-jetson-device.service` for the RM520N-GL AT serial interface.
+- **DGX Spark Linux 7.0+ kernels + MongoDB 8.0**: `stacks/open5gs/compose/render.py` automatically injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` into the `mongo` container so TCMalloc per-CPU `rseq` allocation initializes cleanly on newer Linux kernels.
+- **Jetson `ModemManager` exclusion**: Stop, disable, and mask `ModemManager.service` to prevent AT serial contention with `aoc-v2-jetson-device.service`.
 
 ## TB01 Programmable USIM APDU Reference
 
-If you provision **TB01** blank USIM cards (`ATR: 3B9E94801FC78031E073FE211366425454423031DB`),
-use the verified instruction sequence below over an exclusive **PC/SC `T=0`**
-connection (`pyscard` + Osmocom `pySim.utils.enc_imsi`). Keep vendor SADM keys,
-fixed vendor prefixes, IMSI, Ki, and OPc in restricted local storage (`0700`/`0600`)
-outside Git.
+When provisioning **TB01** unprovisioned 5G USIM test cards
+(`ATR: 3B9E94801FC78031E073FE211366425454423031DB`), execute the verified
+instruction sequence below over an exclusive **PC/SC `T=0`** session (`pyscard`
++ Osmocom `pySim.utils.enc_imsi`). Store vendor SADM keys, fixed vendor
+prefixes, IMSI, Ki, and OPc strictly inside restricted local directories
+(`0700`/`0600`) outside Git.
 
 | Operation | APDU Layout | Technical Notes |
 | --- | --- | --- |
 | Vendor SADM check | `00 FB FF FF 08 <SADM:8 bytes>` | Decoded from 16 hex chars; execute from `MF` before protected writes |
-| USIM IMSI (`EF.IMSI`) | `00 D6 00 00 09 <encoded IMSI:9 bytes>` | Execute in selected `ADF.USIM` -> `EF.IMSI` (`6F07`); read back immediately |
+| USIM IMSI (`EF.IMSI`) | `00 D6 00 00 09 <encoded IMSI:9 bytes>` | Execute inside selected `ADF.USIM` -> `EF.IMSI` (`6F07`); verify readback immediately |
 | USIM Ki | `00 FB 00 00 18 <fixed prefix:8 bytes> <Ki:16 bytes>` | Execute from `MF` context |
-| USIM OPc | `00 FB 00 10 19 <fixed prefix:8 bytes> 01 <OPc:16 bytes>` | Byte `01` is fixed inside the OPc instruction, not the algorithm selector |
-| USIM Milenage selector | `00 FB 00 00 09 <fixed prefix:8 bytes> 00` | **`00` = Milenage**, **`01` = XOR** (selector `01` causes `AUTHENTICATE` error `9862`) |
+| USIM OPc | `00 FB 00 10 19 <fixed prefix:8 bytes> 01 <OPc:16 bytes>` | Byte `01` is a fixed constant inside the OPc instruction, not the algorithm selector |
+| USIM Milenage selector | `00 FB 00 00 09 <fixed prefix:8 bytes> 00` | **`00` = Milenage**, **`01` = XOR** (selector `01` produces `AUTHENTICATE` error `9862`) |
 
 ### TB01 Card Safety Rules
 
-- **Do not alter factory card structure**: Preserve `ICCID`, `PIN`, `PUK`, and `ADM`, and never format or rebuild `EF.DIR`. Only update the lower nibble of byte 4 in `EF.AD` if the target MNC length differs (`2` for PLMN `460/03`).
-- **Clear blocking `EF.FPLMN` entries when reusing cards**: If a previously tested card stored `460/03` in `EF.FPLMN`, clear only that 3-byte entry.
-- **Handle `61xx` and avoid blind retries**: Read pending response data using bounded `GET RESPONSE` (e.g., `6110` -> `9000` carrying `AUTS`). Stop immediately on `63Cx` retry-counter warnings or ambiguous responses without retrying keys.
-- **Local verification**: Run a local 3G AKA vector (`Ki`, `OPc`, random `RAND`, initial `SQN 0`) and confirm the returned `AUTS` MAC-S validates under `AMF=0000`, then complete live 5G SA attach verification on Jetson.
+- **Preserve factory file layout**: Keep `ICCID`, `PIN`, `PUK`, and `ADM` intact, and never format or reconstruct `EF.DIR`. Modify only the lower nibble of byte 4 in `EF.AD` when the target MNC length differs (`2` for PLMN `460/03`).
+- **Clear blocking `EF.FPLMN` entries on reuse**: When reusing a previously tested card that cached `460/03` in `EF.FPLMN`, clear only that 3-byte entry.
+- **Handle `61xx` cleanly and avoid blind retries**: Retrieve pending response bytes via bounded `GET RESPONSE` (e.g., `6110` -> `9000` carrying `AUTS`). Halt immediately on `63Cx` retry-counter warnings or ambiguous status words without retrying authentication keys.
+- **Closed-loop validation**: Execute a local 3G AKA vector (`Ki`, `OPc`, random `RAND`, initial `SQN 0`) and confirm `AUTS` MAC-S validates under `AMF=0000`, followed by live 5G SA attachment verification on Jetson.

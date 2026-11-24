@@ -6,7 +6,7 @@
   <img src="docs/assets/brand/logo-light.png" alt="OpenAirKit" width="540">
 </picture>
 
-<p><strong>Open-Source End-to-End 5G SA &amp; AI-RAN Hardware-Software Platform</strong></p>
+<p><strong>Open-Source End-to-End 5G SA &amp; AI-RAN Experimental Platform</strong></p>
 
 <p>
   <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
@@ -27,26 +27,29 @@
 
 </div>
 
-**OpenAirKit** turns a standardized hardware kit—**DGX Spark + USRP B210 +
-Jetson Orin + Waveshare M.2 5G Carrier + Quectel RM520N-GL**—into a
-reproducible **5G Standalone (SA)** IPv4 data network built on **OCUDU** (RAN)
-and **Open5GS** (5GC), with decoupled local management consoles at both ends.
+**OpenAirKit** integrates a standardized ARM64 hardware testbed—**DGX Spark +
+USRP B210 + Jetson Orin + Waveshare M.2 5G Carrier + Quectel RM520N-GL**—into a
+reproducible **5G Standalone (SA)** IPv4 data network powered by **OCUDU**
+(RAN) and **Open5GS** (5GC), paired with decoupled local management consoles at
+both endpoints.
 
-<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 full hardware kit & benchtop wiring overview photo -->
+<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 Benchtop Hardware Topology Overview photo -->
 
 ## Core Capabilities
 
-- **Rapid end-to-end bring-up**: Move cleanly from hardware wiring and core
-  image builds to USIM provisioning and verified UE user-plane connectivity.
-- **Unified local-first management**: Operate the base station (**Spark
+- **Reproducible end-to-end bring-up**: Progress systematically from physical
+  cabling and Open5GS container builds to 5G USIM provisioning and verified UE
+  user-plane connectivity.
+- **Decoupled local-first management**: Operate the base station (**Spark
   Platform**) and UE (**Jetson Console**) independently with live SSE
-  telemetry, evidence-quality tracking, automatic Wi-Fi/cellular route failover,
-  and bounded self-recovery.
-- **Reserved dual-end compute for DIY AI**: Choosing **DGX Spark** and
-  **Jetson Orin** intentionally reserves GPU and edge AI headroom at both ends
-  of the link, paired with isolated inference ports and authenticated REST/SSE
-  APIs for future custom AI modules. *(Built-in AI modules are planned for a
-  future milestone; see [DIY AI Customization](docs/ai-customization.md).)*
+  telemetry, telemetry freshness gating, automated Wi-Fi/cellular route
+  failover, and bounded self-recovery.
+- **Programmable AI extensibility at both ends**: Selecting **DGX Spark** and
+  **Jetson Orin** allocates dedicated AI compute capacity at both the RAN and UE
+  endpoints, complemented by reserved inference ports and authenticated REST/SSE
+  APIs for **custom AI workloads** and **user-defined AI pipelines**. *(Built-in
+  AI modules are slated for a future milestone; see the
+  [AI Extensibility Guide](docs/ai-customization.md).)*
 
 ## System Architecture
 
@@ -57,10 +60,10 @@ flowchart TB
   classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
   classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
 
-  subgraph AI["Reserved DIY AI Layer (User Extensions)"]
+  subgraph AI["Programmable AI Extension Layer (User-Defined Pipelines)"]
     direction LR
-    JAI["Jetson Edge AI Headroom"]:::ai
-    SAI["DGX Spark AI Headroom"]:::ai
+    JAI["Jetson Edge AI Runtime"]:::ai
+    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
   end
 
   subgraph MGMT["Local-First Management Plane"]
@@ -106,12 +109,13 @@ flowchart TB
 | Component | Hardware / Software Role | Local Access | Reference |
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |
-| **Spark Platform** | Base-station collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
+| **Spark Platform** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
 | **UE Host & Modem** | **Jetson Orin** + **Waveshare M.2 5G Carrier** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
-| **Jetson Console** | UE modem supervision, routing failover & recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
+| **Jetson Console** | UE modem supervision, route failover & bounded recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
 
-Both consoles share `@aoc/console-ui` (`packages/console-ui/`), operate strictly
-on local host state, and remain disabled at boot unless explicitly configured.
+Both consoles share `@aoc/console-ui` (`packages/console-ui/`), maintain
+strictly local host state, and remain disabled at boot unless explicitly
+configured.
 
 ## Documentation Map
 
@@ -119,21 +123,22 @@ on local host state, and remain disabled at boot unless explicitly configured.
 | --- | --- |
 | **Start Here** | [Hardware & Topology](docs/hardware-and-topology.md) · [End-to-End Quickstart](docs/quickstart.md) · [Architecture](docs/architecture.md) |
 | **Deployment & Provisioning** | [Spark Setup](docs/setup-bs-spark.md) · [Stack Deployment](deploy/spark/stack/README.md) · [SIM Provisioning](docs/sim-provisioning.md) · [Jetson Setup](docs/setup-ue-jetson.md) |
-| **Operations & AI Extensions** | [Spark Operations](docs/spark-operations.md) · [Jetson Operations](docs/jetson-operations.md) · [DIY AI Customization](docs/ai-customization.md) |
+| **Operations & AI Extensibility** | [Spark Operations](docs/spark-operations.md) · [Jetson Operations](docs/jetson-operations.md) · [AI Extensibility Guide](docs/ai-customization.md) |
 | **Troubleshooting** | [Spark Troubleshooting](docs/troubleshooting-bs-spark.md) · [Jetson Troubleshooting](docs/troubleshooting-ue-jetson.md) |
 | **Technical Reference (`L3`)** | [Network & RF Profile](docs/reference/network-and-rf-profile.md) · [Ports & Runtime](docs/reference/ports-and-runtime.md) · [API Reference](docs/reference/api-reference.md) · [Hardware & TB01 Notes](docs/reference/hardware-notes.md) · [Glossary](docs/reference/glossary.md) |
 
-See the [full documentation index](docs/README.md) for releasing, roadmap, and visual asset guidelines.
+See the [full documentation index](docs/README.md) for release engineering,
+product roadmap milestones, and visual asset standards.
 
 ## Repository Layout
 
 - `apps/spark-platform/`: Spark telemetry collector, FastAPI backend, and React UI.
 - `apps/jetson-console/`: Jetson device executor, FastAPI backend, and React UI.
 - `packages/console-ui/`: Shared Astryx Core, Charts, and Neutral theme components.
-- `stacks/ocudu/` & `stacks/open5gs/`: RAN build inputs, Open5GS container builds, Compose rendering, and subscriber tools.
+- `stacks/ocudu/` & `stacks/open5gs/`: RAN build inputs, Open5GS container builds, Compose rendering, and subscriber provisioning CLI.
 - `deploy/`: Stack controller, platform installers, restricted maintenance helper, and optional Jetson boot coordinator.
-- `scripts/` & `config/`: Release builders, metrics guard tooling, repository audits, and network contracts.
-- `docs/`: Layered English and Simplified Chinese documentation, reference appendices, and verified baselines.
+- `scripts/` & `config/`: Release builders, metrics firewall guard, repository audits, and site network contracts.
+- `docs/`: Paired English and Simplified Chinese documentation, reference appendices, and verified acceptance baselines.
 
 ## Build and Verify from Source
 
@@ -144,6 +149,7 @@ make install-dev BOOTSTRAP_PYTHON=python3.12
 make check
 ```
 
-Pass `VENV=local/dev-venv` to both commands if using a custom virtual
-environment path. See [Contributing](CONTRIBUTING.md), [Security Policy](SECURITY.md),
-and [Releasing](docs/releasing.md).
+Pass `VENV=local/dev-venv` to both targets when using a custom virtual
+environment path. Review [Contributing](CONTRIBUTING.md),
+[Security Policy](SECURITY.md), and [Releasing](docs/releasing.md) before
+submitting changes or cutting release artifacts.
