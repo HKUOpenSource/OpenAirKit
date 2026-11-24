@@ -56,7 +56,7 @@ identifiers** so visual updates do not break deployed hosts or systemd units:
 
 | Slot File | Document Location | Composition & Guidelines |
 | --- | --- | --- |
-| `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`1024x265`), legible in both light & dark GitHub themes |
+| `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`1024x304`), legible in both light & dark GitHub themes |
 | `docs/assets/hardware/kit-overview.jpg` | `README` & `hardware-and-topology` | `16:9` flat-lay or benchtop shot showing DGX Spark, B210, Jetson Orin, Waveshare M.2 carrier + RM520N-GL, antennas and SIM reader (`<= 1200px` wide, `< 400 KB`) |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology` | Close-up showing direct USB 3.0 connection and `n78` antennas / SMA attenuators |
 | `docs/assets/hardware/jetson-waveshare-rm520n.jpg` | `hardware-and-topology` | Close-up showing RM520N-GL seated in Waveshare M.2 carrier, Nano-SIM orientation, and 4x SMA RF pigtails |
