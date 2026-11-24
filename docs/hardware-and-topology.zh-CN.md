@@ -36,6 +36,13 @@
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="可编程 5G USIM 卡" /><br/><sub><b>SIM 卡：可编程 5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC 智能卡读卡器" /><br/><sub><b>写卡器：PC/SC 智能卡读卡器</b></sub></td>
+  </tr>
+</table>
+
 | 角色 | 硬件组件 | 技术规格与说明 |
 | --- | --- | --- |
 | 基站与核心网主机 | **DGX Spark**（ARM64） | Ubuntu 24.04 ARM64、原生 USB 3.0 接口（连接 B210）、Docker Engine + Compose |
@@ -48,43 +55,15 @@
 
 ## 物理接线与访问拓扑
 
-```mermaid
-flowchart LR
-  classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef net fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef ctrl fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+<div align="center">
 
-  subgraph DEV["工作站"]
-    OP["SSH 客户端与浏览器"]:::ctrl
-    SCR["PC/SC 智能卡读卡器"]:::hw
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/hardware-topology-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/hardware-topology-zh-light.svg">
+  <img src="assets/diagrams/hardware-topology-zh-light.svg" alt="OpenAirKit 物理接线与访问拓扑" width="880">
+</picture>
 
-  subgraph UE["UE 节点（Jetson Orin）"]
-    JET["Jetson Orin"]:::ctrl
-    WIFI["Wi-Fi 管理口 + tailscale0"]:::net
-    CAR["Waveshare M.2 载板"]:::hw
-    MOD["Quectel RM520N-GL + Nano-SIM"]:::hw
-    JET --- WIFI
-    JET -- "USB 3.0" --> CAR
-    CAR --- MOD
-  end
-
-  subgraph BS["基站与核心网节点（DGX Spark）"]
-    SPK["DGX Spark"]:::ctrl
-    TS["管理网口 / tailscale0"]:::net
-    B210["USRP B210"]:::hw
-    SPK --- TS
-    SPK -- "USB 3.0 Type-B" --> B210
-  end
-
-  MOD <== "5G NR SA 空口" ==> B210
-  WIFI -. "管理隧道" .-> TS
-  OP -. "SSH 隧道 :8878" .-> WIFI
-  OP -. "SSH 隧道 :8877" .-> TS
-```
-
-<!-- ASSET_SLOT: docs/assets/hardware/spark-b210-wiring.jpg | 16:9 DGX Spark 与 USRP B210 连线及射频天线/衰减器实拍 -->
-<!-- ASSET_SLOT: docs/assets/hardware/jetson-waveshare-rm520n.jpg | 16:9 Jetson Orin + Waveshare 载板 + RM520N-GL + Nano-SIM 装配实拍 -->
+</div>
 
 ### 物理接线核对清单
 

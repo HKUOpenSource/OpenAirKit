@@ -8,6 +8,13 @@ Quectel RM520N-GL** attachment.
 
 ## Requirements
 
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="90" alt="Programmable 5G USIM" /><br/><sub><b>Programmable 5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="90" alt="PC/SC Smartcard Reader" /><br/><sub><b>USB CCID / PC/SC Reader</b></sub></td>
+  </tr>
+</table>
+
 - Any standard **Milenage-capable programmable 5G USIM** (for instance, cards
   supported by upstream [Osmocom pySim](https://downloads.osmocom.org/docs/pysim/master/html/)).
 - A standard USB CCID/PC/SC smartcard reader connected to your provisioning workstation.

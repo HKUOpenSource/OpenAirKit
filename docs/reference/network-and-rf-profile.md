@@ -27,7 +27,7 @@ This reference serves as the authoritative specification for the RF baseline,
 | --- | --- | --- |
 | PLMN | `460/03` | Must match the provisioned USIM IMSI prefix |
 | Tracking Area Code (TAC) | `1` | Single-cell SA deployment |
-| Slice (SST) | `1` | Default data slice (without SD constraint) |
+| Slice (SST) | `1` | Default data slice; `SD` unset |
 | PDU session type | Single `IPv4` data PDU | Focused 5G SA user plane |
 | Data Network Name (`DNN`) | `oai` | Shared across core UPF policy and Jetson Device Setup |
 | UE IPv4 address pool | `10.0.0.0/24` | Validated during Jetson connectivity probes |

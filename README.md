@@ -49,66 +49,32 @@ both endpoints.
 - **Programmable AI extensibility at both ends**: Selecting **DGX Spark** and
   **Jetson Orin** allocates dedicated AI compute capacity at both the RAN and UE
   endpoints, complemented by reserved inference ports and authenticated REST/SSE
-  APIs for **custom AI workloads** and **user-defined AI pipelines**. *(Built-in
-  AI modules are slated for a future milestone; see the
-  [AI Extensibility Guide](docs/ai-customization.md).)*
+  APIs for **custom AI workloads** and **user-defined AI pipelines**. See the
+  [AI Extensibility Guide](docs/ai-customization.md) and [Roadmap](docs/roadmap.md).
 
 ## System Architecture
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
-  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+<div align="center">
 
-  subgraph HW["ARM64 Hardware Stack"]
-    direction LR
-    UEHW["Jetson Orin +<br/>RM520N-GL"]:::hw
-    BSHW["DGX Spark +<br/>USRP B210"]:::hw
-    UEHW <== "5G NR SA" ==> BSHW
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/diagrams/system-architecture-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/diagrams/system-architecture-en-light.svg">
+  <img src="docs/assets/diagrams/system-architecture-en-light.svg" alt="OpenAirKit System Architecture" width="840">
+</picture>
 
-  subgraph STACK["5G SA Protocol Plane"]
-    direction LR
-    RAN["OCUDU gNB"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RAN -- "N2 / N3" --> CORE
-  end
-
-  subgraph MGMT["Local-First Management Plane"]
-    direction LR
-    JC["Jetson Console"]:::mgmt
-    SP["Spark Console"]:::mgmt
-  end
-
-  subgraph AI["Programmable AI Extension Layer (User-Defined Pipelines)"]
-    direction LR
-    JAI["Jetson Edge AI Runtime"]:::ai
-    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
-  end
-
-  UEHW --- JC
-  BSHW --- RAN
-  RAN -. "Metrics" .-> SP
-  CORE -. "NF & Session State" .-> SP
-  JC -. "REST / SSE" .- JAI
-  SP -. "REST / SSE" .- SAI
-```
+</div>
 
 ## Platform Overview
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/dgx-spark.webp" width="112" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/usrp-b210.webp" width="112" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="112" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>M.2 5G Carrier</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/dgx-spark.webp" width="96" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/usrp-b210.webp" width="96" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="96" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="62" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>M.2 5G Carrier</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="62" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/programmable-5g-usim.webp" height="62" alt="Programmable 5G USIM" /><br/><sub><b>5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/pcsc-smartcard-reader.webp" height="62" alt="PC/SC Smartcard Reader" /><br/><sub><b>PC/SC Reader</b></sub></td>
   </tr>
 </table>
 
@@ -133,8 +99,8 @@ configured.
 | **Troubleshooting** | [Spark Troubleshooting](docs/troubleshooting-bs-spark.md) · [Jetson Troubleshooting](docs/troubleshooting-ue-jetson.md) |
 | **Technical Reference** | [Network & RF Profile](docs/reference/network-and-rf-profile.md) · [Ports & Runtime](docs/reference/ports-and-runtime.md) · [API Reference](docs/reference/api-reference.md) · [Hardware & TB01 Notes](docs/reference/hardware-notes.md) · [Glossary](docs/reference/glossary.md) |
 
-See the [full documentation index](docs/README.md) for release engineering,
-product roadmap milestones, and visual asset standards.
+See the [full documentation index](docs/README.md) for release engineering and
+roadmap milestones.
 
 ## Repository Layout
 

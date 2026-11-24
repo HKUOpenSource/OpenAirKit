@@ -4,11 +4,11 @@
 
 **DGX Spark** (RAN/Core endpoint) and **Jetson Orin** (UE endpoint) are
 provisioned to reserve dedicated GPU and edge compute capacity at both ends of
-the 5G SA link. While turnkey built-in AI agents are scheduled for a future
-milestone, the platform already enforces compute isolation, real-time RAN
+the 5G SA link. The platform enforces compute isolation, real-time RAN
 scheduling protection, and authenticated local APIs so researchers and system
 developers can deploy **custom AI workloads** and **user-defined AI pipelines**
-cleanly alongside the 5G stack.
+alongside the 5G stack. Built-in AI agents are tracked on the
+[Roadmap](roadmap.md).
 
 ## Architectural Principles for Custom AI Workloads
 
@@ -48,13 +48,15 @@ in [Ports & Runtime Reference](reference/ports-and-runtime.md).
 
 ## Closed-Loop Integration Pattern & API Surface
 
-```mermaid
-flowchart LR
-  OBS["Subscribe via REST / SSE"] --> VAL["Gate on Telemetry Freshness"]
-  VAL --> INF["Execute Local Inference (Spark / Jetson)"]
-  INF --> ACT["Invoke Bounded Control / Job API"]
-  ACT --> AUD["Audit Execution & History"]
-```
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/ai-closed-loop-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/ai-closed-loop-en-light.svg">
+  <img src="assets/diagrams/ai-closed-loop-en-light.svg" alt="OpenAirKit Closed-Loop Integration Pattern" width="840">
+</picture>
+
+</div>
 
 Authenticated telemetry feeds (`GET /api/v1/stream`, `GET /api/v1/snapshot`,
 `GET /api/v1/status`, `GET /api/v1/events/stream`) and bounded control endpoints

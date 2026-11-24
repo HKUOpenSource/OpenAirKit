@@ -10,7 +10,7 @@
 | 查阅目标 | 文档 |
 | --- | --- |
 | 理解三平面架构、组件归属、隔离边界与证据语义 | [系统架构](architecture.zh-CN.md) |
-| 查看硬件 BOM（含 Waveshare M.2 载板）、物理拓扑与主机前置条件 | [硬件清单与拓扑](hardware-and-topology.zh-CN.md) |
+| 查看完整硬件清单（BOM）、物理拓扑与主机前置条件 | [硬件清单与拓扑](hardware-and-topology.zh-CN.md) |
 
 ## 部署、运维与 AI 扩展指南
 
@@ -44,7 +44,7 @@
 | 查阅目标 | 文档 |
 | --- | --- |
 | 构建、校验并打包 ARM64 离线发布包 | [发布指南](releasing.zh-CN.md) |
-| 查看品牌解耦矩阵、Logo 规范、硬件图示与脱敏要求 | [视觉素材与品牌替换规范](assets/README.md) |
+| 查看视觉素材、图表资产与截图脱敏规范 | [视觉素材规范](assets/README.md) |
 | 查看产品能力里程碑 | [产品路线图](roadmap.zh-CN.md) |
 | 查阅脱敏后的硬件实机验收基线 | [硬件验收基线索引](acceptance/README.md) |
 

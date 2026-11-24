@@ -3,10 +3,10 @@
 [English](ai-customization.md)
 
 **OpenAirKit** 在硬件架构上选用 **DGX Spark**（基站/核心网侧）与 **Jetson Orin**
-（UE 端侧），旨在 5G SA 通信链路两端提供**预留 AI 算力资源**。双端内置 AI 智能体规划于
-后续里程碑交付；当前版本已完成算力资源隔离、无线实时性保护及鉴权本地 API 建设，便于科研与
-工程开发者在稳定的 5G 底座上开展**端网协同 AI 算法二次开发**，并独立部署**自定义 AI
-服务**与推理流水线。
+（UE 端侧），旨在 5G SA 通信链路两端提供**预留 AI 算力资源**。平台提供算力资源隔离、
+无线实时性保护及鉴权本地 API，支持科研与工程开发者在稳定的 5G 底座上开展**端网协同 AI
+算法二次开发**，并独立部署**自定义 AI 服务**与推理流水线。双端内置 AI 智能体规划见
+[产品路线图](roadmap.zh-CN.md)。
 
 ## 自定义 AI 服务设计原则
 
@@ -37,13 +37,15 @@
 
 ## 闭环集成模式与接口
 
-```mermaid
-flowchart LR
-  OBS["通过 REST / SSE 订阅状态"] --> VAL["核验时间戳与数据时效性"]
-  VAL --> INF["在 Spark / Jetson 本地执行推理"]
-  INF --> ACT["调用受限控制 / 任务接口"]
-  ACT --> AUD["核查审计与历史执行结果"]
-```
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/ai-closed-loop-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/ai-closed-loop-zh-light.svg">
+  <img src="assets/diagrams/ai-closed-loop-zh-light.svg" alt="OpenAirKit 闭环集成模式" width="840">
+</picture>
+
+</div>
 
 所有实时遥测端点（`GET /api/v1/stream`、`GET /api/v1/snapshot`、`GET /api/v1/status`、
 `GET /api/v1/events/stream`）及受限控制端点（`POST /api/v1/control`、`POST /api/v1/jobs`、

@@ -26,7 +26,7 @@
 | --- | --- | --- |
 | PLMN | `460/03` | 须与 USIM 卡内 IMSI 前缀一致 |
 | 跟踪区码（TAC） | `1` | 单小区 SA 部署 |
-| 切片 SST | `1` | 默认数据切片（不限定 SD） |
+| 切片 SST | `1` | 默认数据切片；未配置 `SD` |
 | PDU 会话类型 | 单 `IPv4` 数据 PDU | 专注 5G SA 数据面传输 |
 | 数据网络名（`DNN`） | `oai` | Open5GS UPF 策略与 Jetson Device Setup 共用 |
 | UE IPv4 地址池 | `10.0.0.0/24` | 作为 Jetson 连通性探测校验基准 |

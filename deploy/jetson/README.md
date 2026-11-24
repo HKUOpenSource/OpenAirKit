@@ -1,7 +1,6 @@
 # Jetson deployment
 
-These files install only the `aoc_jetson` application. Retired code, unrelated
-databases and site-specific helpers are excluded from release manifests.
+These files install and manage the `aoc_jetson` application.
 Installation starts the loopback Web service only. The independent `commission`
 action binds the local SIM and management settings without stopping external
 services. It automatically selects the installed application runtime. Both

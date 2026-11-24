@@ -40,64 +40,31 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 
 - **端到端标准化部署**：打通从物理连线、Open5GS 镜像构建、5G USIM 开户与烧录到 UE 用户面连通性验证的完整链路。
 - **双端解耦的本地管控**：**Spark Console** 与 **Jetson Console** 分别纳管基站与终端侧设备，具备 SSE 实时遥测、数据时效性判定、Wi-Fi/蜂窝路由自动切换与有界自愈能力。
-- **端网侧可编程 AI 能力扩展**：基站与核心网侧采用 **DGX Spark**，终端侧采用 **Jetson Orin**，在链路两端分别提供**预留 AI 算力资源**、独立预留推理端口段及鉴权 REST/SSE 接口，便于开展**端网协同 AI 算法二次开发**与部署**自定义 AI 服务**。*（双端内置 AI 模块规划于后续阶段交付，详见[端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md)。）*
+- **端网侧可编程 AI 能力扩展**：基站与核心网侧采用 **DGX Spark**，终端侧采用 **Jetson Orin**，在链路两端分别提供**预留 AI 算力资源**、独立预留推理端口段及鉴权 REST/SSE 接口，便于开展**端网协同 AI 算法二次开发**与部署**自定义 AI 服务**。详见[端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md)与[产品路线图](docs/roadmap.zh-CN.md)。
 
 ## 系统架构
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
-  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+<div align="center">
 
-  subgraph HW["ARM64 硬件栈"]
-    direction LR
-    UEHW["Jetson Orin +<br/>RM520N-GL"]:::hw
-    BSHW["DGX Spark +<br/>USRP B210"]:::hw
-    UEHW <== "5G NR SA" ==> BSHW
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/diagrams/system-architecture-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/diagrams/system-architecture-zh-light.svg">
+  <img src="docs/assets/diagrams/system-architecture-zh-light.svg" alt="OpenAirKit 系统架构" width="840">
+</picture>
 
-  subgraph STACK["5G SA 协议栈平面"]
-    direction LR
-    RAN["OCUDU gNB"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RAN -- "N2 / N3" --> CORE
-  end
-
-  subgraph MGMT["本地优先管理平面"]
-    direction LR
-    JC["Jetson Console"]:::mgmt
-    SP["Spark Console"]:::mgmt
-  end
-
-  subgraph AI["可编程 AI 扩展层（自定义算法与推理流水线）"]
-    direction LR
-    JAI["Jetson 端侧 AI 运行环境"]:::ai
-    SAI["DGX Spark 网侧 AI 运行环境"]:::ai
-  end
-
-  UEHW --- JC
-  BSHW --- RAN
-  RAN -. "无线指标" .-> SP
-  CORE -. "网元与会话状态" .-> SP
-  JC -. "REST / SSE" .- JAI
-  SP -. "REST / SSE" .- SAI
-```
+</div>
 
 ## 平台组成总览
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/dgx-spark.webp" width="112" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/usrp-b210.webp" width="112" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="112" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>M.2 5G 载板</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/dgx-spark.webp" width="96" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/usrp-b210.webp" width="96" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="96" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="62" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>M.2 5G 载板</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="62" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/programmable-5g-usim.webp" height="62" alt="可编程 5G USIM 卡" /><br/><sub><b>5G USIM 卡</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/pcsc-smartcard-reader.webp" height="62" alt="PC/SC 智能卡读卡器" /><br/><sub><b>PC/SC 读卡器</b></sub></td>
   </tr>
 </table>
 
@@ -121,7 +88,7 @@ flowchart TB
 | **故障排查** | [Spark 故障排查](docs/troubleshooting-bs-spark.zh-CN.md) · [Jetson 故障排查](docs/troubleshooting-ue-jetson.zh-CN.md) |
 | **技术参考与附录** | [网络与射频基线](docs/reference/network-and-rf-profile.zh-CN.md) · [端口与运行时参考](docs/reference/ports-and-runtime.zh-CN.md) · [REST 与 SSE 接口](docs/reference/api-reference.zh-CN.md) · [硬件与 TB01 附录](docs/reference/hardware-notes.zh-CN.md) · [核心术语表](docs/reference/glossary.zh-CN.md) |
 
-发布工程规范、产品路线图与视觉素材标准请参阅[完整文档目录](docs/README.zh-CN.md)。
+发布工程规范与产品路线图请参阅[完整文档目录](docs/README.zh-CN.md)。
 
 ## 仓库目录结构
 

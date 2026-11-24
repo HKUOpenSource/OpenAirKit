@@ -1,18 +1,18 @@
 # Empty-Core Deployment And Verification
 
-`render.py` replaces the incomplete handwritten Compose template. It renders
+`render.py` renders
 `compose.json`, per-NF JSON configurations accepted by Open5GS's YAML parser,
 the container runtime, and a SHA256 manifest. It uses the exact ARM64 image IDs
 from `artifacts.lock.json` with `pull_policy: never`; arbitrary image variables
-and tags are not accepted. `ext-DN` uses the minimal connectivity derivative built
-from `Dockerfile.connectivity` (which removes `iperf3` and exposes only a fixed
-`/health` endpoint on TCP port `8080`, without host-published throughput servers).
+and tags are not accepted. `ext-DN` uses the minimal connectivity image built from
+`Dockerfile.connectivity`, exposing only a fixed `/health` endpoint on TCP port
+`8080`.
 
 The 12 services are MongoDB, NRF, AMF, SMF, UPF, AUSF, UDM, UDR, PCF, BSF,
 NSSF and ext-DN. SBI uses direct NRF discovery; SCP is not needed in this configuration.
 In the pinned Open5GS source, SMF requests an SM policy association from PCF,
 and PCF registers a binding with BSF. These data-session dependencies are
-required even though this deployment has no IMS service. PCF obtains policies
+required for 5G SA PDU establishment. PCF obtains policies
 from the independent subscriber database; no inline SUPI policy is generated.
 NSSF supplies SST=1 without SD. No EPC/IMS daemons, sample subscribers or sample
 SUCI private keys are loaded.

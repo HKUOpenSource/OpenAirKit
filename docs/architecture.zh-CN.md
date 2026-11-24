@@ -16,43 +16,15 @@
 
 ## 三平面架构
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
-  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+<div align="center">
 
-  subgraph STACK["1. 5G SA 无线与核心网平面"]
-    direction LR
-    RM["Quectel RM520N-GL<br/>+ USIM"]:::stack
-    GNB["OCUDU gNB +<br/>USRP B210"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RM <== "5G NR SA" ==> GNB
-    GNB -- "N2 / N3" --> CORE
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/three-plane-architecture-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/three-plane-architecture-zh-light.svg">
+  <img src="assets/diagrams/three-plane-architecture-zh-light.svg" alt="OpenAirKit 三平面架构" width="860">
+</picture>
 
-  subgraph MGMT["2. 本地管理与自愈平面"]
-    direction LR
-    JC["Jetson Console"]:::mgmt
-    SP["Spark Console"]:::mgmt
-  end
-
-  subgraph AI["3. 可编程 AI 扩展层（自定义算法与推理流水线）"]
-    direction LR
-    JAI["Jetson 端侧 AI 运行环境"]:::ai
-    SAI["DGX Spark 网侧 AI 运行环境"]:::ai
-  end
-
-  RM --- JC
-  GNB -. "JSON 实时指标" .-> SP
-  CORE -. "Docker 与 infoAPI" .-> SP
-  JC -. "REST / SSE 与受控任务" .- JAI
-  SP -. "REST / SSE 与受控操作" .- SAI
-```
+</div>
 
 1. **5G SA 无线与核心网平面**：承载 UE 模组与 Open5GS 外部数据网（`ext-DN`）之间的
    单 IPv4 数据 PDU。完整射频与核心网基线参数见[网络契约与射频基线](reference/network-and-rf-profile.zh-CN.md)。
@@ -60,7 +32,7 @@ flowchart TB
    SSE 实时流；涉及硬件或 systemd 的写操作统一经由本机执行器或 SHA-256 白名单守护脚本
    `/usr/local/sbin/aoc-maintain` 完成。
 3. **可编程 AI 扩展层**：**DGX Spark** 与 **Jetson Orin** 在通信两端提供独立的**预留
-   AI 算力资源**。Spark 端口规划刻意留空 `8000–8002` 独立推理端口段，配合低时延守护机制
+   AI 算力资源**。Spark 端口规划保留 `8000–8002` 作为独立推理端口段，配合低时延守护机制
    隔离无线实时线程，并借助鉴权 REST/SSE 接口支撑**自定义 AI 服务**与**端网协同 AI 算法
    二次开发**。详见[端网侧 AI 扩展指南](ai-customization.zh-CN.md)。
 
@@ -79,7 +51,6 @@ flowchart TB
 - **运行时拓扑自适应**：Spark 在运行时动态发现所属 Open5GS 网桥；Jetson Console 在打开串口前校验 RM520N-GL USB 接口描述符，并在路由切换前核验 Wi-Fi 与 `tailscale0` 管理通路。
 - **统一 Astryx UI 底座**：两端前端均基于 [`packages/console-ui`](../packages/console-ui/README.zh-CN.md)（`Astryx Core`、`Charts`、`Neutral` 主题与 `UIProvider`）构建。
 - **时效性与代次约束**：采集器随快照附加来源时间戳、进程实例代次及独立的证据时效状态（`ok`、`stale`、`unavailable`、`unsupported`），防止陈旧数据掩盖实时链路中断。
-- **品牌名与运行标识解耦**：对外展示品牌（`OpenAirKit`）与底层运行标识（`aoc-v2ctl`、`aoc-maintain`、`/opt/agentic-ocudu/`、`aoc-v2-*` 服务单元）严格隔离；详见[视觉素材与品牌替换规范](assets/README.md)。
 
 ## 技术参考入口
 

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" width="920" height="540" role="img" aria-label="Deployment Flow Across Hosts">
+  <defs>
+    <marker id="arrow-solid" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#475569" /></marker>
+    <marker id="arrow-dashed" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#64748b" /></marker>
+    <marker id="arrow-rf-end" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#0f766e" /></marker>
+    <marker id="arrow-rf-start" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="3" refY="5" orient="auto"><path d="M 9 1.5 L 1 5 L 9 8.5 Z" fill="#0f766e" /></marker>
+    <clipPath id="band-clip-1"><rect x="16" y="16" width="888" height="86" rx="10" ry="10" /></clipPath>
+    <clipPath id="band-clip-2"><rect x="16" y="156" width="888" height="86" rx="10" ry="10" /></clipPath>
+    <clipPath id="band-clip-3"><rect x="16" y="296" width="888" height="86" rx="10" ry="10" /></clipPath>
+    <clipPath id="band-clip-4"><rect x="16" y="436" width="888" height="86" rx="10" ry="10" /></clipPath>
+  </defs>
+  <!-- Layers -->
+  <rect x="16" y="16" width="888" height="86" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="16" width="174" height="86" fill="#f1f5f9" clip-path="url(#band-clip-1)" />
+  <line x1="190" y1="16" x2="190" y2="102" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="16" width="888" height="86" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="103.0" y="63.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">1. Workstation</text>
+  <rect x="16" y="156" width="888" height="86" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="156" width="174" height="86" fill="#f1f5f9" clip-path="url(#band-clip-2)" />
+  <line x1="190" y1="156" x2="190" y2="242" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="156" width="888" height="86" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="103.0" y="203.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">2. DGX Spark</text>
+  <rect x="16" y="296" width="888" height="86" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="296" width="174" height="86" fill="#f1f5f9" clip-path="url(#band-clip-3)" />
+  <line x1="190" y1="296" x2="190" y2="382" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="296" width="888" height="86" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="103.0" y="343.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">3. Workstation</text>
+  <rect x="16" y="436" width="888" height="86" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="436" width="174" height="86" fill="#f1f5f9" clip-path="url(#band-clip-4)" />
+  <line x1="190" y1="436" x2="190" y2="522" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="436" width="888" height="86" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="103.0" y="483.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">4. Jetson Orin</text>
+  <!-- Edges -->
+  <line x1="580.0" y1="199.0" x2="648.0" y2="199.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="580.0" y1="479.0" x2="648.0" y2="479.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="460.0" y1="85.0" x2="460.0" y2="171.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="770.0" y1="225.0" x2="770.0" y2="311.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <path d="M 650 339 L 472 339 Q 460 339 460 351 L 460 451" fill="none" stroke="#475569" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#arrow-solid)" />
+  <path d="M 340 59 L 269 59 Q 257 59 257 71 L 257 467 Q 257 479 269 479 L 338 479" fill="none" stroke="#64748b" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 4" marker-end="url(#arrow-dashed)" />
+  <!-- Nodes -->
+  <rect x="340" y="33" width="240" height="52" rx="8" ry="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.6" />
+  <text x="460.0" y="55.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">Build ARM64</text>
+  <text x="460.0" y="72.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">Release Archives</text>
+  <rect x="340" y="173" width="240" height="52" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="460.0" y="195.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Deploy 5G Stack &amp;</text>
+  <text x="460.0" y="212.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Spark Console</text>
+  <rect x="650" y="173" width="240" height="52" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="770.0" y="195.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Add Open5GS</text>
+  <text x="770.0" y="212.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Subscriber</text>
+  <rect x="650" y="313" width="240" height="52" rx="8" ry="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.6" />
+  <text x="770.0" y="335.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">Program &amp; Verify</text>
+  <text x="770.0" y="352.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">5G USIM</text>
+  <rect x="340" y="453" width="240" height="52" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="460.0" y="475.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">Install &amp; Commission</text>
+  <text x="460.0" y="492.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">Jetson Console</text>
+  <rect x="650" y="453" width="240" height="52" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="770.0" y="475.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">Run Device Setup</text>
+  <text x="770.0" y="492.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">&amp; Verify E2E</text>
+  <!-- Edge Labels -->
+  <rect x="199.3" y="258.0" width="115.4" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="257.0" y="273.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">Jetson archive</text>
+</svg>

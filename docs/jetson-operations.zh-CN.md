@@ -10,8 +10,6 @@
 Jetson Console 仅绑定回环地址 `127.0.0.1:8878`，从工作站通过 SSH 端口转发访问
 （`ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>`）：
 
-<!-- ASSET_SLOT: docs/assets/screenshots/jetson-console-overview.png | 16:9 脱敏后的 Jetson Console Overview / Device Setup 页面截图（须遮蔽 IMSI、Tailnet IP、Wi-Fi IP/SSID） -->
-
 | 页面 | 路由 | 核心能力 |
 | --- | --- | --- |
 | Overview | `/` | 独立展示 USIM 就绪、小区驻留、NR SA 注册、IPv4 PDU、地址池、RNDIS/ECM 网卡、绑定探测、`management_protected` 与普通 IPv4 出口 |
@@ -24,19 +22,15 @@ Jetson Console 仅绑定回环地址 `127.0.0.1:8878`，从工作站通过 SSH �
 
 ## 双路径路由与有界自愈状态机
 
-```mermaid
-stateDiagram-v2
-  [*] --> WiFi_Fallback: "启动 / 开机默认（暂停自愈）"
-  WiFi_Fallback --> Cellular_Preferred: "连续 2 次有效探测通过"
-  Cellular_Preferred --> WiFi_Fallback: "2 次失败、样本过期或 PDU 丢失"
-  Cellular_Preferred --> Natural_Wait_120s: "链路中断（已启用自动恢复）"
-  WiFi_Fallback --> Natural_Wait_120s: "链路中断（已启用自动恢复）"
-  Natural_Wait_120s --> Bounded_Recover: "120 秒后仍未恢复"
-  Bounded_Recover --> WiFi_Fallback: "恢复完成或重试配额耗尽"
-  WiFi_Fallback --> Maintenance_Mode: "进入维护模式"
-  Cellular_Preferred --> Maintenance_Mode: "进入维护模式（切回 Wi-Fi）"
-  Maintenance_Mode --> WiFi_Fallback: "退出维护模式"
-```
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/jetson-state-machine-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/jetson-state-machine-zh-light.svg">
+  <img src="assets/diagrams/jetson-state-machine-zh-light.svg" alt="Jetson 双路径路由与有界自愈状态机" width="880">
+</picture>
+
+</div>
 
 - **IPv4 双路径切换**：连续两次有效期内绑定探测成功后，普通 IPv4 默认路由切换为
   蜂窝优先（`metric 10`）；若连续探测失败、样本过期或注册/PDU 丢失，立即回退至

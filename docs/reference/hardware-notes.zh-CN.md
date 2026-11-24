@@ -9,8 +9,8 @@ Linux 内核兼容性说明及 **TB01** 可编程 5G USIM 卡的 APDU 协议规�
 
 将 **Quectel RM520N-GL** 安装于 **Waveshare SIM8262E-M2 5G for Jetson Orin**
 扩展载板并通过 USB 3.0 接入 Jetson 后，模组将枚举为 **RNDIS** 或 **ECM（`cdc_ether`）**
-拓扑。Jetson Console 在打开任何串口前均会校验 USB 接口描述符并拒绝不匹配配置（不可仅凭
-`ttyUSB` 编号判定）：
+拓扑。Jetson Console 在打开任何串口前均会校验 USB 接口描述符而非 `ttyUSB` 编号，并拒绝
+不匹配配置：
 
 | USB 数据驱动 | 数据接口 `bInterfaceNumber` | 串口 `bInterfaceNumber`（`DIAG / GNSS / AT / Modem`） | 所需 `device.at_interface_number` |
 | --- | --- | --- | --- |

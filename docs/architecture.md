@@ -20,43 +20,15 @@ orchestrator.
 
 ## Three-Plane Model
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
-  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+<div align="center">
 
-  subgraph STACK["1. 5G SA Radio & Core Plane"]
-    direction LR
-    RM["Quectel RM520N-GL<br/>+ USIM"]:::stack
-    GNB["OCUDU gNB +<br/>USRP B210"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RM <== "5G NR SA" ==> GNB
-    GNB -- "N2 / N3" --> CORE
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/three-plane-architecture-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/three-plane-architecture-en-light.svg">
+  <img src="assets/diagrams/three-plane-architecture-en-light.svg" alt="OpenAirKit Three-Plane Architecture" width="860">
+</picture>
 
-  subgraph MGMT["2. Local Management & Self-Recovery Plane"]
-    direction LR
-    JC["Jetson Console"]:::mgmt
-    SP["Spark Console"]:::mgmt
-  end
-
-  subgraph AI["3. Programmable AI Extension Layer (User-Defined Pipelines)"]
-    direction LR
-    JAI["Jetson Edge AI Runtime"]:::ai
-    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
-  end
-
-  RM --- JC
-  GNB -. "JSON Telemetry" .-> SP
-  CORE -. "Docker & infoAPI" .-> SP
-  JC -. "REST / SSE & Jobs" .- JAI
-  SP -. "REST / SSE & Control" .- SAI
-```
+</div>
 
 1. **5G SA Radio & Core Plane**: Carries the single-PDU IPv4 user plane between
    the UE modem and Open5GS external data network (`ext-DN`). Authoritative RF
@@ -68,7 +40,7 @@ flowchart TB
    `/usr/local/sbin/aoc-maintain`.
 3. **Programmable AI Extension Layer**: **DGX Spark** and **Jetson Orin**
    reserve dedicated edge and RAN-side AI compute resources at both endpoints.
-   Port allocation keeps inference ports (`8000–8002`) unallocated on Spark,
+   Port allocation reserves `8000–8002` on Spark for local inference,
    real-time CPU latency guards isolate gNB scheduling, and authenticated
    REST/SSE endpoints provide clean integration boundaries for user-defined AI
    pipelines. See [AI Extensibility Guide](ai-customization.md).
@@ -99,10 +71,6 @@ flowchart TB
   timestamps, process generation IDs, and an independent telemetry freshness
   state (`ok`, `stale`, `unavailable`, `unsupported`) so aged data never masks
   live link failures.
-- **Brand vs. runtime decoupling**: Display branding (`OpenAirKit`) remains
-  isolated from immutable runtime identifiers (`aoc-v2ctl`, `aoc-maintain`,
-  `/opt/agentic-ocudu/`, `aoc-v2-*` units); see
-  [Visual Assets & Brand Guide](assets/README.md).
 
 ## Technical References
 

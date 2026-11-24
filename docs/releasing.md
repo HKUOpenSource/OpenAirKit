@@ -30,8 +30,7 @@ Every release archive must pass the following boundary checks:
    repository audits.
 4. Execute the manual `Extended checks` workflow against the release candidate,
    covering Jetson Python 3.10, Spark Python 3.12, and both browser end-to-end
-   suites. Resolve any failures prior to tagging—manual execution does not relax
-   release acceptance criteria.
+   suites. Resolve any failures before tagging.
 
 ## Build Offline ARM64 Archives
 

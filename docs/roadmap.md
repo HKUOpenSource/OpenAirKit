@@ -4,9 +4,8 @@
 
 This roadmap tracks capability milestones across the 5G SA protocol stack,
 dual-end management consoles, and the upcoming **Open AI-RAN Extension
-Ecosystem**. Completed milestones reflect verified source implementations,
-automated test suites, and hardware acceptance baselines (see
-[Acceptance Baselines](acceptance/README.md)).
+Ecosystem**. Hardware verification records are maintained in
+[Acceptance Baselines](acceptance/README.md).
 
 ## Architectural Invariants
 
@@ -34,7 +33,7 @@ automated test suites, and hardware acceptance baselines (see
 - [x] Exclusive AT serial locking, Device Setup configuration previews and baseline readback, and separated network/selection/diagnostic/recovery policy blocks.
 - [x] Dual-path IPv4 route failover (`Wi-Fi` fallback <-> `cellular` preference), `management_protected` verification, and bounded automatic recovery.
 - [x] Opt-in cold-boot coordinator (`boot_connect.py`) verified across unattended cold reboots.
-- [ ] Expanded automated fault-matrix replay and post-refactor ARM64 install/rollback regression gate.
+- [ ] Expanded automated fault-matrix replay and ARM64 install/rollback regression gate.
 
 ## Milestone 4 — Open AI-RAN Extension Ecosystem (`Planned`)
 

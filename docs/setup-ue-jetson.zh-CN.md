@@ -34,8 +34,7 @@ sudo bash deploy/install-jetson.sh
 程序安装于 `/opt/agentic-ocudu/jetson`，仅拉起回环 Web 服务，两个 systemd 服务单元默认
 不开启开机自启。
 
-随后停止 Jetson Console，传入 Spark 的实际管理 IPv4 地址（替换下例 RFC 5737 示例地址
-`192.0.2.20`）执行 `commission` 并启动服务：
+随后停止 Jetson Console，将下例中的 `192.0.2.20` 替换为 Spark 的实际 Tailscale IPv4 地址，执行 `commission` 并启动服务：
 
 ```sh
 sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py stop
@@ -60,7 +59,7 @@ sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py s
 如需开启无人值守冷重启自连（将 `deploy/jetson/boot_connect.py` 安装至 `/opt/agentic-ocudu/jetson/boot_connect.py`）：
 
 1. **在 `aoc-v2-jetson-device.service` 停止状态下完成只读 AT 预检**：对照[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#rm520n-gl-qmap-与-mpdn-固件核查)逐项核实 AT 查询与 USB 速率检查均正常返回。
-2. **完成应用安装后再生成 `/etc/aoc-v2-jetson/boot.json`（`0600`，root 持有）**：确保 `device_sha256`、`manifest_sha256`、`sim_sha256`、`usb_speed_mbps` 与 `modem_configuration` 与现役运行版本一致（不含任何 SIM 密钥），并创建 `/var/lib/aoc-v2-jetson-boot/private`（`0700`）与 `public`（`0755`）。
+2. **完成应用安装后再生成 `/etc/aoc-v2-jetson/boot.json`（`0600`，root 持有）**：确保 `device_sha256`、`manifest_sha256`、`sim_sha256`、`usb_speed_mbps` 与 `modem_configuration` 与现役运行版本一致，并创建 `/var/lib/aoc-v2-jetson-boot/private`（`0700`）与 `public`（`0755`）。
 3. **部署 systemd drop-in 与开机一次性单元**：
    - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`：配置 `TimeoutStartSec=360`，以 `ExecStartPre=` 重置后串联 `boot_connect.py ready` -> `site_guard.py` -> `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback`，待 USB 枚举、模组 DHCP、Wi-Fi 与 `tailscale0` 全部就绪后再拉起 `device_entry.py`。
    - `/etc/systemd/system/aoc-v2-jetson-boot.service`（`Type=oneshot`、`After=aoc-v2-jetson-device.service aoc-v2-jetson-web.service`）：最长等待 `30 s` 直至 `/run/aoc-v2-jetson/device.sock` 就绪，随后运行 `/usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/boot_connect.py connect`（`TimeoutStartSec=1200`）完成标准入网编排并激活带自愈的蜂窝数据通道。

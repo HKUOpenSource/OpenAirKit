@@ -84,7 +84,7 @@ clients.
 | --- | --- | --- | --- |
 | `/api/v1/jobs` | `GET` | Session | List prepared, active, and completed device jobs |
 | `/api/v1/jobs/{identifier}` | `GET` | Session | Inspect one job's change plan and step results |
-| `/api/v1/jobs` | `POST` | Session + CSRF | Prepare a Setup or Recover plan (previews changes prior to execution) |
+| `/api/v1/jobs` | `POST` | Session + CSRF | Prepare a Setup or Recover change plan |
 | `/api/v1/jobs/{identifier}/run` | `POST` | Session + CSRF | Execute a prepared device job |
 | `/api/v1/jobs/{identifier}/cancel` | `POST` | Session + CSRF | Request bounded cancellation of an active job |
 | `/api/v1/maintenance` | `POST` | Session + CSRF | Toggle maintenance mode (releases AT serial lock and activates Wi-Fi fallback route) |

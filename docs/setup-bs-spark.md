@@ -44,7 +44,7 @@ already-running RAN or core stack.
 
 Follow [Spark Stack Deployment](../deploy/spark/stack/README.md) to compile
 OCUDU and prepare Open5GS images, render and initialize a private authenticated
-N6 core deployment bundle, and perform a clean install of
+N6 core deployment bundle, and install
 `aoc-v2-core.service`, `aoc-v2-radio.service`, `aoc-v2-cpu-latency.service`, and
 `/usr/local/bin/aoc-v2ctl`.
 

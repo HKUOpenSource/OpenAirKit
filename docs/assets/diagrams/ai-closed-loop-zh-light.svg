@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 276" width="880" height="276" role="img" aria-label="闭环集成模式与接口">
+  <defs>
+    <marker id="arrow-solid" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#475569" /></marker>
+    <marker id="arrow-dashed" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#64748b" /></marker>
+    <marker id="arrow-rf-end" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#0f766e" /></marker>
+    <marker id="arrow-rf-start" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="3" refY="5" orient="auto"><path d="M 9 1.5 L 1 5 L 9 8.5 Z" fill="#0f766e" /></marker>
+  </defs>
+  <!-- Layers -->
+  <rect x="16" y="16" width="848" height="244" rx="12" ry="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <!-- Edges -->
+  <line x1="270.0" y1="75.0" x2="323.0" y2="75.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="555.0" y1="75.0" x2="608.0" y2="75.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="725.0" y1="112.0" x2="725.0" y2="162.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="530.0" y1="201.0" x2="352.0" y2="201.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="155.0" y1="164.0" x2="155.0" y2="114.0" stroke="#64748b" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="5 4" marker-end="url(#arrow-dashed)" />
+  <!-- Nodes -->
+  <rect x="40" y="38" width="230" height="74" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="155.0" y="57.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#1d4ed8">01</text>
+  <text x="155.0" y="78.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">通过 REST / SSE</text>
+  <text x="155.0" y="95.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">订阅状态</text>
+  <rect x="325" y="38" width="230" height="74" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="440.0" y="57.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#047857">02</text>
+  <text x="440.0" y="78.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">核验时间戳与</text>
+  <text x="440.0" y="95.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">数据时效性</text>
+  <rect x="610" y="38" width="230" height="74" rx="8" ry="8" fill="#fefce8" stroke="#a16207" stroke-width="1.6" stroke-dasharray="6 4" />
+  <text x="725.0" y="57.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#a16207">03</text>
+  <text x="725.0" y="78.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#713f12">在 Spark / Jetson</text>
+  <text x="725.0" y="95.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#713f12">本地执行推理</text>
+  <rect x="530" y="164" width="250" height="74" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="655.0" y="183.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#1d4ed8">04</text>
+  <text x="655.0" y="204.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">调用受限控制 /</text>
+  <text x="655.0" y="221.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">任务接口</text>
+  <rect x="100" y="164" width="250" height="74" rx="8" ry="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.6" />
+  <text x="225.0" y="183.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#475569">05</text>
+  <text x="225.0" y="204.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">核查审计与</text>
+  <text x="225.0" y="221.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">历史执行结果</text>
+  <!-- Edge Labels -->
+  <rect x="119.8" y="127.0" width="70.4" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="155.0" y="142.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">持续闭环</text>
+</svg>
