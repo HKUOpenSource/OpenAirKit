@@ -12,9 +12,9 @@ expansion board.
 
 <table>
   <tr>
-    <td align="center"><img src="assets/hardware/jetson-orin-nano.webp" height="95" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin Nano</b></sub></td>
-    <td align="center"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="95" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>Waveshare M.2 Carrier (C for RM5XX)</b></sub></td>
-    <td align="center"><img src="assets/hardware/quectel-rm520n-gl.webp" height="95" alt="Quectel RM520N-GL" /><br/><sub><b>Quectel RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="145" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin Nano</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="90" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>Waveshare M.2 Carrier (C for RM5XX)</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="90" alt="Quectel RM520N-GL" /><br/><sub><b>Quectel RM520N-GL</b></sub></td>
   </tr>
 </table>
 

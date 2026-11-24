@@ -22,16 +22,16 @@ allocations, and RM520N-GL USB interface layouts, see the [Technical Reference](
 
 <table>
   <tr>
-    <td align="center"><img src="assets/hardware/dgx-spark.webp" height="105" alt="DGX Spark" /><br/><sub><b>gNB / 5GC Host: DGX Spark</b></sub></td>
-    <td align="center"><img src="assets/hardware/usrp-b210.webp" height="105" alt="USRP B210" /><br/><sub><b>SDR Front-End: Ettus USRP B210</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="150" alt="DGX Spark" /><br/><sub><b>gNB / 5GC Host: DGX Spark</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="150" alt="USRP B210" /><br/><sub><b>SDR Front-End: Ettus USRP B210</b></sub></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center"><img src="assets/hardware/jetson-orin-nano.webp" height="105" alt="Jetson Orin Nano" /><br/><sub><b>UE Host: Jetson Orin Nano</b></sub></td>
-    <td align="center"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="105" alt="Waveshare SIM8262E-M2 5G for Jetson Orin" /><br/><sub><b>Carrier: Waveshare M.2 5G</b></sub></td>
-    <td align="center"><img src="assets/hardware/quectel-rm520n-gl.webp" height="105" alt="Quectel RM520N-GL" /><br/><sub><b>5G Modem: Quectel RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="150" alt="Jetson Orin Nano" /><br/><sub><b>UE Host: Jetson Orin Nano</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="96" alt="Waveshare SIM8262E-M2 5G for Jetson Orin" /><br/><sub><b>Carrier: Waveshare M.2 5G</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="96" alt="Quectel RM520N-GL" /><br/><sub><b>5G Modem: Quectel RM520N-GL</b></sub></td>
   </tr>
 </table>
 

@@ -10,8 +10,8 @@
 
 <table>
   <tr>
-    <td align="center"><img src="assets/hardware/dgx-spark.webp" height="95" alt="DGX Spark" /><br/><sub><b>DGX Spark（ARM64 主机）</b></sub></td>
-    <td align="center"><img src="assets/hardware/usrp-b210.webp" height="95" alt="USRP B210" /><br/><sub><b>Ettus USRP B210（USB 3.0）</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="145" alt="DGX Spark" /><br/><sub><b>DGX Spark（ARM64 主机）</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="145" alt="USRP B210" /><br/><sub><b>Ettus USRP B210（USB 3.0）</b></sub></td>
   </tr>
 </table>
 
