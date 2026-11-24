@@ -55,6 +55,7 @@ PUBLIC_HYGIENE_PATTERNS = (
     ("vendor binary hash or reverse-engineering symbol", re.compile(r"(?:GRSIMWrite\.exe|RadLTE_)")),
     ("Jetson Console misnamed as OCUDU", re.compile(r"\b(?:stop\s+OCUDU|full\s+OCUDU|OCUDU\s+validates)\b")),
     ("retired telemetry port", re.compile(r"127\.0\.0\.1:8001\b")),
+    ("retired Spark console directory", re.compile(r"\bspark-platform\b")),
 )
 HYGIENE_EXEMPT_PREFIXES = ("docs/acceptance/",)
 HYGIENE_EXEMPT_FILES = {

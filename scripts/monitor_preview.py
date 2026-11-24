@@ -23,10 +23,10 @@ def main():
     (state / "auth.json").write_text(json.dumps(auth))
     (state / "auth.json").chmod(0o600)
     config = dict(auth_file=str(state / "auth.json"), database=str(state / "history.db"),
-                  snapshot=str(state / "snapshot.json"), frontend=str(ROOT / "apps/spark-platform/frontend/dist"),
+                  snapshot=str(state / "snapshot.json"), frontend=str(ROOT / "apps/spark-console/frontend/dist"),
                   switch_enabled=False, port=args.port)
     (state / "config.json").write_text(json.dumps(config))
-    env = dict(os.environ, PYTHONPATH=str(ROOT / "apps/spark-platform/backend"), PYTHONPYCACHEPREFIX=str(ROOT / "local/pycache"))
+    env = dict(os.environ, PYTHONPATH=str(ROOT / "apps/spark-console/backend"), PYTHONPYCACHEPREFIX=str(ROOT / "local/pycache"))
     with (state / "server.log").open("ab") as log:
         process = subprocess.Popen([str(ROOT / "local/monitor-venv/bin/python"), "-m", "aoc_spark.web", "--config", str(state / "config.json")],
                                    env=env, cwd=ROOT, stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)

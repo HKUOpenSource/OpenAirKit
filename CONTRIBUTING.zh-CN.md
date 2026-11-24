@@ -11,7 +11,7 @@ Conventional Commits。一次合并请求尽量只涉及一个应用或一项共
 ## 目录边界
 
 - Jetson 应用修改放在 `apps/jetson-console` 和 `deploy/jetson`。
-- Spark 应用修改放在 `apps/spark-platform` 和 `deploy/spark`。
+- Spark 应用修改放在 `apps/spark-console` 和 `deploy/spark`。
 - 协议栈修改放在 `stacks/ocudu` 或 `stacks/open5gs`。
 - `packages/console-ui` 只能包含不带平台业务逻辑的共享 UI 原语。
 - `archive/` 中的归档文件不得进入导入、构建或发布。

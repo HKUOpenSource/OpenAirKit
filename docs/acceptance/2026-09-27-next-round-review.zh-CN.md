@@ -81,9 +81,9 @@ functionality 为 0、写入历史只有 `cfun0`，且恢复暂停。尚未测�
 ### P1 — Spark 控制连接 EOF 后，未结束的任务阻塞后续操作
 
 调用路径：`POST /control → run_control → control_messages → reader.readline`，
-位置为 [web.py](../../apps/spark-platform/backend/aoc_spark/web.py) 第 83–85、118–130 行。
+位置为 [web.py](../../apps/spark-console/backend/aoc_spark/web.py) 第 83–85、118–130 行。
 收到 `running` 后连接 EOF 会正常结束迭代，绕过调用 `poll_control` 的异常处理。
-持久化任务一直为 running，[storage.py](../../apps/spark-platform/backend/aoc_spark/storage.py)
+持久化任务一直为 running，[storage.py](../../apps/spark-console/backend/aoc_spark/storage.py)
 第 132 行会拒绝后续操作。隔离 `running → EOF` 复现中，下一任务得到
 `operation_in_progress`。Web 启动时的协调逻辑可以恢复，但持续运行的进程不会协调
 此正常 EOF 路径。
@@ -105,7 +105,7 @@ functionality 为 0、写入历史只有 `cfun0`，且恢复暂停。尚未测�
 ### P2 — Spark 诊断脱敏遗漏观测值
 
 调用路径：`Collector.host → snapshot → diagnostics → redacted_diagnostics`，
-位置为 [web.py](../../apps/spark-platform/backend/aoc_spark/web.py) 第 25–43 行。
+位置为 [web.py](../../apps/spark-console/backend/aoc_spark/web.py) 第 25–43 行。
 过滤只比较字典键，而实际观测以 `name=b210_serial`、内容放在 `value` 的结构表示。
 合成序列号和 PID 在导出后仍保留，`details.InvocationID` 也绕过 `invocation_id`
 匹配。这是导出逻辑缺陷，不表示本次审阅发现凭据已经泄露。
@@ -116,7 +116,7 @@ metrics 和 systemd details。
 ### P2 — 一个空闲 UE 会掩盖总无线吞吐
 
 调用路径：`SchedulerFeed.receive → parse_ocudu → Collector.collect → UI`，
-位置为 [telemetry.py](../../apps/spark-platform/backend/aoc_spark/telemetry.py)
+位置为 [telemetry.py](../../apps/spark-console/backend/aoc_spark/telemetry.py)
 第 52–77 行。明确零传输块的 UE 被赋予空速率，汇总又要求所有 UE 的值均非空。
 合成的下行 23 Mbps、上行 5 Mbps 活跃 UE 与一个空闲 UE 共存时，总吞吐变成不可用。
 合成空闲 UE 在两个方向均明确报告速率为零，且 OK/NOK 传输块计数均为零。
@@ -128,8 +128,8 @@ metrics 和 systemd details。
 ### P2 — Active 设备视图计入 inactive 或 unknown PDU
 
 调用路径：`Open5GS.parse_info → fresh_snapshot → Overview/Devices 筛选`，
-位置为 [OverviewPage.tsx](../../apps/spark-platform/frontend/src/pages/OverviewPage.tsx)
-第 98–104 行和 [DevicesPage.tsx](../../apps/spark-platform/frontend/src/pages/DevicesPage.tsx)
+位置为 [OverviewPage.tsx](../../apps/spark-console/frontend/src/pages/OverviewPage.tsx)
+第 98–104 行和 [DevicesPage.tsx](../../apps/spark-console/frontend/src/pages/DevicesPage.tsx)
 第 78–84 行。两处仅要求会话证据质量 `status=ok`，忽略 `session.state`。
 合成 inactive/unknown 会话时，后端 `active_pdu_count=0`，前端 Active 条件却成立。
 

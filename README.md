@@ -90,11 +90,11 @@ both endpoints.
 | Component | Hardware / Software Role | Local Access | Reference |
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |
-| **Spark Console** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
+| **Spark Console** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-console/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
 | **UE Host & Modem** | **Jetson Orin** + **Waveshare M.2 5G Carrier** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
 | **Jetson Console** | UE modem supervision, route failover & bounded recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
 
-Both consoles share `@aoc/console-ui` (`packages/console-ui/`), maintain
+Both consoles share `@agentic-ocudu/console-ui` (`packages/console-ui/`), maintain
 strictly local host state, and remain disabled at boot unless explicitly
 configured.
 
@@ -113,7 +113,7 @@ roadmap milestones.
 
 ## Repository Layout
 
-- `apps/spark-platform/`: Spark telemetry collector, FastAPI backend, and React UI.
+- `apps/spark-console/`: Spark telemetry collector, FastAPI backend, and React UI.
 - `apps/jetson-console/`: Jetson device executor, FastAPI backend, and React UI.
 - `packages/console-ui/`: Shared Astryx Core, Charts, and Neutral theme components.
 - `stacks/ocudu/` & `stacks/open5gs/`: RAN build inputs, Open5GS container builds, Compose rendering, and subscriber provisioning CLI.

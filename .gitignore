@@ -25,5 +25,5 @@ node_modules/
 coverage/
 .coverage
 /apps/jetson-console/frontend/dist/
-/apps/spark-platform/frontend/dist/
+/apps/spark-console/frontend/dist/
 .codegraph/

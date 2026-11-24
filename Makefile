@@ -9,28 +9,28 @@ install-dev:
 	$(BOOTSTRAP_PYTHON) -c 'import sys; assert (3, 10) <= sys.version_info[:2] <= (3, 12), "BOOTSTRAP_PYTHON must be Python 3.10-3.12"'
 	@test -x $(PYTHON) || $(BOOTSTRAP_PYTHON) -m venv $(VENV)
 	$(MAKE) check-python
-	$(PYTHON) -m pip install -r requirements-tools.txt -r apps/jetson-console/requirements-dev.txt -r apps/spark-platform/requirements-dev.txt
+	$(PYTHON) -m pip install -r requirements-tools.txt -r apps/jetson-console/requirements-dev.txt -r apps/spark-console/requirements-dev.txt
 	npm --prefix apps/jetson-console/frontend ci
 	npm --prefix apps/jetson-console/frontend run build
-	npm --prefix apps/spark-platform/frontend ci
-	npm --prefix apps/spark-platform/frontend run build
+	npm --prefix apps/spark-console/frontend ci
+	npm --prefix apps/spark-console/frontend run build
 test-stack:
 	$(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 test-jetson-backend:
-	PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend $(PYTHON) -m unittest discover -s apps/jetson-console/tests -p 'test_*.py'
+	PYTHONPATH=apps/jetson-console/backend:apps/spark-console/backend $(PYTHON) -m unittest discover -s apps/jetson-console/tests -p 'test_*.py'
 test-jetson-boot:
 	$(PYTHON) -m unittest discover -s tests -p 'test_jetson_boot.py'
 test-spark-backend:
-	PYTHONPATH=apps/jetson-console/backend:apps/spark-platform/backend $(PYTHON) -m unittest discover -s apps/spark-platform/tests -p 'test_*.py'
+	PYTHONPATH=apps/jetson-console/backend:apps/spark-console/backend $(PYTHON) -m unittest discover -s apps/spark-console/tests -p 'test_*.py'
 typecheck:
 	npm --prefix apps/jetson-console/frontend run typecheck
-	npm --prefix apps/spark-platform/frontend run typecheck
+	npm --prefix apps/spark-console/frontend run typecheck
 build-jetson-frontend:
 	npm --prefix apps/jetson-console/frontend ci
 	npm --prefix apps/jetson-console/frontend run build
 build-spark-frontend:
-	npm --prefix apps/spark-platform/frontend ci
-	npm --prefix apps/spark-platform/frontend run build
+	npm --prefix apps/spark-console/frontend ci
+	npm --prefix apps/spark-console/frontend run build
 build-jetson-release:
 	$(PYTHON) scripts/build_release.py jetson --output $(RELEASE_OUT)
 build-spark-release:
@@ -48,7 +48,7 @@ license-audit:
 shell-check:
 	find deploy scripts -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
 test-frontend-behavior:
-	node --test apps/jetson-console/frontend/test-behavior.mjs apps/spark-platform/frontend/tests/behavior.mjs
+	node --test apps/jetson-console/frontend/test-behavior.mjs apps/spark-console/frontend/tests/behavior.mjs
 
 check: test-frontend-behavior check-python test-jetson-backend test-spark-backend test-stack typecheck docs-audit release-audit license-audit shell-check
 

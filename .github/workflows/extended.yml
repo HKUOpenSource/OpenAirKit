@@ -25,7 +25,7 @@ jobs:
             target: e2e-jetson
           - name: Spark
             python: '3.12'
-            app: spark-platform
+            app: spark-console
             target: e2e-spark
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
           npm run build --prefix apps/${{ matrix.app }}/frontend
       - name: Test target Python version
         env:
-          PYTHONPATH: apps/jetson-console/backend:apps/spark-platform/backend
+          PYTHONPATH: apps/jetson-console/backend:apps/spark-console/backend
         run: python -m unittest discover -s apps/${{ matrix.app }}/tests -p 'test_*.py'
       - name: Install browser
         working-directory: apps/${{ matrix.app }}/frontend

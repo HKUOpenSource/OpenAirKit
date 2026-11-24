@@ -78,7 +78,7 @@ Jetson A 另有两项旧的非 V2 服务处于 failed，均已禁用；仅凭这
 `python scripts/aocctl --help` 在参数解析前即报
 `ModuleNotFoundError: No module named 'scripts.v2.runtime'`。
 [scripts/aocctl](../../scripts/aocctl) 第 6 行导入了缺失实现。应用调用路径为
-Web → executor → [control.run_step](../../apps/spark-platform/backend/aoc_spark/control.py)
+Web → executor → [control.run_step](../../apps/spark-console/backend/aoc_spark/control.py)
 第 36–45 行 → 已安装的 `/usr/local/bin/aoc-v2ctl`。生命周期控制器需要 V2 core/radio
 unit，但当前源码树没有对应定义；`scripts/install_radio.py`（审阅时路径，随后归档）
 第 21 行仍安装旧 `aoc-stack`、`aoc-core`、`aoc-gnb`，并要求历史 launcher。
@@ -128,7 +128,7 @@ Open5GS `render()` 也成功，OCUDU 二进制构建入口仍存在。应用与�
 ### P2 — Spark 并发取消可能使操作一直被占用
 
 调用路径：`ControlHandler` 多线程 → `execute` / `request_cancel` → `persist`。
-[control.py](../../apps/spark-platform/backend/aoc_spark/control.py)第 68–78 行共用
+[control.py](../../apps/spark-console/backend/aoc_spark/control.py)第 68–78 行共用
 同一个任务临时文件，但 `emit` 不持有第 119–128 行取消操作所用的锁。
 确定调度的双线程复现中，取消先替换临时文件，执行线程首次 emit 随后抛出
 `FileNotFoundError`；第 90 行还位于 try 外。没有实际命令执行，worker 已退出，
@@ -148,7 +148,7 @@ Open5GS `render()` 也成功，OCUDU 二进制构建入口仍存在。应用与�
 ### P2 — Spark 诊断脱敏遗漏 observation 的值
 
 调用路径：Diagnostics → `/api/v1/diagnostics` → `redacted_diagnostics(snapshot())`。
-[web.py](../../apps/spark-platform/backend/aoc_spark/web.py)第 33–43 行只过滤字典键；
+[web.py](../../apps/spark-console/backend/aoc_spark/web.py)第 33–43 行只过滤字典键；
 collector 把 `b210_serial`、`radio_pid`、`b210_holder_pids` 放在 `name`，内容位于
 `value`，因此原样导出。`InvocationID` 与过滤项 `invocation_id` 也不匹配。
 二次复核通过真实登录和鉴权后的诊断接口，确认四类合成标识残留，普通 `pid` 键则正确
@@ -161,7 +161,7 @@ collector 把 `b210_serial`、`radio_pid`、`b210_holder_pids` 放在 `name`，�
 ### P2 — 一个空闲 UE 会使总无线吞吐变成不可用
 
 调用路径：scheduler → `parse_ocudu` → collector → gNB 图表。
-[telemetry.py](../../apps/spark-platform/backend/aoc_spark/telemetry.py)第 52–53 行
+[telemetry.py](../../apps/spark-console/backend/aoc_spark/telemetry.py)第 52–53 行
 在传输块为零时把明确的零 bitrate 改为 null，第 73–77 行又要求所有 UE 的 bitrate
 均非 null。合成活动 UE 单独显示下行 23 Mbps、上行 5 Mbps；加入明确上报零 bitrate
 及零传输块的空闲 UE 后，两项总量均变成 unavailable。应保留明确零流量，并对缺失

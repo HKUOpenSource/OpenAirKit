@@ -7,7 +7,7 @@ are in `/deploy/spark/platform`. It keeps evidence-based state and has no
 runtime dependency on another application or monitoring database.
 
 ```sh
-npm ci --prefix apps/spark-platform/frontend
-npm run build --prefix apps/spark-platform/frontend
-PYTHONPATH=apps/spark-platform/backend python3 -m unittest discover -s apps/spark-platform/tests -p 'test_*.py'
+npm ci --prefix apps/spark-console/frontend
+npm run build --prefix apps/spark-console/frontend
+PYTHONPATH=apps/spark-console/backend python3 -m unittest discover -s apps/spark-console/tests -p 'test_*.py'
 ```

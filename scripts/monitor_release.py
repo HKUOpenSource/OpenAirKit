@@ -19,7 +19,7 @@ import time
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE = ROOT / "apps/spark-platform"
+MODULE = ROOT / "apps/spark-console"
 INSTALL = Path("/opt/agentic-ocudu/monitor")
 CONFIG = Path("/etc/aoc-monitor")
 UNITS = ("aoc-control.service", "aoc-observe.service", "aoc-monitor-web.service")

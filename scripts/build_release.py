@@ -14,7 +14,7 @@ def build(platform, output):
     output = output.resolve()
     if output.exists():
         raise FileExistsError("Release output must be a new directory: " + str(output))
-    app = ROOT / "apps" / ("jetson-console" if platform == "jetson" else "spark-platform")
+    app = ROOT / "apps" / ("jetson-console" if platform == "jetson" else "spark-console")
     subprocess.run(["npm", "--prefix", str(app / "frontend"), "run", "build"], check=True)
     output.mkdir(parents=True)
     stage = output / "stage"
