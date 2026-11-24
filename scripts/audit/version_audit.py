@@ -56,14 +56,18 @@ def check_versions(version: str) -> None:
     for rel in ("README.md", "README.zh-CN.md"):
         text = (ROOT / rel).read_text(encoding="utf-8")
         expected_tokens = (
-            f"Spark Console: {version}",
-            f"Spark_Console-{version}-blue",
-            f"Jetson Console: {version}",
-            f"Jetson_Console-{version}-blue",
+            f"Version: {version}",
+            f"version-{version}-blue",
+            "license-Apache--2.0-green",
         )
         for token in expected_tokens:
             if token not in text:
-                raise SystemExit(f"missing version badge {token!r} in {rel}")
+                raise SystemExit(f"missing badge {token!r} in {rel}")
+
+    citation_text = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    for token in (f"version: {version}", f"/releases/tag/v{version}"):
+        if token not in citation_text:
+            raise SystemExit(f"missing version token {token!r} in CITATION.cff")
 
     for rel in ("docs/releasing.md", "docs/releasing.zh-CN.md"):
         text = (ROOT / rel).read_text(encoding="utf-8")
