@@ -1044,7 +1044,7 @@ export function Settings(context: Context) {
           <Heading level={2}>Platform</Heading>
           <Fields
             items={[
-              ["Product", "Agentic-OCUDU Jetson V2"],
+              ["Product", "OpenAirKit · Jetson Console"],
               ["Release", context.config.release],
               ["State retention", "Metrics 7 days · events and tasks 30 days"],
               ["IPv6 data path", state.network?.ipv6?.quality || "Unavailable"],

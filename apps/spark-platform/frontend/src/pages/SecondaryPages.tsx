@@ -507,7 +507,7 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
     <Stack className="spark-page" gap={4}>
       <PageIntro
         title="Stack operations"
-        description="Bounded control for the independent Agentic-OCUDU protocol stack."
+        description="Bounded control for the independent OpenAirKit 5G SA protocol stack."
         icon={Settings}
       />
       <Card className="section-frame operations-panel">
@@ -523,7 +523,7 @@ export function OperationsPage({ csrf, refresh }: PageProps) {
             <span className="section-meta">OCUDU · Open5GS · data only</span>
           </Stack>
           <Text as="p">
-            Start, stop, or restart only the Agentic-OCUDU stack. The monitoring
+            Start, stop, or restart only the OpenAirKit 5G SA stack. The monitoring
             platform remains available after a stack stop.
           </Text>
           <Stack

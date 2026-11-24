@@ -230,7 +230,7 @@ function App() {
             }}
           >
             <Stack gap={6}>
-              <Text type="label">Agentic-OCUDU</Text>
+              <Text type="label">OpenAirKit</Text>
               <Heading level={1}>Jetson Console</Heading>
               <Text color="secondary">
                 Sign in to manage the local 5G data connection.
@@ -269,7 +269,7 @@ function App() {
           aria-label="Primary navigation"
           header={
             <Stack padding={4} gap={1}>
-              <Text weight="semibold">Agentic-OCUDU</Text>
+              <Text weight="semibold">OpenAirKit</Text>
               <Text type="supporting" color="secondary">
                 Jetson Console
               </Text>
