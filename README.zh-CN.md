@@ -9,10 +9,11 @@
 <p><strong>面向 AI-RAN 的开源端到端 5G SA 实验与管控平台</strong></p>
 
 <p>
-  <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Console: 1.0.0" src="https://img.shields.io/badge/Spark_Console-1.0.0-blue">
-  <img alt="Jetson Console: 1.0.0" src="https://img.shields.io/badge/Jetson_Console-1.0.0-blue">
-  <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
+  <a href="CHANGELOG.md"><img alt="Version: 1.0.0" src="https://img.shields.io/badge/version-1.0.0-blue"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-green"></a>
+  <a href="docs/architecture.zh-CN.md"><img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen"></a>
+  <a href="docs/ai-customization.zh-CN.md"><img alt="AI-RAN: Testbed" src="https://img.shields.io/badge/AI--RAN-Testbed-6f42c1"></a>
+  <a href="https://github.com/HKUOpenSource/OpenAirKit/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/HKUOpenSource/OpenAirKit/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
 <p>
@@ -22,7 +23,8 @@
   <a href="docs/architecture.zh-CN.md">系统架构</a> ·
   <a href="docs/hardware-and-topology.zh-CN.md">硬件清单</a> ·
   <a href="CONTRIBUTING.zh-CN.md">贡献指南</a> ·
-  <a href="docs/README.zh-CN.md">文档总览</a>
+  <a href="docs/README.zh-CN.md">文档总览</a> ·
+  <a href="LICENSE">开源协议</a>
 </p>
 
 </div>
@@ -91,10 +93,11 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 
 | 分类 | 文档入口 |
 | --- | --- |
-| **快速了解** | [硬件清单与拓扑](docs/hardware-and-topology.zh-CN.md) · [端到端快速搭建指南](docs/quickstart.zh-CN.md) · [系统架构](docs/architecture.zh-CN.md) |
+| **快速了解** | [硬件清单与拓扑](docs/hardware-and-topology.zh-CN.md) · [端到端快速搭建指南](docs/quickstart.zh-CN.md) · [系统架构](docs/architecture.zh-CN.md) · [架构决策记录（ADR）](docs/adr/README.zh-CN.md) |
 | **部署与开户** | [Spark 安装](docs/setup-bs-spark.zh-CN.md) · [协议栈部署](deploy/spark/stack/README.zh-CN.md) · [SIM 开户与烧录](docs/sim-provisioning.zh-CN.md) · [Jetson 安装](docs/setup-ue-jetson.zh-CN.md) |
 | **运维与 AI 扩展** | [Spark 运维](docs/spark-operations.zh-CN.md) · [Jetson 运维](docs/jetson-operations.zh-CN.md) · [端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md) |
 | **故障排查** | [Spark 故障排查](docs/troubleshooting-bs-spark.zh-CN.md) · [Jetson 故障排查](docs/troubleshooting-ue-jetson.zh-CN.md) |
+| **开发与发布** | [开发者指南](docs/development.zh-CN.md) · [发布工程指南](docs/releasing.zh-CN.md) · [更新日志](CHANGELOG.md) |
 | **技术参考与附录** | [网络与射频基线](docs/reference/network-and-rf-profile.zh-CN.md) · [端口与运行时参考](docs/reference/ports-and-runtime.zh-CN.md) · [REST 与 SSE 接口](docs/reference/api-reference.zh-CN.md) · [硬件与 TB01 附录](docs/reference/hardware-notes.zh-CN.md) · [核心术语表](docs/reference/glossary.zh-CN.md) |
 
 发布工程规范与产品路线图请参阅[完整文档目录](docs/README.zh-CN.md)。
@@ -119,4 +122,30 @@ make check
 ```
 
 若使用自定义虚拟环境路径，请在两条命令中同时传入 `VENV=local/dev-venv`。提交变更或构建
-离线发布包前，请参阅[贡献指南](CONTRIBUTING.zh-CN.md)、[安全策略](SECURITY.md)与[发布指南](docs/releasing.zh-CN.md)。
+离线发布包前，请参阅[开发者指南](docs/development.zh-CN.md)、[贡献指南](CONTRIBUTING.zh-CN.md)、
+[安全策略](SECURITY.md)与[发布指南](docs/releasing.zh-CN.md)。
+
+## 引用说明
+
+如果 OpenAirKit 对你的研究或实验平台工作有所帮助，欢迎引用：
+
+> Wang, Z. (2026). OpenAirKit (Version 1.0.0) [Computer software]. https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0
+
+```bibtex
+@software{wang2026openairkit,
+  author  = {Wang, Zhaolin},
+  title   = {OpenAirKit},
+  version = {1.0.0},
+  year    = {2026},
+  url     = {https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0},
+  license = {Apache-2.0}
+}
+```
+
+机器可读的引用元数据位于根目录 [`CITATION.cff`](CITATION.cff)。
+
+## 开源协议
+
+OpenAirKit 仓库自有代码基于 **Apache License 2.0** 协议开源。完整协议文本见
+[`LICENSE`](LICENSE)，第三方依赖声明及上游 RAN/5GC 组件协议边界见
+[`THIRD_PARTY_NOTICES.zh-CN.md`](THIRD_PARTY_NOTICES.zh-CN.md)。

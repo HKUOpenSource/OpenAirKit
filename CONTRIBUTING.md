@@ -33,7 +33,10 @@ Run the narrowest useful target while developing (`make docs-audit`,
 `make test-jetson-backend`, `make test-spark-backend`, or `make test-stack`) and
 run `make ci` before opening a pull request. `make ci` runs both backend test
 suites, shared stack/release tests, frontend TypeScript checks and production
-builds, and repository audits.
+builds, and repository audits (`docs-audit`, `release-audit`, `license-audit`,
+`version-audit`, `shell-check`). See the [Developer Guide](docs/development.md)
+for local preview servers, simulation mode, and browser E2E setup, and review the
+[Architecture Decisions](docs/adr/README.md) before modifying console boundaries.
 
 Install backend development dependencies first (`make install-dev`); frontend
 builds invoke `npm ci` automatically. CI targets Python 3.12 and Node.js 22.

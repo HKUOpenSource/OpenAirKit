@@ -16,3 +16,10 @@ Neutral 和 Charts（MIT），StyleX 0.19.0（MIT），以及 Lucide React 1.18.
 前端构建从打包依赖的许可证文件生成 `dist/THIRD_PARTY_NOTICES.txt`，并随静态
 前端复制到发布产物。许可证正文缺失会使构建失败。用于补足 npm 包遗漏的固定
 版本上游许可证副本见[共享 UI 包](packages/console-ui/README.zh-CN.md)。
+
+## 上游协议栈与硬件工具链协议边界
+
+本仓库自有代码与发布工具遵循 **Apache License 2.0**（[LICENSE](LICENSE)）。
+在目标主机上独立拉取、编译或运行的外部上游组件——包括 **OCUDU**（`config/upstreams.json`）、
+**Open5GS**（`config/images.lock.json`）、**Ettus UHD** 与 **pySim**——并未在
+本仓库或控制台离线发布包中再分发，仍各自受其原始上游开源协议约束。

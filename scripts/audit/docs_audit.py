@@ -15,6 +15,7 @@ ROOT_DOCUMENTS = (
     "SECURITY.md",
     "CHANGELOG.md",
     "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_NOTICES.zh-CN.md",
     "AGENTS.md",
 )
 PAIRED_DOCUMENTS = (
@@ -25,6 +26,7 @@ PAIRED_DOCUMENTS = (
     "sim-provisioning",
     "ai-customization",
     "coding-agent-codegraph",
+    "development",
     "setup-ue-jetson",
     "setup-bs-spark",
     "jetson-operations",
@@ -33,6 +35,10 @@ PAIRED_DOCUMENTS = (
     "troubleshooting-bs-spark",
     "releasing",
     "roadmap",
+    "adr/README",
+    "adr/0001-decoupled-spark-and-jetson-consoles",
+    "adr/0002-offline-arm64-wheelhouse-releases",
+    "adr/0003-loopback-isolation-and-ai-port-reservation",
     "reference/network-and-rf-profile",
     "reference/ports-and-runtime",
     "reference/api-reference",

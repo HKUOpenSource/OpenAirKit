@@ -19,3 +19,12 @@ license files, which is copied with the static frontend into release payloads.
 Missing license text fails the build. Pinned upstream copies for npm tarballs
 that omit their license are documented in
 [the shared UI package](packages/console-ui/README.md).
+
+## Upstream Protocol Stack & Hardware Tooling Boundaries
+
+OpenAirKit source files in this repository are licensed under the Apache License
+2.0 ([LICENSE](LICENSE)). External upstream components cloned, built, or
+installed on target hosts—such as **OCUDU** (`config/upstreams.json`),
+**Open5GS** (`config/images.lock.json`), **Ettus UHD**, and **pySim**—are NOT
+redistributed inside this repository or console release archives and remain
+governed by their respective upstream licenses.

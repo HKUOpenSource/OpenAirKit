@@ -29,7 +29,8 @@ Conventional Commits。一次合并请求尽量只涉及一个应用或一项共
 开发过程中可按改动范围运行最小测试目标（`make docs-audit`、`make test-jetson-backend`、
 `make test-spark-backend` 或 `make test-stack`），提交 Pull Request 前请运行 `make ci`。
 `make ci` 会依次执行两端后端测试、协议栈与发布测试、两端前端 TypeScript 检查与生产构建，
-以及全套仓库边界审计。
+以及全套仓库边界审计（`docs-audit`、`release-audit`、`license-audit`、`version-audit`、
+`shell-check`）。本地模拟调试与端到端测试详见[开发者指南](docs/development.zh-CN.md)；涉及模块边界或发布契约调整时，请先阅读[架构决策记录](docs/adr/README.zh-CN.md)。
 
 执行前请先运行 `make install-dev` 安装后端开发依赖（如使用自定义虚拟环境路径，请追加
 `VENV=local/dev-venv`）；前端构建会自动执行 `npm ci`。自动 CI 对齐 Python 3.12 与

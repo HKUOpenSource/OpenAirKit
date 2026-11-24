@@ -11,6 +11,7 @@ technical references.
 | Need | Guide |
 | --- | --- |
 | Understand planes, component boundaries, isolation, and evidence semantics | [Architecture](architecture.md) |
+| Review architectural rationale for decoupled consoles, offline releases, and AI port isolation | [Architecture Decisions (ADRs)](adr/README.md) |
 | Review full hardware BOM, wiring topology, and host prerequisites | [Hardware & Topology](hardware-and-topology.md) |
 
 ## Setup, Operations & Extensibility Guides
@@ -44,6 +45,7 @@ technical references.
 
 | Need | Document |
 | --- | --- |
+| Set up a dev environment, run synthetic previews, E2E suites, and repository audits | [Developer Guide](development.md) |
 | Build, package, and audit offline ARM64 releases | [Releasing](releasing.md) |
 | Review logo, diagram, hardware photo, and screenshot redaction guidelines | [Visual Assets Guide](assets/README.md) |
 | Track product capability milestones | [Product Roadmap](roadmap.md) |
