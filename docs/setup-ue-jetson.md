@@ -52,11 +52,17 @@ a local management terminal.
 
 The 0.6.2 release contains a verified manifest, ARM64 CPython 3.10 offline
 wheels, frontend, installer (`deploy/manage.py`), lifecycle scripts and license
-material. Production config belongs outside the unpacked release. From 0.6.2,
-`manage.py` temporarily applies `os.umask(0o022)` while building `venv/` and
-explicitly sets `os.chmod(..., mode)` in `private_write()`, keeping `venv/` and
-`web.json` (`0640 root:aoc-v2-jetson-web`) readable by the unprivileged web user
-even when invoked under `umask 077`.
+material. Production config belongs outside the unpacked release.
+
+<details>
+<summary>Note on `umask 077` hardening in 0.6.2+</summary>
+
+From `0.6.2`, `manage.py` temporarily applies `os.umask(0o022)` while creating
+`venv/` and explicitly enforces `os.chmod(..., mode)` in `private_write()`,
+keeping `venv/` and `web.json` (`0640 root:aoc-v2-jetson-web`) readable by
+the unprivileged web service even when invoked under `umask 077`.
+
+</details>
 
 ## Install and commission
 

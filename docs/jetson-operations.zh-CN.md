@@ -12,6 +12,8 @@ Jetson Console（`0.6.2`）在回环地址 `127.0.0.1:8878` 提供本地 Astryx 
 ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>
 ```
 
+<!-- ASSET_SLOT: docs/assets/screenshots/jetson-console-overview.png | 16:9 脱敏后的 Jetson Console Overview / Device Setup 页面截图（须遮蔽 IMSI、Tailnet IP、Wi-Fi IP/SSID） -->
+
 | 页面 | 路由 | 观测与管控内容 |
 | --- | --- | --- |
 | Overview | `/` | 独立展示 SIM、驻留、5GS 注册、IPv4 PDU、地址池、RNDIS/ECM 接口、绑定探测、`management_protected` 与普通 IPv4 出口 |
@@ -114,6 +116,29 @@ Overview 分别展示 SIM、驻留、5GS 注册、PDU 激活、地址池、RNDIS
 
 ## 恢复与连通性
 
+### 双路径路由切换与有界自愈状态机
+
+```mermaid
+stateDiagram-v2
+  [*] --> WiFi_Fallback: "启动服务 / 开机默认（暂停恢复）"
+  WiFi_Fallback --> Cellular_Preferred: "连续 2 次新鲜探测通过（含公网目标）"
+  Cellular_Preferred --> WiFi_Fallback: "连续 2 次探测失败 或 证据过期 >20s 或 接口/PDU 丢失"
+  Cellular_Preferred --> Natural_Wait_120s: "检测到断网（已启用自动恢复时）"
+  WiFi_Fallback --> Natural_Wait_120s: "检测到断网（已启用自动恢复时）"
+  Natural_Wait_120s --> Bounded_Recover: "120 秒后仍未恢复（最多 2 次，冷却 300 秒）"
+  Bounded_Recover --> WiFi_Fallback: "恢复结束或达到最大尝试次数"
+  WiFi_Fallback --> Maintenance_Mode: "进入维护模式（释放串口锁）"
+  Cellular_Preferred --> Maintenance_Mode: "进入维护模式（切回 Wi-Fi 并释放串口锁）"
+  Maintenance_Mode --> WiFi_Fallback: "退出维护模式（重扫模组并重建探测路由）"
+```
+
+| 路由与恢复策略参数 | 默认阈值与约束 |
+| --- | --- |
+| 协议 `186` 自有默认路由 | `metric 5` = Wi-Fi 回退路由；`metric 10` = 蜂窝优先路由（外部默认路由 metric 须 `> 10`） |
+| 探测与证据过期时间 | 正常采样间隔：`10 s`；新鲜度上限：`20 s`；UPF/ext-DN/探测目标主机路由始终绑定蜂窝接口 |
+| 自动恢复预算 | 仅在用户成功完成 Setup/Recover 后激活：先自然等待 `120 s`，最多触发 `2` 次恢复（冷却 `300 s`） |
+| 超时与退出码 | Helper 调用上限 `330 s`；健康等待 `60 s`；退出码：`0` 成功、`1` 失败、`2` 参数错、`3` 锁忙 |
+
 IPv4 默认路由切换独立于模组重置权限。连续两组完整且新鲜的探测（包含公网）成功
 后优先蜂窝，连续两组失败后回退 Wi-Fi；注册、PDU、接口丢失或证据超过 20 秒时，
 在下一次协调中回退。正常采样间隔为 10 秒。等待或暂停中的任务也不能在证据过期后
@@ -124,8 +149,8 @@ USB 网卡改名时只重建归属明确的自有路由。启动和 systemd 停�
 
 Overview 的 IPv4 出口使用探测主机路由之外的普通目标读取。`management_protected`
 表示 Wi-Fi 回退网关和到配置的 Spark 地址的 Tailscale 路由可用，并不证明隧道底层
-传输独立。这两台 Jetson 的内核不支持策略路由，切换可能短暂重连 Tailscale。
-本次不实现或声称支持 IPv6 自动切换。
+传输独立。由于当前目标 Jetson 内核不支持策略路由，切换默认出口时 Tailscale 可能
+短时重连；当前版本仅支持 IPv4 故障切换，暂不支持 IPv6 自动切换。
 
 恢复任务先检查状态，只修复本项目拥有的路由；必要时每个任务最多执行一次模组
 重连，并持久化步骤、取消和清理结果。若 CFUN=0 可能已生效但应答或回读失败，
@@ -148,6 +173,11 @@ Overview 的 IPv4 出口使用探测主机路由之外的普通目标读取。`m
 中的服务文件。设备服务保持停止，检查后需显式启动。如果任务修改过模组或网络状态，还需执行
 记录中的设备恢复动作；只回滚应用代码不能恢复设备现场。
 
+<details>
+<summary>从早期 Schema 2（0.4.0 之前）升级迁移说明</summary>
+
 安装时将配置从 schema 2 一次性迁移到 schema 3，迁移前备份配置与数据库。
 数据库 schema 2 保留旧测速历史，未结束的测速任务标记为中断与退役，不能再次执行。
 回滚使用对应的升级前备份。
+
+</details>

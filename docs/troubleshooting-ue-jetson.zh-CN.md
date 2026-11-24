@@ -1,5 +1,7 @@
 # Jetson 故障排查
 
+[English](troubleshooting-ue-jetson.md)
+
 ## Web 服务无法启动（`203/EXEC`、权限拒绝或 `8878` 端口冲突）
 
 - **`127.0.0.1:8878` 端口占用**：执行 `ss -tlnp | grep 8878` 检查是否有旧版控制台服务

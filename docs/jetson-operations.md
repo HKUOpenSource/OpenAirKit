@@ -13,6 +13,8 @@ attachment. Access the console from your workstation over an SSH tunnel:
 ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>
 ```
 
+<!-- ASSET_SLOT: docs/assets/screenshots/jetson-console-overview.png | 16:9 redacted screenshot of Jetson Console Overview / Device Setup pages (redact IMSI, Tailnet IPs, Wi-Fi IP/SSID) -->
+
 | Page | Route | What It Shows & Manages |
 | --- | --- | --- |
 | Overview | `/` | Independent readiness for SIM, camping, 5GS registration, IPv4 PDU, pool match, RNDIS/ECM interface, bound data probes, `management_protected` and IPv4 egress |
@@ -131,6 +133,29 @@ interrupted command; route preparation failure leaves maintenance enabled.
 
 ## Recovery and connectivity
 
+### Dual-Path Routing & Self-Recovery State Machine
+
+```mermaid
+stateDiagram-v2
+  [*] --> WiFi_Fallback: "Service start / Boot (recovery paused)"
+  WiFi_Fallback --> Cellular_Preferred: "2 consecutive fresh probes pass (incl. public target)"
+  Cellular_Preferred --> WiFi_Fallback: "2 probe failures OR evidence > 20s stale OR PDU/IF lost"
+  Cellular_Preferred --> Natural_Wait_120s: "Outage detected (when automation enabled)"
+  WiFi_Fallback --> Natural_Wait_120s: "Outage detected (when automation enabled)"
+  Natural_Wait_120s --> Bounded_Recover: "Still disconnected after 120s (max 2 runs, 300s cooldown)"
+  Bounded_Recover --> WiFi_Fallback: "Setup/Recover finishes or attempt budget exhausted"
+  WiFi_Fallback --> Maintenance_Mode: "Enter maintenance (releases serial.lock)"
+  Cellular_Preferred --> Maintenance_Mode: "Enter maintenance (switches to Wi-Fi, releases serial.lock)"
+  Maintenance_Mode --> WiFi_Fallback: "Exit maintenance (rediscover modem & probe routes)"
+```
+
+| Policy / Routing Parameter | Default / Constraint |
+| --- | --- |
+| Owned protocol-186 defaults | `metric 5` = Wi-Fi fallback; `metric 10` = verified cellular preference (foreign defaults must be `> 10`) |
+| Probe & freshness cadence | Sample interval: `10 s`; stale cutoff: `20 s`; host routes to UPF, ext-DN and probe target remain bound to cellular |
+| Automatic recovery budget | Triggered only after successful user Setup/Recover: `120 s` natural wait -> max `2` recovery jobs (`300 s` cooldown) |
+| Helper / health timeouts | Helper call limit: `330 s`; health wait: `60 s`; exit codes: `0` ok, `1` failure, `2` bad args, `3` busy |
+
 IPv4 default-route selection is independent of permission to reset the modem.
 Two complete fresh probe samples, including the public target, must pass before
 cellular is preferred. Two failures return ordinary traffic to Wi-Fi; loss of
@@ -179,7 +204,13 @@ service remains stopped for inspection until explicitly started. If a workflow c
 network state, use its recorded recovery action as well; changing application
 code alone does not restore device state.
 
-Schema 2 configuration migrates once to schema 3 during installation. The installer
-backs up configuration and databases before migration. Database schema 2 preserves
-old benchmark results but marks unfinished benchmark tasks interrupted and retired;
-they cannot be launched. Roll back using the matching pre-upgrade backup.
+<details>
+<summary>Upgrading from Schema 2 (pre-0.4.0) releases</summary>
+
+Schema 2 configuration migrates once to schema 3 during installation. The
+installer backs up configuration and databases before migration. Database schema
+2 preserves old benchmark results but marks unfinished benchmark tasks
+interrupted and retired; they cannot be launched. Roll back using the matching
+pre-upgrade backup.
+
+</details>

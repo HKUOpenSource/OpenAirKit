@@ -13,7 +13,6 @@ ROOT_DOCUMENTS = (
     "CONTRIBUTING.md",
     "CONTRIBUTING.zh-CN.md",
     "SECURITY.md",
-    "INTERNAL_RELEASE.md",
     "CHANGELOG.md",
     "THIRD_PARTY_NOTICES.md",
     "AGENTS.md",
@@ -32,6 +31,7 @@ PAIRED_DOCUMENTS = (
     "troubleshooting-ue-jetson",
     "troubleshooting-bs-spark",
     "releasing",
+    "roadmap",
 )
 STALE_PATH = re.compile(r"(?:^|[\s`(/])(?:modules/|deploy-v2(?:/|\b)|aoc_monitor\b|aoc_jetson_v2\b)")
 LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
@@ -39,6 +39,19 @@ LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 # reference project. Keeping this token assembled avoids making the audit
 # source itself look like project documentation to repository-wide scans.
 FORBIDDEN_REFERENCE = "biver" + "ge"
+PUBLIC_HYGIENE_PATTERNS = (
+    ("local user home path", re.compile(r"(?<![A-Za-z0-9_<])/home/(?!<user>)[a-z0-9][a-z0-9_-]*")),
+    (
+        "internal PR or agent template phrasing",
+        re.compile(r"(?:The question is|Validation for this change|No \.?[Cc]ode[Gg]raph index)"),
+    ),
+    ("hardware or stack typo", re.compile(r"\b(?:RM250N|OCUCU)\b", re.IGNORECASE)),
+)
+HYGIENE_EXEMPT_PREFIXES = ("docs/acceptance/",)
+HYGIENE_EXEMPT_FILES = {
+    "docs/coding-agent-codegraph.md",
+    "docs/coding-agent-codegraph.zh-CN.md",
+}
 
 
 def current_documents() -> list[Path]:
@@ -81,18 +94,29 @@ def check_links(path: Path, text: str) -> None:
             )
 
 
+def check_public_hygiene(rel: str, text: str) -> None:
+    if rel in HYGIENE_EXEMPT_FILES or any(rel.startswith(prefix) for prefix in HYGIENE_EXEMPT_PREFIXES):
+        return
+    for label, pattern in PUBLIC_HYGIENE_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            raise SystemExit(f"public release hygiene failure ({label}) in {rel}: {match.group(0)!r}")
+
+
 def main() -> None:
     check_pairs()
     documents = current_documents()
     for path in documents:
         if not path.is_file():
             raise SystemExit(f"missing canonical document: {path.relative_to(ROOT)}")
+        rel = str(path.relative_to(ROOT))
         text = path.read_text(encoding="utf-8")
         if FORBIDDEN_REFERENCE in text.casefold():
-            raise SystemExit(f"external project reference in {path.relative_to(ROOT)}")
+            raise SystemExit(f"external project reference in {rel}")
         if STALE_PATH.search(text):
-            raise SystemExit(f"retired path in {path.relative_to(ROOT)}")
+            raise SystemExit(f"retired path in {rel}")
         check_links(path, text)
+        check_public_hygiene(rel, text)
     print(f"Documentation audit passed ({len(documents)} current documents)")
 
 

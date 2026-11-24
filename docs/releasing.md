@@ -1,7 +1,23 @@
 # Releasing
 
-Jetson Console and Spark Platform use independent versions and release
-artifacts. Release one platform at a time.
+[简体中文](releasing.zh-CN.md)
+
+Jetson Console and Spark Platform use independent versions, source trees, and
+release artifacts (`0.6.2` and `0.2.1` respectively). Release one platform at a
+time.
+
+## Release boundary policy
+
+Every generated archive is verified against the following repository boundaries:
+
+- **Single-platform isolation**: Each package contains only its own
+  application, deployment tools, locked dependencies, wheelhouse, version,
+  manifest, and third-party license notices.
+- **Excluded artifacts**: Release audits reject files from the other platform,
+  `archive/`, generated caches or outputs, symlinks, mutable/unpinned
+  dependencies, and production subscriber data or credentials.
+- **Safe installer behavior**: Installers never enable boot startup
+  automatically and never modify the other platform's stack or database.
 
 ## Before building
 

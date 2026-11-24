@@ -1,5 +1,7 @@
 # Spark 故障排查
 
+[English](troubleshooting-bs-spark.md)
+
 ## 监测平台不可用或缺少无线指标
 
 检查 `aoc-control.service`、`aoc-observe.service`、`aoc-monitor-web.service` 与
@@ -21,11 +23,17 @@
 持有者。区分 unit 失败与进程运行但 N2 未建立。稳定窗口失败后不要反复重启，应保留
 日志和 invocation identifier。
 
-- 若既有迁移主机在 `prepare` 阶段出现 `Unlisted release files` 或清单哈希不匹配，
-  检查 `/opt/agentic-ocudu/v2/release.json`（早期 schema 2 迁移实例目录为 `units/`
-  且清单中可能含历史备份文件，不应直接以 schema 3 `runtime.py` 整文件替换）。
 - 检查 `systemctl show aoc-v2-radio.service -p DropInPaths`，确认不存在遗留的
   `/run/systemd/system/aoc-v2-radio.service.d/*.conf` 临时覆盖。
+
+<details>
+<summary>早期 Schema 2 主机在 prepare 阶段报未登记文件或哈希不匹配</summary>
+
+若历史升级主机在 `/opt/agentic-ocudu/v2/` 的 `prepare` 阶段提示 `Unlisted release files`
+或清单哈希不一致，请核对 `release.json`（早期 schema 2 使用 `units/` 目录且清单中可能含
+历史备份条目，不应直接以 schema 3 `runtime.py` 整文件替换）。
+
+</details>
 
 ## 核心网功能异常
 

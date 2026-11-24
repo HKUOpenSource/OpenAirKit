@@ -19,7 +19,9 @@ running it, using the reviewed UHD installation:
 c++ -std=c++17 stacks/ocudu/scripts/probe_b210.cpp -o /path/to/private-radio/probe-b210 $(pkg-config --cflags --libs uhd)
 ```
 
-Obtain Open5GS images from the pinned build inputs under `stacks/open5gs/`.
+Obtain and verify the Open5GS runtime images by following
+[Open5GS ARM64 build & verification](../../../stacks/open5gs/build/README.md),
+including `Dockerfile.n6` and `Dockerfile.connectivity`.
 Generate the private authenticated N6 bundle with:
 
 ```sh
@@ -48,10 +50,11 @@ file hashes and service membership. It records every file, including the probe,
 controller and both units. The output is a private deployment candidate containing
 site configuration, not a shareable application archive. Never add it to Git.
 
-## Install later, in a device maintenance window
+## Install on the target ARM64 host
 
-This source change has local synthetic validation only. Target installation,
-service validation and RF acceptance are separate, pending work.
+Before commissioning live RF operation, perform target installation checks and
+verify service startup against physical hardware (local unit tests do not
+replace target-host or RF verification).
 
 Transfer the reviewed candidate privately and verify its independently recorded
 checksum. From a trusted checkout, run `package.py verify --source CANDIDATE`, then

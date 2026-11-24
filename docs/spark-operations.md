@@ -11,6 +11,8 @@ Spark Platform (`0.2.1`) serves a local-only Astryx web console on
 ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>
 ```
 
+<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 redacted screenshot of Spark Platform Overview / Devices pages (redact IMSI, hostnames, Tailnet IPs) -->
+
 | Page | Route | What It Shows & Manages |
 | --- | --- | --- |
 | Overview | `/` | System health summary, evidence freshness, RAN/core status and active UE count |
@@ -72,6 +74,22 @@ are started in dependency order. An active unhealthy core or partially running c
 containers cause an error rather than an implicit restart. A startup failure preserves
 completed stages. A stop failure halts before stopping dependencies or the monitor;
 remaining containers or processes cannot be reported as successfully stopped.
+
+### Operational Parameters & Exit Codes
+
+| Parameter | Value / Rule |
+| --- | --- |
+| Startup sequence | `core` (12 containers) -> `radio` (B210 + N2 NG Setup) -> `monitor` (`control`, `observe`, `web`) |
+| Shutdown sequence | `radio` -> `core` -> `monitor` (keeps observation alive during shutdown; retains DB volume) |
+| Helper / health budgets | Helper call timeout: `330 s`; per-stage health wait: `60 s`; graceful Web shutdown: `10 s` |
+| `platformctl.py` exit codes | `0` = success (including `status` when stopped), `1` = execution/verification failure, `2` = invalid arguments, `3` = busy lock |
+| Listener verification | `start` checks IPv4/IPv6 on `8877` via `ss --cgroup` and rejects foreign or unhealthy listeners |
+
+> [!WARNING]
+> **Concurrency**: One user-level lock prevents overlapping `platformctl.py`
+> runs, but it does not serialize concurrent UI Operations or manual root
+> `aoc-v2ctl` commands. Avoid mixing CLI, Web UI, and maintenance-helper
+> actions concurrently.
 
 Helper calls have a 330-second timeout and each health wait has a 60-second budget.
 No write is automatically retried or rolled back. On timeout or interruption, query

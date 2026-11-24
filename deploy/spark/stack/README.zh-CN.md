@@ -16,7 +16,8 @@
 c++ -std=c++17 stacks/ocudu/scripts/probe_b210.cpp -o /path/to/private-radio/probe-b210 $(pkg-config --cflags --libs uhd)
 ```
 
-Open5GS 镜像由 `stacks/open5gs/` 的固定构建输入提供。生成带鉴权和 N6 的私有核心网包：
+Open5GS 镜像请按 [Open5GS ARM64 构建与验证](../../../stacks/open5gs/build/README.md)
+（含 `Dockerfile.n6` 与 `Dockerfile.connectivity`）准备并核验。生成带鉴权和 N6 的私有核心网包：
 
 ```sh
 python3 stacks/open5gs/compose/render.py --database-auth --n6 --output /path/to/private-core
@@ -41,9 +42,10 @@ staging 检查 ARM64 ELF 头、gNB 哈希和固定源码版本、核心网文件
 并记录探针、控制器和两个 unit 在内的全部文件。输出包含站点配置，是私有部署候选包，
 不属于可公开分发的应用压缩包，不能加入 Git。
 
-## 后续设备维护窗口安装
+## 在目标 ARM64 主机安装
 
-本次源码变更仅经过本地合成验证，目标机安装、服务校验和射频验收仍需后续执行。
+本地单元测试不替代目标主机安装校验与现场射频验证，正式接入前请结合实机完成核验。
+
 私下传输已审阅候选包，校验独立记录的摘要；从可信 checkout 执行
 `package.py verify --source CANDIDATE`，再在 ARM64 Linux 上执行
 `sudo python3 deploy/spark/stack/package.py install --source CANDIDATE`。

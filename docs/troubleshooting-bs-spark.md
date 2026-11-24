@@ -1,5 +1,7 @@
 # Spark troubleshooting
 
+[简体中文](troubleshooting-bs-spark.zh-CN.md)
+
 ## Monitor unavailable or missing radio metrics
 
 Check `aoc-control.service`, `aoc-observe.service`, `aoc-monitor-web.service`
@@ -24,14 +26,19 @@ verify that no process owns the B210. Distinguish a failed unit from an active
 process with no N2. Do not repeatedly restart a radio that failed its stability
 window; preserve its log and invocation identifier.
 
-- If `prepare` reports `Unlisted release files` or a manifest checksum mismatch
-  on a migrated host under `/opt/agentic-ocudu/v2/`, inspect `release.json`
-  and verify all entries in `files` (remembering legacy schema-2 hosts use
-  `units/` instead of `systemd/` and may retain older backup entries listed in
-  their original manifest).
 - Check `systemctl show aoc-v2-radio.service -p DropInPaths` to confirm no stale
   `/run/systemd/system/aoc-v2-radio.service.d/*.conf` overrides are masking
   persisted settings.
+
+<details>
+<summary>Schema 2 legacy hosts reporting unlisted release files during prepare</summary>
+
+If `prepare` reports `Unlisted release files` or a manifest checksum mismatch
+on an older migrated host under `/opt/agentic-ocudu/v2/`, inspect `release.json`
+and verify all entries in `files` (earlier schema-2 layouts use `units/` instead
+of `systemd/` and may retain backup entries listed in their original manifest).
+
+</details>
 
 ## Core function unhealthy
 

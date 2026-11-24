@@ -31,7 +31,9 @@ then run its platform installer in preflight and install modes. The target is
 `aoc-observe.service`, `aoc-monitor-web.service`) remain disabled at boot.
 Installing the monitor does not start or restart the protocol stack.
 
-From the unpacked Spark release, use the actual installer actions:
+From the unpacked Spark release, run verification, host checks, and installation
+(a fresh install interactively prompts for a Spark Web Console password of at
+least 12 characters, stored hashed in `/etc/aoc-monitor/auth.json`):
 
 ```sh
 python3 -I -B install.py verify --path .
@@ -64,11 +66,16 @@ The maintained runtime baseline reflects observed hardware tuning:
   `aoc-v2-cpu-latency.service` (`PartOf=aoc-v2-radio.service`), drop-in
   `cpu-latency.conf`, and `realtime.conf.example` (`CPUAffinity`, `LimitRTPRIO=99`)
   prevent CPU C-state wakeups and contention with co-located workloads.
-- **Migrated schema-2 vs fresh schema-3 `/opt/agentic-ocudu/v2/` layouts**:
-  fresh installs use schema-3 (`systemd/`, strict unlisted-file checks); legacy
-  migrated hosts carrying schema-2 manifests (`units/` and backup directories)
-  must patch their live `runtime.py` in place and update `release.json` hashes
-  rather than overwriting with schema-3 `runtime.py`.
+
+<details>
+<summary>Notes for hosts previously migrated from Schema 2</summary>
+
+Fresh installs use schema-3 under `/opt/agentic-ocudu/v2/` (`systemd/`, strict
+unlisted-file checks). Existing hosts carrying schema-2 manifests (`units/` and
+backup directories) must patch live `runtime.py` in place and update
+`release.json` hashes rather than overwriting with schema-3 `runtime.py`.
+
+</details>
 
 `scripts/spark/enable_radio_json_metrics.py` supplies the guarded telemetry
 transaction, migrating disabled or legacy `127.0.0.1:8001` configurations to

@@ -1,5 +1,7 @@
 # UE access and lab policy
 
+[简体中文](ue-access-policy.zh-CN.md)
+
 This project supports OCUDU + Open5GS. A UE does not need the Spark management
 address, gNB implementation or fixed PCI to perform standard network access.
 The lab must align its SIM subscription, PLMN, DNN, slice and supported PDU type.

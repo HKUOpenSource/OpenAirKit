@@ -1,5 +1,7 @@
 # UE 接入与实验室策略
 
+[English](ue-access-policy.md)
+
 本项目仅支持 OCUDU + Open5GS。标准网络接入不需要 UE 知道 Spark 管理地址、
 gNB 实现或固定 PCI。实验室仍需对齐 SIM 订阅、PLMN、DNN、切片与支持的 PDU 类型。
 本应用目前仅验证 IPv4；配置中的切片和 QoS 是预期值，不代表模组已协商成功。

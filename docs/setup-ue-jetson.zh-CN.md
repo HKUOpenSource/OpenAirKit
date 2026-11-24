@@ -41,10 +41,16 @@ profile 与其他规则。实测现象及受限站点修复流程见
 该链路，首次网络准备应在本地管理终端完成。
 
 0.6.2 发布包包含已校验清单、ARM64 CPython 3.10 离线依赖、前端、安装器
-（`deploy/manage.py`）、生命周期脚本及许可材料。生产配置放在发布目录外。从 0.6.2 起，
-`manage.py` 在创建 `venv/` 时会临时切换到 `os.umask(0o022)`，并在 `private_write()`
-中显式执行 `os.chmod(..., mode)`，确保即使在 `umask 077` 环境下，`venv/` 与
-`web.json`（`0640 root:aoc-v2-jetson-web`）仍对非特权 Web 服务可读。
+（`deploy/manage.py`）、生命周期脚本及许可材料。生产配置放在发布目录外。
+
+<details>
+<summary>0.6.2+ 对 `umask 077` 环境的兼容处理</summary>
+
+从 `0.6.2` 起，`manage.py` 在创建 `venv/` 时会临时切换到 `os.umask(0o022)`，
+并在 `private_write()` 中显式执行 `os.chmod(..., mode)`，确保在受限 `umask 077`
+环境下，`venv/` 与 `web.json`（`0640 root:aoc-v2-jetson-web`）仍对非特权 Web 服务可读。
+
+</details>
 
 ## 安装与初始化
 

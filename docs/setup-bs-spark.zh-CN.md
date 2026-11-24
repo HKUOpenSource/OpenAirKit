@@ -27,7 +27,8 @@ platform installer 完成 preflight 和 install。安装位置为
 `aoc-observe.service`、`aoc-monitor-web.service`）默认不开机自启。安装监测平台不会
 启动或重启协议栈。
 
-在解压后的 Spark 发布目录使用实际安装器动作：
+在解压后的 Spark 发布目录依次执行校验、主机预检与安装（全新安装时会交互提示输入
+不少于 12 位的 Spark Web 控制台密码，并以加盐哈希写入 `/etc/aoc-monitor/auth.json`）：
 
 ```sh
 python3 -I -B install.py verify --path .
@@ -57,10 +58,15 @@ sudo python3 -I -B install.py install --path .
   `aoc-v2-cpu-latency.service`（`PartOf=aoc-v2-radio.service`）、`cpu-latency.conf`
   及 `realtime.conf.example`（`CPUAffinity`、`LimitRTPRIO=99`），用于避免 CPU 深度休眠及与
   共驻负载争抢核芯。
-- **迁移实例（schema 2）与全新实例（schema 3）差异**：全新安装采用 schema 3 布局
-  （`systemd/`，且新版 `runtime.py` 会拒绝目录内未登记文件）；若目标机属于带 schema 2 清单的
-  既有迁移实例（使用 `units/` 并含历史备份目录），升级时应就地修补其现役 `runtime.py` 并更新
-  `release.json` 哈希，不要直接用 schema 3 `runtime.py` 覆盖。
+
+<details>
+<summary>从 Schema 2 历史布局升级的兼容说明</summary>
+
+全新安装默认采用 `/opt/agentic-ocudu/v2/` 下的 schema 3 布局（`systemd/` 目录且严格拒绝未登记文件）。
+若维护早期携带 schema 2 清单（`units/` 与历史备份目录）的主机，升级时应就地更新 `runtime.py` 与
+`release.json` 哈希，避免直接用 schema 3 `runtime.py` 整文件覆盖。
+
+</details>
 
 `scripts/spark/enable_radio_json_metrics.py` 提供带回滚事务的指标端口切换工具，可将未启用或旧版
 `127.0.0.1:8001` 配置迁移到 `127.0.0.1:8879`，并安装 `aoc-v2-metrics-guard.service` 仅放行

@@ -1,5 +1,7 @@
 # Jetson troubleshooting
 
+[简体中文](troubleshooting-ue-jetson.zh-CN.md)
+
 ## Web service fails (`203/EXEC`, permission denied, or port 8878 busy)
 
 - **Port `127.0.0.1:8878` conflict**: Check `ss -tlnp | grep 8878`. If a legacy
