@@ -32,13 +32,15 @@ Both root READMEs render the light/dark transparent PNG logos from
 upgrades can drop into the same paths):
 
 ```html
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.png" />
-    <img alt="OpenAirKit" src="docs/assets/brand/logo-light.png" width="420" />
-  </picture>
-</p>
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.png">
+  <img src="docs/assets/brand/logo-light.png" alt="OpenAirKit" width="540">
+</picture>
+
+</div>
 ```
 
 ### Brand Decoupling Matrix
