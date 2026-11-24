@@ -56,32 +56,40 @@ both endpoints.
 ## System Architecture
 
 ```mermaid
-flowchart LR
+---
+config:
+  layout: elk
+---
+flowchart TB
   classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
   classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
   classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
 
-  subgraph HW["ARM64 Hardware"]
+  subgraph HW["ARM64 Hardware Stack"]
+    direction LR
     UEHW["Jetson Orin +<br/>RM520N-GL"]:::hw
     BSHW["DGX Spark +<br/>USRP B210"]:::hw
     UEHW <== "5G NR SA" ==> BSHW
   end
 
   subgraph STACK["5G SA Protocol Plane"]
+    direction LR
     RAN["OCUDU gNB"]:::stack
     CORE["Open5GS 5GC"]:::stack
     RAN -- "N2 / N3" --> CORE
   end
 
-  subgraph MGMT["Local Management Plane"]
+  subgraph MGMT["Local-First Management Plane"]
+    direction LR
     JC["Jetson Console"]:::mgmt
     SP["Spark Console"]:::mgmt
   end
 
-  subgraph AI["Programmable AI Layer"]
-    JAI["Jetson Edge<br/>AI Runtime"]:::ai
-    SAI["DGX Spark RAN-Side<br/>AI Runtime"]:::ai
+  subgraph AI["Programmable AI Extension Layer (User-Defined Pipelines)"]
+    direction LR
+    JAI["Jetson Edge AI Runtime"]:::ai
+    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
   end
 
   UEHW --- JC

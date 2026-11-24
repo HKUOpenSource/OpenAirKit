@@ -8,26 +8,34 @@
 ## 跨主机全链路部署流程
 
 ```mermaid
-flowchart LR
+---
+config:
+  layout: elk
+---
+flowchart TB
   classDef ws fill:#f1f5f9,stroke:#475569,color:#0f172a
   classDef spark fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef jetson fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
 
   subgraph WS1["1. 工作站"]
+    direction LR
     S0["构建 ARM64<br/>离线发布包"]:::ws
   end
 
   subgraph SPARK["2. DGX Spark"]
+    direction LR
     S1["部署 5G 协议栈与<br/>Spark Console"]:::spark
     S2A["Open5GS 添加<br/>独立订阅"]:::spark
     S1 --> S2A
   end
 
   subgraph WS2["3. 工作站"]
+    direction LR
     S2B["烧录并校验<br/>5G USIM"]:::ws
   end
 
   subgraph JETSON["4. Jetson Orin"]
+    direction LR
     S3["安装并初始化<br/>Jetson Console"]:::jetson
     S4["执行 Device Setup<br/>并端到端验收"]:::jetson
     S3 --> S4

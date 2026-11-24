@@ -17,12 +17,17 @@
 ## 三平面架构
 
 ```mermaid
-flowchart LR
+---
+config:
+  layout: elk
+---
+flowchart TB
   classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
   classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
 
   subgraph STACK["1. 5G SA 无线与核心网平面"]
+    direction LR
     RM["Quectel RM520N-GL<br/>+ USIM"]:::stack
     GNB["OCUDU gNB +<br/>USRP B210"]:::stack
     CORE["Open5GS 5GC"]:::stack
@@ -31,13 +36,15 @@ flowchart LR
   end
 
   subgraph MGMT["2. 本地管理与自愈平面"]
+    direction LR
     JC["Jetson Console"]:::mgmt
     SP["Spark Console"]:::mgmt
   end
 
-  subgraph AI["3. 可编程 AI 扩展层"]
-    JAI["Jetson 端侧<br/>AI 运行环境"]:::ai
-    SAI["DGX Spark 网侧<br/>AI 运行环境"]:::ai
+  subgraph AI["3. 可编程 AI 扩展层（自定义算法与推理流水线）"]
+    direction LR
+    JAI["Jetson 端侧 AI 运行环境"]:::ai
+    SAI["DGX Spark 网侧 AI 运行环境"]:::ai
   end
 
   RM --- JC
