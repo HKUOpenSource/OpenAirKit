@@ -37,15 +37,15 @@ with a centered `<picture>` block:
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.svg" />
-    <img alt="Project Logo" src="docs/assets/brand/logo-light.svg" width="420" />
+    <img alt="OpenAirKit Logo" src="docs/assets/brand/logo-light.svg" width="420" />
   </picture>
 </p>
 ```
 
 ### Brand Decoupling Matrix
 
-Keep **display branding** separate from **runtime system identifiers** so
-rebranding does not break deployed hosts or systemd units:
+Keep **display branding** (`OpenAirKit`) separate from **runtime system
+identifiers** so visual updates do not break deployed hosts or systemd units:
 
 | Layer | Examples | Rebranding Impact |
 | --- | --- | --- |

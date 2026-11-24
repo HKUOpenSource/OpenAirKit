@@ -1,6 +1,6 @@
 # Open5GS core stack
 
-This module is the core-network boundary for Agentic-OCUDU. The current release carries one IPv4 data PDU only:
+This module is the core-network boundary for OpenAirKit. The current release carries one IPv4 data PDU only:
 
 - DNN `oai`
 - IPv4 UE pool `10.0.0.0/24` (subject to the live-resource check)

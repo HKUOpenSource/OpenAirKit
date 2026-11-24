@@ -1,8 +1,8 @@
 <!-- ASSET_SLOT: docs/assets/brand/logo-light.svg & docs/assets/brand/logo-dark.svg (<picture> dark/light hero banner) -->
 
-# Agentic-OCUDU
+# OpenAirKit
 
-**可复现的端到端 5G SA 通信搭建与双端管理平台**
+**面向 AI-RAN 的开源端到端 5G SA 通信搭建与双端管理平台**
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [快速搭建](docs/quickstart.zh-CN.md) | [硬件清单与拓扑](docs/hardware-and-topology.zh-CN.md) | [文档导航](docs/README.zh-CN.md)
 
@@ -11,7 +11,7 @@
 ![Jetson Console: 0.6.2](https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8)
 ![Target: ARM64 Linux](https://img.shields.io/badge/Host-ARM64_Linux-334155)
 
-**Agentic-OCUDU** 基于 **OCUDU**（RAN）与 **Open5GS**（5GC），将 **DGX Spark +
+**OpenAirKit** 基于 **OCUDU**（RAN）与 **Open5GS**（5GC），将 **DGX Spark +
 USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** 标准化
 硬件套件快速整合为可复现的 **5G 独立组网（SA）** IPv4 数据通信系统，并提供双端解耦的本地管理平台。
 

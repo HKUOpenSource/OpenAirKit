@@ -1,8 +1,8 @@
 <!-- ASSET_SLOT: docs/assets/brand/logo-light.svg & docs/assets/brand/logo-dark.svg (<picture> dark/light hero banner) -->
 
-# Agentic-OCUDU
+# OpenAirKit
 
-**Reproducible End-to-End 5G SA Setup and Dual-End Management Platform**
+**Open-Source End-to-End 5G SA & AI-RAN Hardware-Software Platform**
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [Quickstart](docs/quickstart.md) | [Hardware & Topology](docs/hardware-and-topology.md) | [Documentation Map](docs/README.md)
 
@@ -11,7 +11,7 @@
 ![Jetson Console: 0.6.2](https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8)
 ![Target: ARM64 Linux](https://img.shields.io/badge/Host-ARM64_Linux-334155)
 
-**Agentic-OCUDU** turns a standardized hardware kit—**DGX Spark + USRP B210 +
+**OpenAirKit** turns a standardized hardware kit—**DGX Spark + USRP B210 +
 Jetson Orin + Waveshare M.2 5G Carrier + Quectel RM520N-GL**—into a
 reproducible **5G Standalone (SA)** IPv4 data network built on **OCUDU** (RAN)
 and **Open5GS** (5GC), with decoupled local management consoles at both ends.

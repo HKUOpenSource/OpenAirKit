@@ -4,7 +4,7 @@
 
 ## 设计总览
 
-**Agentic-OCUDU** 构建了一套可复现的 **5G 独立组网（SA）** IPv4 数据通信系统，
+**OpenAirKit** 构建了一套可复现的 **5G 独立组网（SA）** IPv4 数据通信系统，
 并在通信两端配套两个彼此解耦的本地管控平台：
 
 - **基站与核心网侧（`DGX Spark` + `USRP B210`）**：运行 **OCUDU** RAN、**Open5GS**
@@ -74,7 +74,7 @@ flowchart TB
 - **动态环境适配**：Spark 在运行时动态发现所属 Open5GS 网桥；Jetson Console 在打开串口前校验 RM520N-GL USB 接口描述符，并在路由切换前核验 Wi-Fi 与 `tailscale0` 管理通路。
 - **统一 Astryx UI 底座**：两端前端均采用 [`packages/console-ui`](../packages/console-ui/README.zh-CN.md)（`Astryx Core`、`Charts`、`Neutral` 主题与 `UIProvider`）。
 - **证据质量与进程代次**：采集器随快照保留来源时间、进程代次与证据质量标签（`ok`、`stale`、`unavailable`、`unsupported`），防止历史状态掩盖真实故障。
-- **品牌名与技术标识解耦**：对外展示品牌名（`Agentic-OCUDU`）与底层运行标识（`aoc-v2ctl`、`aoc-maintain`、`/opt/agentic-ocudu/`、`aoc-v2-*` 服务单元）互不耦合；详见[视觉素材与品牌替换规范](assets/README.md)。
+- **品牌名与技术标识解耦**：对外展示品牌名（`OpenAirKit`）与底层运行标识（`aoc-v2ctl`、`aoc-maintain`、`/opt/agentic-ocudu/`、`aoc-v2-*` 服务单元）互不耦合；详见[视觉素材与品牌替换规范](assets/README.md)。
 
 ## 技术参考入口
 

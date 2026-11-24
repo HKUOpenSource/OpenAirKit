@@ -4,7 +4,7 @@
 
 ## Design Overview
 
-**Agentic-OCUDU** provides a self-contained **5G Standalone (SA)** IPv4 data
+**OpenAirKit** provides a self-contained **5G Standalone (SA)** IPv4 data
 network paired with two decoupled local operations consoles:
 
 - **Base-station & core side (`DGX Spark` + `USRP B210`)**: runs the **OCUDU**
@@ -90,7 +90,7 @@ flowchart TB
 - **Evidence-driven connectivity**: Telemetry snapshots tag source timestamps,
   process generation IDs, and independent evidence quality (`ok`, `stale`,
   `unavailable`, `unsupported`) so stale values never mask real outages.
-- **Brand vs. system identifiers**: Display branding (`Agentic-OCUDU`) is kept
+- **Brand vs. system identifiers**: Display branding (`OpenAirKit`) is kept
   separate from stable runtime identifiers (`aoc-v2ctl`, `aoc-maintain`,
   `/opt/agentic-ocudu/`, `aoc-v2-*` units); see [Visual Assets & Brand Guide](assets/README.md).
 
