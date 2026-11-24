@@ -61,9 +61,6 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
 
 </div>
 
-<!-- ASSET_SLOT: docs/assets/hardware/spark-b210-wiring.jpg | 16:9 close-up of DGX Spark connected to USRP B210 with antennas/attenuators -->
-<!-- ASSET_SLOT: docs/assets/hardware/jetson-waveshare-rm520n.jpg | 16:9 close-up of Jetson Orin + Waveshare M.2 5G carrier with Quectel RM520N-GL, Nano-SIM and 4 antennas -->
-
 ### Wiring Checklist
 
 1. Connect the **USRP B210** directly to a native USB 3.0 port on **DGX Spark** (bypassing unpowered hubs) and terminate RF ports with Band `n78` antennas or calibrated SMA attenuators before enabling transmission.

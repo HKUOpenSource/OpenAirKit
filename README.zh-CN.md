@@ -40,7 +40,7 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 
 - **端到端标准化部署**：打通从物理连线、Open5GS 镜像构建、5G USIM 开户与烧录到 UE 用户面连通性验证的完整链路。
 - **双端解耦的本地管控**：**Spark Console** 与 **Jetson Console** 分别纳管基站与终端侧设备，具备 SSE 实时遥测、数据时效性判定、Wi-Fi/蜂窝路由自动切换与有界自愈能力。
-- **端网侧可编程 AI 能力扩展**：基站与核心网侧采用 **DGX Spark**，终端侧采用 **Jetson Orin**，在链路两端分别提供**预留 AI 算力资源**、独立预留推理端口段及鉴权 REST/SSE 接口，便于开展**端网协同 AI 算法二次开发**与部署**自定义 AI 服务**。*（双端内置 AI 模块规划于后续阶段交付，详见[端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md)。）*
+- **端网侧可编程 AI 能力扩展**：基站与核心网侧采用 **DGX Spark**，终端侧采用 **Jetson Orin**，在链路两端分别提供**预留 AI 算力资源**、独立预留推理端口段及鉴权 REST/SSE 接口，便于开展**端网协同 AI 算法二次开发**与部署**自定义 AI 服务**。详见[端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md)与[产品路线图](docs/roadmap.zh-CN.md)。
 
 ## 系统架构
 
@@ -86,7 +86,7 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 | **故障排查** | [Spark 故障排查](docs/troubleshooting-bs-spark.zh-CN.md) · [Jetson 故障排查](docs/troubleshooting-ue-jetson.zh-CN.md) |
 | **技术参考与附录** | [网络与射频基线](docs/reference/network-and-rf-profile.zh-CN.md) · [端口与运行时参考](docs/reference/ports-and-runtime.zh-CN.md) · [REST 与 SSE 接口](docs/reference/api-reference.zh-CN.md) · [硬件与 TB01 附录](docs/reference/hardware-notes.zh-CN.md) · [核心术语表](docs/reference/glossary.zh-CN.md) |
 
-发布工程规范、产品路线图与视觉素材标准请参阅[完整文档目录](docs/README.zh-CN.md)。
+发布工程规范与产品路线图请参阅[完整文档目录](docs/README.zh-CN.md)。
 
 ## 仓库目录结构
 

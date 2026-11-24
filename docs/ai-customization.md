@@ -4,11 +4,11 @@
 
 **DGX Spark** (RAN/Core endpoint) and **Jetson Orin** (UE endpoint) are
 provisioned to reserve dedicated GPU and edge compute capacity at both ends of
-the 5G SA link. While turnkey built-in AI agents are scheduled for a future
-milestone, the platform already enforces compute isolation, real-time RAN
+the 5G SA link. The platform enforces compute isolation, real-time RAN
 scheduling protection, and authenticated local APIs so researchers and system
 developers can deploy **custom AI workloads** and **user-defined AI pipelines**
-cleanly alongside the 5G stack.
+alongside the 5G stack. Built-in AI agents are tracked on the
+[Roadmap](roadmap.md).
 
 ## Architectural Principles for Custom AI Workloads
 

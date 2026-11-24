@@ -58,9 +58,6 @@
 
 </div>
 
-<!-- ASSET_SLOT: docs/assets/hardware/spark-b210-wiring.jpg | 16:9 DGX Spark 与 USRP B210 连线及射频天线/衰减器实拍 -->
-<!-- ASSET_SLOT: docs/assets/hardware/jetson-waveshare-rm520n.jpg | 16:9 Jetson Orin + Waveshare 载板 + RM520N-GL + Nano-SIM 装配实拍 -->
-
 ### 物理接线核对清单
 
 1. 将 **USRP B210** 直连 **DGX Spark** 原生 USB 3.0 端口（避免经过无源 Hub），发射前须先接好 `n78` 天线或经校验的 SMA 衰减器。

@@ -37,9 +37,8 @@ sudo bash deploy/install-jetson.sh
 The installer deploys the runtime into `/opt/agentic-ocudu/jetson`, starts the
 loopback Web UI service, and leaves both systemd units disabled at boot.
 
-Next, stop Jetson Console, commission it with Spark's actual management IPv4
-address (substituting the real Tailscale address for the RFC 5737 documentation
-placeholder `192.0.2.20`), and start the services:
+Next, stop Jetson Console, commission it with Spark's actual Tailscale IPv4
+address in place of `192.0.2.20`, and start the services:
 
 ```sh
 sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py stop
@@ -56,7 +55,7 @@ and management interfaces using the deployed application runtime.
 
 1. Open an SSH tunnel to `127.0.0.1:8878` and sign in to **Overview** / **Device Setup**.
 2. Execute **Device Setup** and confirm USIM readiness, NR SA registration, active IPv4 PDU, verified bound data probes, `management_protected = true`, and automatic switching to cellular preferred egress after consecutive clean probes.
-3. Validate one complete `manage.py stop` and `manage.py start` cycle (including route cleanup) prior to routine operation.
+3. Validate one complete `manage.py stop` and `manage.py start` cycle, verifying route cleanup and restoration, prior to routine operation.
 
 To configure passwordless operator wrappers (`~/aoc-ops/jetson/start.sh`),
 deploy the matching maintenance package per [Maintenance Helper](../deploy/maintenance/README.md)
@@ -68,7 +67,7 @@ To enable unattended cold-boot attachment (`deploy/jetson/boot_connect.py`
 installed at `/opt/agentic-ocudu/jetson/boot_connect.py`):
 
 1. **Validate read-only AT compatibility** while `aoc-v2-jetson-device.service` is stopped, using the AT queries and USB checks documented in [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap-and-mpdn-firmware-check).
-2. **Generate `/etc/aoc-v2-jetson/boot.json` (`0600`, root-owned)** *after* application installation so `device_sha256`, `manifest_sha256`, `sim_sha256`, `usb_speed_mbps`, and `modem_configuration` match the active installation (without storing subscriber keys). Create `/var/lib/aoc-v2-jetson-boot/private` (`0700`) and `/var/lib/aoc-v2-jetson-boot/public` (`0755`).
+2. **Generate `/etc/aoc-v2-jetson/boot.json` (`0600`, root-owned)** *after* application installation so `device_sha256`, `manifest_sha256`, `sim_sha256`, `usb_speed_mbps`, and `modem_configuration` match the active installation. Create `/var/lib/aoc-v2-jetson-boot/private` (`0700`) and `/var/lib/aoc-v2-jetson-boot/public` (`0755`).
 3. **Install the systemd drop-in and oneshot boot unit**:
    - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`: sets `TimeoutStartSec=360`, clears `ExecStartPre=`, and chains `boot_connect.py ready` -> `site_guard.py` -> `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback` so USB enumeration, modem DHCP, Wi-Fi, and `tailscale0` settle before `device_entry.py` starts.
    - `/etc/systemd/system/aoc-v2-jetson-boot.service` (`Type=oneshot`, `After=aoc-v2-jetson-device.service aoc-v2-jetson-web.service`): waits up to `30 s` for `/run/aoc-v2-jetson/device.sock` and invokes `/usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/boot_connect.py connect` (`TimeoutStartSec=1200`) to execute one Device Setup sequence and confirm sustained cellular connectivity with automatic recovery enabled.

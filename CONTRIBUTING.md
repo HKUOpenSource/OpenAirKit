@@ -15,14 +15,14 @@ behavior, validation and rollback impact.
 - Spark application changes belong in `apps/spark-platform` and `deploy/spark`.
 - Protocol-stack changes belong in `stacks/ocudu` or `stacks/open5gs`.
 - Shared UI code in `packages/console-ui` must contain no platform logic.
-- Retired material stays outside the current source tree and releases.
+- Files under `archive/` stay outside imports, builds, and releases.
 
-Do not add compatibility imports for retired paths. Update imports, tests,
-release manifests and documentation in the same change.
+When moving or removing modules, update imports, tests, release manifests, and
+documentation in the same change rather than adding compatibility shims.
 
 ## Documentation
 
-Runtime interfaces use English. Current architecture, setup, operations,
+Runtime interfaces use English. Architecture, setup, operations,
 troubleshooting and release documents have matching English and Simplified
 Chinese files. Keep commands executable from the documented working directory,
 use relative links for repository files, and mark unverified behavior clearly.
@@ -32,8 +32,8 @@ use relative links for repository files, and mark unverified behavior clearly.
 Run the narrowest useful target while developing (`make docs-audit`,
 `make test-jetson-backend`, `make test-spark-backend`, or `make test-stack`) and
 run `make ci` before opening a pull request. `make ci` runs both backend test
-suites, shared stack/release tests, both production frontend builds (including
-TypeScript checks), and repository audits.
+suites, shared stack/release tests, frontend TypeScript checks and production
+builds, and repository audits.
 
 Install backend development dependencies first (`make install-dev`); frontend
 builds invoke `npm ci` automatically. CI targets Python 3.12 and Node.js 22.

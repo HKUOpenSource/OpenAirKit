@@ -11,8 +11,6 @@ upgrade/rollback workflows on **Jetson Orin**.
 Jetson Console listens strictly on `127.0.0.1:8878`. Open it from your
 workstation via an SSH tunnel (`ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>`):
 
-<!-- ASSET_SLOT: docs/assets/screenshots/jetson-console-overview.png | 16:9 redacted screenshot of Jetson Console Overview / Device Setup pages (redact IMSI, Tailnet IPs, Wi-Fi IP/SSID) -->
-
 | Page | Route | Capabilities |
 | --- | --- | --- |
 | Overview | `/` | USIM readiness, serving-cell camp, NR SA registration, IPv4 PDU, pool match, RNDIS/ECM interface, bound probes, `management_protected`, and IPv4 egress |

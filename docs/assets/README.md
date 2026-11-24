@@ -2,9 +2,8 @@
 
 This directory maintains standardized paths for **brand assets**, **hardware
 visuals**, **redacted console screenshots**, and optional **vector diagrams**.
-Pending field photographs inside active markdown guides use HTML comment
-placeholders (`<!-- ASSET_SLOT: ... -->`) so automated link audits remain clean
-until image capture and redaction are complete.
+Pending field photographs and redacted console screenshots are tracked in the
+asset inventory table below until capture and redaction are complete.
 
 ## Directory Layout
 
@@ -67,7 +66,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | **Component Role Names** | `Spark Console`, `Jetson Console`, `5G SA Stack` | Keep consistent across all guides to minimize cross-file drift |
 | **Immutable Runtime Identifiers** | `aoc-v2ctl`, `aoc-maintain`, `/opt/agentic-ocudu/`, `aoc-v2-*.service`, `aoc_jetson`, `aoc_spark` | Do **not** rename in docs without a coordinated code and package release |
 
-## Registered Visual Assets & Remaining `ASSET_SLOT` Placements
+## Registered Visual Assets & Pending Captures
 
 | Asset / Slot File | Document Location | Composition & Guidelines |
 | --- | --- | --- |

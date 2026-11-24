@@ -32,7 +32,7 @@
    SSE 实时流；涉及硬件或 systemd 的写操作统一经由本机执行器或 SHA-256 白名单守护脚本
    `/usr/local/sbin/aoc-maintain` 完成。
 3. **可编程 AI 扩展层**：**DGX Spark** 与 **Jetson Orin** 在通信两端提供独立的**预留
-   AI 算力资源**。Spark 端口规划刻意留空 `8000–8002` 独立推理端口段，配合低时延守护机制
+   AI 算力资源**。Spark 端口规划保留 `8000–8002` 作为独立推理端口段，配合低时延守护机制
    隔离无线实时线程，并借助鉴权 REST/SSE 接口支撑**自定义 AI 服务**与**端网协同 AI 算法
    二次开发**。详见[端网侧 AI 扩展指南](ai-customization.zh-CN.md)。
 
@@ -51,7 +51,6 @@
 - **运行时拓扑自适应**：Spark 在运行时动态发现所属 Open5GS 网桥；Jetson Console 在打开串口前校验 RM520N-GL USB 接口描述符，并在路由切换前核验 Wi-Fi 与 `tailscale0` 管理通路。
 - **统一 Astryx UI 底座**：两端前端均基于 [`packages/console-ui`](../packages/console-ui/README.zh-CN.md)（`Astryx Core`、`Charts`、`Neutral` 主题与 `UIProvider`）构建。
 - **时效性与代次约束**：采集器随快照附加来源时间戳、进程实例代次及独立的证据时效状态（`ok`、`stale`、`unavailable`、`unsupported`），防止陈旧数据掩盖实时链路中断。
-- **品牌名与运行标识解耦**：对外展示品牌（`OpenAirKit`）与底层运行标识（`aoc-v2ctl`、`aoc-maintain`、`/opt/agentic-ocudu/`、`aoc-v2-*` 服务单元）严格隔离；详见[视觉素材与品牌替换规范](assets/README.md)。
 
 ## 技术参考入口
 

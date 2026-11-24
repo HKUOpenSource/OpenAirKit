@@ -10,8 +10,6 @@
 Spark Console 仅监听本地回环 `127.0.0.1:8877`，从工作站通过 SSH 端口转发访问
 （`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`）：
 
-<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 脱敏后的 Spark Console Overview / Devices 页面截图（须遮蔽 IMSI、主机名与 Tailnet IP） -->
-
 | 页面 | 路由 | 核心能力 |
 | --- | --- | --- |
 | Overview | `/` | 系统健康概览、数据时效性、RAN/核心网状态与在线 UE 数量 |

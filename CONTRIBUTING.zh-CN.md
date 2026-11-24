@@ -14,13 +14,13 @@ Conventional Commits。一次合并请求尽量只涉及一个应用或一项共
 - Spark 应用修改放在 `apps/spark-platform` 和 `deploy/spark`。
 - 协议栈修改放在 `stacks/ocudu` 或 `stacks/open5gs`。
 - `packages/console-ui` 只能包含不带平台业务逻辑的共享 UI 原语。
-- 退役材料保存在当前源码树之外，不得进入导入、构建或发布。
+- `archive/` 中的归档文件不得进入导入、构建或发布。
 
-不要为退役路径添加兼容导入。一次修改应同时更新导入、测试、发布清单和文档。
+移动或删除模块时，应在同一变更中同步更新导入、测试、发布清单和文档，避免添加兼容封装层。
 
 ## 文档
 
-运行时界面统一使用英文。当前架构、安装、运维、故障排查和发布文档必须提供
+运行时界面统一使用英文。架构、安装、运维、故障排查和发布文档必须提供
 英文与简体中文配对文件。命令应能从文档注明的工作目录执行；仓库文件使用相对
 链接；未实测的能力必须明确标记为未验证。
 
@@ -28,7 +28,7 @@ Conventional Commits。一次合并请求尽量只涉及一个应用或一项共
 
 开发过程中可按改动范围运行最小测试目标（`make docs-audit`、`make test-jetson-backend`、
 `make test-spark-backend` 或 `make test-stack`），提交 Pull Request 前请运行 `make ci`。
-`make ci` 会依次执行两端后端测试、协议栈与发布测试、两端前端生产构建（含 TypeScript 检查）
+`make ci` 会依次执行两端后端测试、协议栈与发布测试、两端前端 TypeScript 检查与生产构建，
 以及全套仓库边界审计。
 
 执行前请先运行 `make install-dev` 安装后端开发依赖（如使用自定义虚拟环境路径，请追加

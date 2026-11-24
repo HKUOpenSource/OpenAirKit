@@ -8,8 +8,8 @@ This module is the core-network boundary for OpenAirKit. The current release car
 - PLMN `46003`, TAC `1`, SST `1`
 - Open5GS NFs and MongoDB in a project-owned Compose deployment
 
-The stack is scoped to the single IPv4 data PDU above (excluding IMS, `ims` DNN,
-SIP, and P-CSCF). Existing vendor or IMS contexts on a UE modem are left untouched.
+The stack provides the single IPv4 data PDU profile above and leaves existing
+vendor contexts on a UE modem untouched.
 
 Open5GS 2.8.0 and MongoDB 8.0.30 are pinned in the source and artifact locks. `stacks/open5gs/compose/render.py` injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` on `mongo` so MongoDB 8.0.30 avoids TCMalloc per-CPU rseq allocation failures on Linux 7.0+ kernels. Build and Compose tooling is kept in this stack directory; production data and generated images stay outside Git.
 

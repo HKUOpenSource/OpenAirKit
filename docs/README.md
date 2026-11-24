@@ -11,7 +11,7 @@ technical references.
 | Need | Guide |
 | --- | --- |
 | Understand planes, component boundaries, isolation, and evidence semantics | [Architecture](architecture.md) |
-| Review hardware BOM, Waveshare M.2 carrier, wiring topology, and OS prerequisites | [Hardware & Topology](hardware-and-topology.md) |
+| Review full hardware BOM, wiring topology, and host prerequisites | [Hardware & Topology](hardware-and-topology.md) |
 
 ## Setup, Operations & Extensibility Guides
 
@@ -45,7 +45,7 @@ technical references.
 | Need | Document |
 | --- | --- |
 | Build, package, and audit offline ARM64 releases | [Releasing](releasing.md) |
-| Review brand naming decoupling, logo assets, hardware photos, and redaction rules | [Visual Assets & Brand Guide](assets/README.md) |
+| Review logo, diagram, hardware photo, and screenshot redaction guidelines | [Visual Assets Guide](assets/README.md) |
 | Track product capability milestones | [Product Roadmap](roadmap.md) |
 | Review redacted hardware verification baselines | [Verified Hardware Baselines](acceptance/README.md) |
 

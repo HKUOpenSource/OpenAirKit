@@ -11,8 +11,8 @@ USIM APDU reference.
 When mounted on the **Waveshare SIM8262E-M2 5G for Jetson Orin** expansion
 board over USB 3.0, the RM520N-GL enumerates under either an **RNDIS** or **ECM
 (`cdc_ether`)** USB layout. Jetson Console validates USB interface descriptors
-before opening any serial device and rejects mismatches (`ttyUSB` node numbering
-alone is non-deterministic):
+rather than `ttyUSB` node numbers before opening any serial device and rejects
+mismatches:
 
 | USB Data Driver | Data `bInterfaceNumber` | Serial `bInterfaceNumber` (`DIAG / GNSS / AT / Modem`) | Required `device.at_interface_number` |
 | --- | --- | --- | --- |

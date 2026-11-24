@@ -2,9 +2,9 @@
 
 [English](README.md)
 
-`runtime.py`、`package.py`、`libexec/` 与 `systemd/` 是独立 OCUDU/Open5GS 生命周期的现行源码，
+`runtime.py`、`package.py`、`libexec/` 与 `systemd/` 实现独立的 OCUDU/Open5GS 生命周期，
 与 Spark Console 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
-`aoc-v2ctl`。旧模板与安装器已经归档，不参与打包。
+`aoc-v2ctl`。
 
 ## 准备私有候选包
 
@@ -16,8 +16,7 @@
 c++ -std=c++17 stacks/ocudu/scripts/probe_b210.cpp -o /path/to/private-radio/probe-b210 $(pkg-config --cflags --libs uhd)
 ```
 
-Open5GS 镜像请按 [Open5GS ARM64 构建与验证](../../../stacks/open5gs/build/README.md)
-（含 `Dockerfile.n6` 与 `Dockerfile.connectivity`）准备并核验。生成带鉴权和 N6 的私有核心网包：
+Open5GS 镜像请按 [Open5GS ARM64 构建与验证](../../../stacks/open5gs/build/README.md) 准备并核验。生成带鉴权和 N6 的私有核心网包：
 
 ```sh
 python3 stacks/open5gs/compose/render.py --database-auth --n6 --output /path/to/private-core
@@ -44,7 +43,7 @@ staging 检查 ARM64 ELF 头、gNB 哈希和固定源码版本、核心网文件
 
 ## 在目标 ARM64 主机安装
 
-本地单元测试不替代目标主机安装校验与现场射频验证，正式接入前请结合实机完成核验。
+正式接入射频前，请在目标 ARM64 主机上结合实机完成安装校验与启动验证。
 
 私下传输已审阅候选包，校验独立记录的摘要；从可信 checkout 执行
 `package.py verify --source CANDIDATE`，再在 ARM64 Linux 上执行
@@ -64,9 +63,9 @@ infoAPI 确认 NG Setup 成功。启动失败保留现场；停止先核对无�
 以适配 Linux 7.0+ 内核与 MongoDB 8.0.30；`runtime.py` 默认生成 `tx_gain=80`、`rx_gain=54`
 及 `cell_cfg.pusch.max_ue_mcs=24` 的私有 `gnb.json` 配置。
 
-初始无线配置禁用遥测；另行安排 `scripts/spark/enable_radio_json_metrics.py` 事务
-安装 `127.0.0.1:8879` 回环访问保护并启用 JSON 指标（已从 `8001` 迁移以避开共驻容器，且回滚时
-会自动停止 `aoc-v2-metrics-guard.service`），再验收采集。`/dev/cpu_dma_latency` 低时延守护
+初始无线配置禁用遥测；执行 `scripts/spark/enable_radio_json_metrics.py` 在
+`127.0.0.1:8879` 安装 root-only 回环保护并启用 JSON 指标后再验收采集，回滚时自动停止
+`aoc-v2-metrics-guard.service`。`/dev/cpu_dma_latency` 低时延守护
 （`libexec/aoc-v2-cpu-latency`、`systemd/aoc-v2-cpu-latency.service`、`cpu-latency.conf`）
 及实时 CPU 绑定模板（`systemd/aoc-v2-radio.service.d/realtime.conf.example`）按站点审阅策略
 配合 [协议栈服务定义](systemd/README.zh-CN.md) 使用。

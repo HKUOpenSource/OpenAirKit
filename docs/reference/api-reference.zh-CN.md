@@ -82,7 +82,7 @@ Session Cookie + CSRF 鉴权模型，供运维面板、自动化脚本及外部 
 | --- | --- | --- | --- |
 | `/api/v1/jobs` | `GET` | Session | 列出已准备、执行中及已完成的设备任务 |
 | `/api/v1/jobs/{identifier}` | `GET` | Session | 查看单个任务的配置预览与分步结果 |
-| `/api/v1/jobs` | `POST` | Session + CSRF | 生成 Setup 或 Recover 任务计划（执行前预览变更） |
+| `/api/v1/jobs` | `POST` | Session + CSRF | 生成 Setup 或 Recover 变更计划 |
 | `/api/v1/jobs/{identifier}/run` | `POST` | Session + CSRF | 执行已准备好的设备任务 |
 | `/api/v1/jobs/{identifier}/cancel` | `POST` | Session + CSRF | 请求有界取消活动任务 |
 | `/api/v1/maintenance` | `POST` | Session + CSRF | 切换维护模式（释放 AT 串口锁并切回 Wi-Fi 备用默认路由） |

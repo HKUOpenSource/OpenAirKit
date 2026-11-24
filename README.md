@@ -49,9 +49,8 @@ both endpoints.
 - **Programmable AI extensibility at both ends**: Selecting **DGX Spark** and
   **Jetson Orin** allocates dedicated AI compute capacity at both the RAN and UE
   endpoints, complemented by reserved inference ports and authenticated REST/SSE
-  APIs for **custom AI workloads** and **user-defined AI pipelines**. *(Built-in
-  AI modules are slated for a future milestone; see the
-  [AI Extensibility Guide](docs/ai-customization.md).)*
+  APIs for **custom AI workloads** and **user-defined AI pipelines**. See the
+  [AI Extensibility Guide](docs/ai-customization.md) and [Roadmap](docs/roadmap.md).
 
 ## System Architecture
 
@@ -98,8 +97,8 @@ configured.
 | **Troubleshooting** | [Spark Troubleshooting](docs/troubleshooting-bs-spark.md) · [Jetson Troubleshooting](docs/troubleshooting-ue-jetson.md) |
 | **Technical Reference** | [Network & RF Profile](docs/reference/network-and-rf-profile.md) · [Ports & Runtime](docs/reference/ports-and-runtime.md) · [API Reference](docs/reference/api-reference.md) · [Hardware & TB01 Notes](docs/reference/hardware-notes.md) · [Glossary](docs/reference/glossary.md) |
 
-See the [full documentation index](docs/README.md) for release engineering,
-product roadmap milestones, and visual asset standards.
+See the [full documentation index](docs/README.md) for release engineering and
+roadmap milestones.
 
 ## Repository Layout
 

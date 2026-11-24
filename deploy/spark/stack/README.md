@@ -2,11 +2,10 @@
 
 [简体中文](README.zh-CN.md)
 
-`runtime.py`, `package.py`, `libexec/` and `systemd/` are the supported source for
-the independent OCUDU/Open5GS lifecycle. They install separately from Spark
-Console. The source CLI is `python3 scripts/aocctl --help`; the installed CLI
-is `aoc-v2ctl`. Retired templates and installers are archived and are not package
-inputs.
+`runtime.py`, `package.py`, `libexec/`, and `systemd/` implement the
+independent OCUDU/Open5GS lifecycle and install separately from Spark Console.
+The source CLI is `python3 scripts/aocctl --help`; the installed CLI is
+`aoc-v2ctl`.
 
 ## Prepare a private candidate
 
@@ -20,8 +19,7 @@ c++ -std=c++17 stacks/ocudu/scripts/probe_b210.cpp -o /path/to/private-radio/pro
 ```
 
 Obtain and verify the Open5GS runtime images by following
-[Open5GS ARM64 build & verification](../../../stacks/open5gs/build/README.md),
-including `Dockerfile.n6` and `Dockerfile.connectivity`.
+[Open5GS ARM64 build & verification](../../../stacks/open5gs/build/README.md).
 Generate the private authenticated N6 bundle with:
 
 ```sh
@@ -52,9 +50,8 @@ site configuration, not a shareable application archive. Never add it to Git.
 
 ## Install on the target ARM64 host
 
-Before commissioning live RF operation, perform target installation checks and
-verify service startup against physical hardware (local unit tests do not
-replace target-host or RF verification).
+Commissioning live RF operation requires target-host installation checks and
+service startup verification against physical hardware.
 
 Transfer the reviewed candidate privately and verify its independently recorded
 checksum. From a trusted checkout, run `package.py verify --source CANDIDATE`, then
@@ -80,11 +77,10 @@ The generated `compose.json` includes `GLIBC_TUNABLES=glibc.pthread.rseq=1` on
 generates the private `gnb.json` with B210 `tx_gain=80`, `rx_gain=54` and
 `cell_cfg.pusch.max_ue_mcs=24`.
 
-Telemetry is disabled in the initial radio configuration. The separate
-`scripts/spark/enable_radio_json_metrics.py` transaction installs the root-only
-nftables guard on `127.0.0.1:8879` (avoiding `8000–8002` co-located services;
-migrating legacy `8001` setups cleanly and stopping `aoc-v2-metrics-guard.service`
-on rollback) and enables JSON metrics before accepting collector telemetry.
+Telemetry is disabled in the initial radio configuration. Run
+`scripts/spark/enable_radio_json_metrics.py` to install the root-only nftables
+guard on `127.0.0.1:8879` and enable JSON metrics before accepting collector
+telemetry; rollback stops `aoc-v2-metrics-guard.service`.
 Low-latency `/dev/cpu_dma_latency` clamping (`libexec/aoc-v2-cpu-latency`,
 `systemd/aoc-v2-cpu-latency.service`, and `cpu-latency.conf`) and CPU placement
 (`systemd/aoc-v2-radio.service.d/realtime.conf.example`) are site-reviewed

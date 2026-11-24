@@ -10,8 +10,6 @@
 Jetson Console 仅绑定回环地址 `127.0.0.1:8878`，从工作站通过 SSH 端口转发访问
 （`ssh -L 8878:127.0.0.1:8878 <user>@<jetson-host>`）：
 
-<!-- ASSET_SLOT: docs/assets/screenshots/jetson-console-overview.png | 16:9 脱敏后的 Jetson Console Overview / Device Setup 页面截图（须遮蔽 IMSI、Tailnet IP、Wi-Fi IP/SSID） -->
-
 | 页面 | 路由 | 核心能力 |
 | --- | --- | --- |
 | Overview | `/` | 独立展示 USIM 就绪、小区驻留、NR SA 注册、IPv4 PDU、地址池、RNDIS/ECM 网卡、绑定探测、`management_protected` 与普通 IPv4 出口 |

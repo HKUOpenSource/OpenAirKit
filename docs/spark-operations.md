@@ -11,8 +11,6 @@ procedures on **DGX Spark**.
 Spark Console binds strictly to `127.0.0.1:8877`. Access it from your
 workstation over an SSH tunnel (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`):
 
-<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 redacted screenshot of Spark Console Overview / Devices pages (redact IMSI, hostnames, Tailnet IPs) -->
-
 | Page | Route | Capabilities |
 | --- | --- | --- |
 | Overview | `/` | System health summary, telemetry freshness, RAN/core state, and active UE count |

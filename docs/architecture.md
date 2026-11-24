@@ -40,7 +40,7 @@ orchestrator.
    `/usr/local/sbin/aoc-maintain`.
 3. **Programmable AI Extension Layer**: **DGX Spark** and **Jetson Orin**
    reserve dedicated edge and RAN-side AI compute resources at both endpoints.
-   Port allocation keeps inference ports (`8000–8002`) unallocated on Spark,
+   Port allocation reserves `8000–8002` on Spark for local inference,
    real-time CPU latency guards isolate gNB scheduling, and authenticated
    REST/SSE endpoints provide clean integration boundaries for user-defined AI
    pipelines. See [AI Extensibility Guide](ai-customization.md).
@@ -71,10 +71,6 @@ orchestrator.
   timestamps, process generation IDs, and an independent telemetry freshness
   state (`ok`, `stale`, `unavailable`, `unsupported`) so aged data never masks
   live link failures.
-- **Brand vs. runtime decoupling**: Display branding (`OpenAirKit`) remains
-  isolated from immutable runtime identifiers (`aoc-v2ctl`, `aoc-maintain`,
-  `/opt/agentic-ocudu/`, `aoc-v2-*` units); see
-  [Visual Assets & Brand Guide](assets/README.md).
 
 ## Technical References
 
