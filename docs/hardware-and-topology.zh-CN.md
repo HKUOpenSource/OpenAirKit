@@ -38,7 +38,7 @@
 | 基站与核心网主机 | **DGX Spark**（ARM64） | Ubuntu 24.04 ARM64、原生 USB 3.0 接口（接 B210）、Docker Engine + Compose |
 | 射频前端（SDR） | **Ettus USRP B210** | USB 3.0 Type-B 线缆、`n78` 频段天线（桌面近场测试建议配备 SMA 固定衰减器） |
 | UE 边缘主机 | **NVIDIA Jetson Orin**（Nano） | Ubuntu 22.04 ARM64、独立 Wi-Fi 管理链路、USB 3.0 主机端口 |
-| M.2 5G 扩展载板 | **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)** | 通过 USB 3.1/3.0 连入 Jetson Orin 的 M.2 B-Key 扩展载板，内置 Nano-SIM 卡槽、4 路 SMA 转 IPEX 天线及 3A 供电；本项目用于搭载 **Quectel RM520N-GL** 模组 |
+| M.2 5G 扩展载板 | **Waveshare SIM8262E-M2 5G for Jetson Orin** | 通过 USB 3.1/3.0 连入 Jetson Orin 的 M.2 B-Key 扩展载板，内置 Nano-SIM 卡槽、4 路 SMA 转 IPEX 天线及 3A 供电；本项目用于搭载 **Quectel RM520N-GL** 模组 |
 | 5G NR 模组 | **Quectel RM520N-GL** | 安装于上述 Waveshare M.2 B-Key 扩展载板内（支持 RNDIS 或 ECM 模式；详见[硬件附录](reference/hardware-notes.zh-CN.md)） |
 | 可编程 USIM | **5G USIM 白卡**（支持 Milenage） | 每台 UE 独占一张物理 SIM 卡与一条独立 Open5GS 订阅 |
 | 写卡器 | **PC/SC 智能卡读卡器** | 标准 USB CCID/PC/SC 读卡器，接入开户工作站使用 |
@@ -86,7 +86,7 @@ flowchart LR
 ### 物理接线核对清单
 
 1. 将 **USRP B210** 直接接入 **DGX Spark** 原生 USB 3.0 端口（避免经过无源 Hub），安装 `n78` 天线或经校验的 SMA 衰减器。
-2. 将 **Quectel RM520N-GL** 与已烧录的 Nano-SIM 装入 **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)** 载板，接好 4 根 5G 天线后连入 **Jetson Orin** 的 USB 3.0 接口。
+2. 将 **Quectel RM520N-GL** 与已烧录的 Nano-SIM 装入 **Waveshare SIM8262E-M2 5G for Jetson Orin** 载板，接好 4 根 5G 天线后连入 **Jetson Orin** 的 USB 3.0 接口。
 3. 确认 **Jetson Orin** 保持独立的 Wi-Fi 管理回退网关，并具备经由 **`tailscale0`** 到达 Spark 管理地址的可达路由。
 
 ## 主机软件前置条件

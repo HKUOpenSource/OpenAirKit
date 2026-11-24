@@ -8,7 +8,7 @@ reference.
 
 ## Quectel RM520N-GL USB Interface Layouts
 
-When mounted on the **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)**
+When mounted on the **Waveshare SIM8262E-M2 5G for Jetson Orin**
 expansion board over USB 3.0, the RM520N-GL enumerates either an **RNDIS** or
 **ECM (`cdc_ether`)** topology. Jetson Console verifies the USB interface
 descriptors before opening any serial port and rejects mismatches (`ttyUSB`

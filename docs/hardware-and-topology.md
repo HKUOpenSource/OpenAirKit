@@ -40,7 +40,7 @@ allocations, and RM520N-GL USB interface layouts, see the [Technical Reference](
 | Base station & core host | **DGX Spark** (ARM64) | Ubuntu 24.04 ARM64, native USB 3.0 port for B210, Docker Engine + Compose |
 | SDR front-end | **Ettus USRP B210** | USB 3.0 Type-B cable and Band `n78` antennas (or SMA benchtop attenuators) |
 | UE edge host | **NVIDIA Jetson Orin** (Nano) | Ubuntu 22.04 ARM64, Wi-Fi management uplink, USB 3.0 host port |
-| M.2 5G carrier board | **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)** | USB 3.1/3.0 M.2 B-Key expansion board with Nano-SIM slot, 4x SMA-to-IPEX antennas, and 3A power circuit; used as the physical carrier to mount the **Quectel RM520N-GL** module |
+| M.2 5G carrier board | **Waveshare SIM8262E-M2 5G for Jetson Orin** | USB 3.1/3.0 M.2 B-Key expansion board with Nano-SIM slot, 4x SMA-to-IPEX antennas, and 3A power circuit; used as the physical carrier to mount the **Quectel RM520N-GL** module |
 | 5G NR modem | **Quectel RM520N-GL** | Mounted inside the Waveshare M.2 B-Key carrier board (supports RNDIS or ECM mode; see [Hardware Notes](reference/hardware-notes.md)) |
 | Programmable USIM | **5G USIM** (Milenage-capable) | One independent USIM card and Open5GS subscriber per UE |
 | SIM writer | **PC/SC smartcard reader** | Standard USB CCID/PC/SC reader attached to your provisioning workstation |
@@ -88,7 +88,7 @@ flowchart LR
 ### Wiring Checklist
 
 1. Connect **USRP B210** directly to a native USB 3.0 port on **DGX Spark** (avoid unpowered hubs) and attach Band `n78` antennas or verified SMA attenuators before transmitting.
-2. Seat the **Quectel RM520N-GL** module and programmed Nano-SIM into the **[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)** board, attach all four 5G antennas, and connect it to a USB 3.0 port on **Jetson Orin**.
+2. Seat the **Quectel RM520N-GL** module and programmed Nano-SIM into the **Waveshare SIM8262E-M2 5G for Jetson Orin** board, attach all four 5G antennas, and connect it to a USB 3.0 port on **Jetson Orin**.
 3. Ensure **Jetson Orin** maintains an active Wi-Fi management link with an IPv4 fallback gateway and a **`tailscale0`** route to Spark's management address.
 
 ## Host Software Prerequisites

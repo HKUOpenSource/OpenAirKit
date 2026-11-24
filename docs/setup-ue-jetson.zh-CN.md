@@ -3,7 +3,7 @@
 [English](setup-ue-jetson.md)
 
 本指南说明如何在 **Jetson Orin** 上安装、初始化 **Jetson Console**，并可选开启针对
-**[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)**
+**Waveshare SIM8262E-M2 5G for Jetson Orin**
 载板与 **Quectel RM520N-GL** 模组的无人值守冷重启自连。
 
 ## 前置条件

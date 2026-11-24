@@ -107,7 +107,7 @@ flowchart TB
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |
 | **Spark Platform** | Base-station collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
-| **UE Host & Modem** | **Jetson Orin** + **[Waveshare M.2 5G Carrier](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
+| **UE Host & Modem** | **Jetson Orin** + **Waveshare M.2 5G Carrier** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
 | **Jetson Console** | UE modem supervision, routing failover & recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
 
 Both consoles share `@aoc/console-ui` (`packages/console-ui/`), operate strictly

@@ -5,7 +5,7 @@
 This guide covers installing, commissioning, and optionally enabling unattended
 cold-boot attachment for **Jetson Console** on **Jetson Orin** with a
 **Quectel RM520N-GL** modem mounted on the
-**[Waveshare SIM8262E-M2 5G for Jetson Orin](https://www.waveshare.net/shop/SIM8262E-M2-5G-for-Jetson-Orin.htm)**
+**Waveshare SIM8262E-M2 5G for Jetson Orin**
 expansion board.
 
 ## Prerequisites
