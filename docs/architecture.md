@@ -21,30 +21,27 @@ orchestrator.
 ## Three-Plane Model
 
 ```mermaid
-flowchart TB
+flowchart LR
   classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
   classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
   classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
 
-  subgraph AI["3. Programmable AI Extension Layer (User-Defined Pipelines)"]
-    direction LR
-    JAI["Jetson Edge AI Runtime"]:::ai
-    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
+  subgraph STACK["1. 5G SA Radio & Core Plane"]
+    RM["Quectel RM520N-GL<br/>+ USIM"]:::stack
+    GNB["OCUDU gNB +<br/>USRP B210"]:::stack
+    CORE["Open5GS 5GC"]:::stack
+    RM <== "5G NR SA" ==> GNB
+    GNB -- "N2 / N3" --> CORE
   end
 
-  subgraph MGMT["2. Local Management & Self-Recovery Plane"]
-    direction LR
+  subgraph MGMT["2. Local Management Plane"]
     JC["Jetson Console"]:::mgmt
     SP["Spark Console"]:::mgmt
   end
 
-  subgraph STACK["1. 5G SA Radio & Core Plane"]
-    direction LR
-    RM["Quectel RM520N-GL + USIM"]:::stack
-    GNB["OCUDU gNB + USRP B210"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RM <== "5G NR SA" ==> GNB
-    GNB -- "N2 / N3" --> CORE
+  subgraph AI["3. Programmable AI Layer"]
+    JAI["Jetson Edge<br/>AI Runtime"]:::ai
+    SAI["DGX Spark RAN-Side<br/>AI Runtime"]:::ai
   end
 
   RM --- JC
