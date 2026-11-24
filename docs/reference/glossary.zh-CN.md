@@ -12,3 +12,4 @@
 | **协议 `186` 路由** | Jetson Console 管理的内核协议 `186` 默认 IPv4 路由：Wi-Fi 兜底（`metric 5`）与蜂窝数据优先（`metric 10`）。 |
 | **`QMAP / MPDN`** | Quectel RM520N-GL 固件中将蜂窝 PDU 上下文与主机 RNDIS/ECM 网卡绑定的多路复用/多 PDN 规则。 |
 | **`boot_id` 防重放账本** | `boot_connect.py` 基于 Linux `/proc/sys/kernel/random/boot_id` 维护的单次开机状态记录，确保每次冷启动至多执行一次自动入网编排。 |
+| **ATR（Answer To Reset / 复位应答）** | 符合 ISO/IEC 7816 标准的智能卡上电复位响应字节串，包含传输协议参数（如 `T=0`）与厂商历史字节，用于在发送专用写卡 APDU 前核验白卡型号（例如 `TB01`）；不含任何订阅私钥或个人信息。 |

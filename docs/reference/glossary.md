@@ -12,3 +12,4 @@
 | **Protocol-186 Routing** | Default IPv4 routes managed by Jetson Console under Linux routing protocol `186`: Wi-Fi fallback (`metric 5`) and verified cellular preference (`metric 10`). |
 | **QMAP / MPDN** | Quectel RM520N-GL multiplexing/multi-PDN firmware rules mapping cellular PDU sessions to host RNDIS/ECM data interfaces. |
 | **`boot_id` Ledger** | Persistent per-boot record keyed by `/proc/sys/kernel/random/boot_id` inside `boot_connect.py` to execute unattended setup at most once per cold boot. |
+| **ATR (Answer To Reset)** | Standard ISO/IEC 7816 hex response returned by a smartcard upon power-up reset, encoding transport parameters (such as `T=0`) and manufacturer historical bytes used to verify programmable USIM models (such as `TB01`) before issuing card-specific APDU writes; contains no subscriber keys. |
