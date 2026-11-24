@@ -59,12 +59,13 @@ replace target-host or RF verification).
 Transfer the reviewed candidate privately and verify its independently recorded
 checksum. From a trusted checkout, run `package.py verify --source CANDIDATE`, then
 `sudo python3 deploy/spark/stack/package.py install --source CANDIDATE` on ARM64 Linux.
-The installer checks pinned images, volume ownership, resource conflicts and unit
-syntax. It copies into private root-owned storage, rechecks the copy and installs
-`/opt/agentic-ocudu/v2`, two V2 units and `/usr/local/bin/aoc-v2ctl`.
-It never starts/enables services, changes subscriber data or touches the monitor.
-Existing installations, units or CLI paths are rejected; this is a fresh-install
-path, not an in-place upgrade. A failed install removes only files it just created.
+The installer verifies pinned images, volume ownership, resource conflicts and
+systemd unit syntax, copies artifacts into private root-owned storage, rechecks
+the copy, and installs `/opt/agentic-ocudu/v2`, `aoc-v2-core.service`,
+`aoc-v2-radio.service`, `aoc-v2-cpu-latency.service`, and `/usr/local/bin/aoc-v2ctl`.
+Services remain stopped and disabled at boot after fresh install. Existing
+installations are never overwritten, and a failed install removes only files it
+created.
 
 Use `preflight`, `start`, `status`, `stop` with the installed controller. `prepare`
 opens the free B210 to verify its identity/gain limits, writes private configuration

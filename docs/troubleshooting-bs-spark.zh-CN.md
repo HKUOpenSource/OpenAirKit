@@ -2,58 +2,34 @@
 
 [English](troubleshooting-bs-spark.md)
 
+当 **DGX Spark** 基站或核心网侧出现异常时，可按以下现象逐项排查。
+
 ## 监测平台不可用或缺少无线指标
 
-检查 `aoc-control.service`、`aoc-observe.service`、`aoc-monitor-web.service` 与
-`127.0.0.1:8877`。端口冲突会在 `current` 链接变化前终止安装。健康接口正常但 SSE
-中断时，先检查采集新鲜度和登录过期，再决定是否重启。
+- **`127.0.0.1:8877` 无法访问或 SSE 断开**：检查 `aoc-control.service`、`aoc-observe.service`
+  与 `aoc-monitor-web.service` 状态及日志。若 `/api/v1/health` 正常而 SSE 断开，优先排查 SSH
+  隧道连通性与会话登录过期。
+- **主机与核心网指标正常但缺少 gNB 调度指标**：
+  - 执行 `ss -tna | grep :8879`，确认 `127.0.0.1:8879` 处于 `LISTEN` 且已与 `aoc-observe` 建立 `ESTAB` 连接。
+  - 执行 `sudo nft -nn list table inet aoc_v2_metrics_guard` 核验 `8879` 端口守护规则。
+  - 若网桥流量计数为空，运行 `docker network inspect aoc-v2-open5gs-core` 确认网桥接口处于活动状态。
 
-若主机与核心网指标正常但缺少 RAN 调度器指标：
+## OCUDU 无线栈启动失败
 
-- 通过 `ss -tna | grep :8879` 确认 `127.0.0.1:8879` 处于 `LISTEN`，且与 `aoc-observe`
-  已建立 `ESTAB` 连接。
-- 检查 `sudo nft -nn list table inet aoc_v2_metrics_guard`：规则应为
-  `tcp dport 8879 meta skuid != 0 reject`（不应残留在 `8001` 上，以免影响共驻容器）。
-- 若核心网网桥流量缺失，确认 `docker network inspect aoc-v2-open5gs-core` 返回有效网桥，
-  以匹配 `collector.py::bridge_interface()` 动态解析结果。
+- **进程退出或 B210 设备冲突**：运行 `aoc-v2ctl status` 并查看 `aoc-v2-radio.service` 日志，确认无其他进程占用 B210。
+- **进程在运行但 N2 未建链**：先核查 Open5GS AMF 容器健康状态，保留失败现场日志后再排查重试。
+- **配置未生效**：运行 `systemctl show aoc-v2-radio.service -p DropInPaths`，检查是否存在遗留的 `/run/systemd/system/` 临时覆盖文件屏蔽了 `runtime.py` 基线配置。
 
-## 无线栈启动失败
+## Open5GS 核心网异常
 
-运行 `aoc-v2ctl status`，检查生命周期记录和无线 journal，并确认 B210 没有其他
-持有者。区分 unit 失败与进程运行但 N2 未建立。稳定窗口失败后不要反复重启，应保留
-日志和 invocation identifier。
-
-- 检查 `systemctl show aoc-v2-radio.service -p DropInPaths`，确认不存在遗留的
-  `/run/systemd/system/aoc-v2-radio.service.d/*.conf` 临时覆盖。
-
-<details>
-<summary>早期 Schema 2 主机在 prepare 阶段报未登记文件或哈希不匹配</summary>
-
-若历史升级主机在 `/opt/agentic-ocudu/v2/` 的 `prepare` 阶段提示 `Unlisted release files`
-或清单哈希不一致，请核对 `release.json`（早期 schema 2 使用 `units/` 目录且清单中可能含
-历史备份条目，不应直接以 schema 3 `runtime.py` 整文件替换）。
-
-</details>
-
-## 核心网功能异常
-
-只检查对应容器及其依赖，记录退出码、OOM 和健康原因。N2、N3、N4、N6 是独立
-证据域，一个接口健康不能抵消另一个接口故障。
-
-若 `mongo`（8.0.30）在 Linux 7.0+ 内核（如 `7.0.0-1019-nvidia`）上因 TCMalloc
-per-CPU rseq 崩溃，核查 `/opt/agentic-ocudu/v2/core/compose.json` 中是否包含
-`GLIBC_TUNABLES=glibc.pthread.rseq=1`（仓库 `stacks/open5gs/compose/render.py` 已默认注入）。
+- 通过 `docker ps -a` 与 `docker logs` 针对性排查故障容器的退出码或 OOM 状态；N2、N3、N4、N6 需分段独立核验。
+- 若 `mongo` 在 Linux 7.0+ 内核因 TCMalloc `rseq` 分配异常退出，检查生成的 `compose.json` 是否已注入 `GLIBC_TUNABLES=glibc.pthread.rseq=1`（见[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md#主机系统与内核兼容性说明)）。
 
 ## 设备显示过期或断开
 
-对比当前 gNB 进程代次、RAN 上下文时间、核心网会话和 PDU 端点。gNB 重启前的会话
-只能作为历史，直到出现新的关联证据。旧 IP 或旧测速不能将设备标记为当前在线。
+- 在 Spark Platform 对比当前 gNB 进程代次、RAN 上下文时间戳、Open5GS 会话状态与 UE 端探测状态。gNB 重启前的会话归属历史记录，需待重启后产生新的关联证据方可恢复在线判定。
 
-## 射频错误或吞吐较低
+## 射频报错（`underflow` / `late`）或吞吐偏低
 
-在同一 gNB invocation 内比较 underflow、overflow 和 late。确认
-`aoc-v2-cpu-latency.service` 处于 `active`（保持 `/dev/cpu_dma_latency=0`），
-在有共驻推理任务的主机上核对 `realtime.conf`（CPU 亲和性与 `LimitRTPRIO=99`），并确认
-B210 `rx_gain`（`54`）与 `cell_cfg.pusch.max_ue_mcs`（`24`）。记录 RSRP、RSRQ、
-SINR、天线配置以及三次绑定 UE 接口的 benchmark。一次只修改一个无线、调度或
-运行时变量，保留回滚，并在相同物理条件下复测。
+- 确认 `aoc-v2-cpu-latency.service` 处于 `active`；若 Spark 同时运行共驻 AI 推理负载，确认已启用 `realtime.conf` 核芯隔离（参见[端口与运行时参考](reference/ports-and-runtime.zh-CN.md)）。
+- 对照[网络契约与射频基线](reference/network-and-rf-profile.zh-CN.md)核对 B210 增益与 MCS 上限，检查射频天线与衰减器连接；调参时一次仅改动一个变量并保存备份。

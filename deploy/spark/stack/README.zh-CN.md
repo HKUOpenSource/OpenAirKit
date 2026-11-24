@@ -49,10 +49,10 @@ staging 检查 ARM64 ELF 头、gNB 哈希和固定源码版本、核心网文件
 私下传输已审阅候选包，校验独立记录的摘要；从可信 checkout 执行
 `package.py verify --source CANDIDATE`，再在 ARM64 Linux 上执行
 `sudo python3 deploy/spark/stack/package.py install --source CANDIDATE`。
-安装器检查固定镜像、卷归属、资源冲突和 unit 语法，复制至 root 私有目录后再次校验，
-安装 `/opt/agentic-ocudu/v2`、两个 V2 unit 和 `/usr/local/bin/aoc-v2ctl`。
-安装不启用/启动服务，不更改订阅数据或监测平台。已有安装、unit 或 CLI 路径均拒绝覆盖；
-这是全新安装入口，不是原位升级。失败时只清理本次新建文件。
+安装器核验固定镜像、卷归属、资源冲突和 unit 语法，复制至 root 私有目录后再次校验，
+安装 `/opt/agentic-ocudu/v2`、`aoc-v2-core.service`、`aoc-v2-radio.service`、
+`aoc-v2-cpu-latency.service` 与 `/usr/local/bin/aoc-v2ctl`。全新安装后服务默认停止且
+不开启自启，不覆盖已有安装；安装失败仅清理本次新建文件。
 
 安装后使用 `preflight`、`start`、`status`、`stop`。`prepare` 会打开空闲 B210，
 核对身份/增益、写私有配置并执行 gNB dry-run；它要求核心网健康，通常作为 radio unit

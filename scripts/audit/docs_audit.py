@@ -22,6 +22,7 @@ PAIRED_DOCUMENTS = (
     "architecture",
     "hardware-and-topology",
     "quickstart",
+    "sim-provisioning",
     "ai-customization",
     "coding-agent-codegraph",
     "setup-ue-jetson",
@@ -32,6 +33,11 @@ PAIRED_DOCUMENTS = (
     "troubleshooting-bs-spark",
     "releasing",
     "roadmap",
+    "reference/network-and-rf-profile",
+    "reference/ports-and-runtime",
+    "reference/api-reference",
+    "reference/hardware-notes",
+    "reference/glossary",
 )
 STALE_PATH = re.compile(r"(?:^|[\s`(/])(?:modules/|deploy-v2(?:/|\b)|aoc_monitor\b|aoc_jetson_v2\b)")
 LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
@@ -46,9 +52,13 @@ PUBLIC_HYGIENE_PATTERNS = (
         re.compile(r"(?:The question is|Validation for this change|No \.?[Cc]ode[Gg]raph index)"),
     ),
     ("hardware or stack typo", re.compile(r"\b(?:RM250N|OCUCU)\b", re.IGNORECASE)),
+    ("vendor binary hash or reverse-engineering symbol", re.compile(r"(?:GRSIMWrite\.exe|RadLTE_)")),
+    ("Jetson Console misnamed as OCUDU", re.compile(r"\b(?:stop\s+OCUDU|full\s+OCUDU|OCUDU\s+validates)\b")),
+    ("retired telemetry port", re.compile(r"127\.0\.0\.1:8001\b")),
 )
 HYGIENE_EXEMPT_PREFIXES = ("docs/acceptance/",)
 HYGIENE_EXEMPT_FILES = {
+    "CHANGELOG.md",
     "docs/coding-agent-codegraph.md",
     "docs/coding-agent-codegraph.zh-CN.md",
 }

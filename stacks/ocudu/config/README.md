@@ -1,15 +1,23 @@
-# RAN 配置生成约定
+# RAN Configuration Generation
 
-输入以 `config/spark.example.json` 的环境结构为准，实际站点配置放在未跟踪的 `local/`，输出写入发布目录及 `/etc/agentic-ocudu/ocudu/`。当前不提供可直接发射的 gNB YAML。
+Site-specific deployment configuration lives outside Git in protected runtime
+storage rather than checked-in radio YAML files. `deploy/spark/stack/runtime.py`
+renders the OCUDU gNB configuration from `config/network-contract.json` and the
+target deployment inputs:
 
-| 输入 | OCUDU 26.04 目标配置 |
+| Deployment Input | OCUDU gNB Target Field |
 | --- | --- |
-| `network.addresses.amf` | `cu_cp.amf.addrs` |
-| `network.addresses.gnb` | `cu_cp.amf.bind_addrs` 和 `cu_up.ngu.socket[].bind_addr` |
-| PLMN / TAC / SST | AMF supported tracking areas 与 cell 配置一致 |
-| B210 序列号 | UHD device args，明确选择设备 |
-| 射频参数 | `ru_sdr`、`cell_cfg`，必须现场确认 |
+| Core AMF address | `cu_cp.amf.addrs` |
+| Local gNB N2/N3 bind address | `cu_cp.amf.bind_addrs`, `cu_up.ngu.socket[].bind_addr` |
+| PLMN / TAC / SST | `cu_cp.amf.supported_tracking_areas` and cell identity fields |
+| USRP B210 serial | UHD `device_args` |
+| RF & TDD parameters | `ru_sdr` and `cell_cfg` |
 
-必须补齐 `radio.serial`、`dl_arfcn`、增益、TDD、cell identity 和订阅匹配。OAI 的 SSB ARFCN `643392` 不能直接当作 OCUDU 的 `dl_arfcn`；OAI attenuation 也不能直接当作 UHD gain。
+Verify `radio.serial`, `dl_arfcn`, gain settings, TDD pattern, cell identity,
+and Open5GS subscriber alignment against [Network & RF Profile](../../../docs/reference/network-and-rf-profile.md)
+before field operation.
 
-JSON 指标需要评估 OCUDU `remote_control` WebSocket。该端口同时包含控制命令，默认不开启；启用时仅绑定 `127.0.0.1:8001`，不得通过网页代理或 Tailscale 直接暴露。
+When OCUDU `remote_control` JSON telemetry is enabled via
+`scripts/spark/enable_radio_json_metrics.py`, it binds strictly to loopback
+`127.0.0.1:8879` behind the root-only `aoc-v2-metrics-guard.service` firewall
+and is never exposed externally.

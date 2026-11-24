@@ -1,70 +1,35 @@
-# Jetson troubleshooting
+# Jetson Troubleshooting
 
 [简体中文](troubleshooting-ue-jetson.zh-CN.md)
 
-## Web service fails (`203/EXEC`, permission denied, or port 8878 busy)
+Use the symptom-based checks below when diagnosing issues on **Jetson Orin**.
 
-- **Port `127.0.0.1:8878` conflict**: Check `ss -tlnp | grep 8878`. If a legacy
-  console service is still enabled or running, disable and stop the conflicting
-  unit while keeping its directory backup separately for rollback, then rerun
-  `aoc-maintain start`.
-- **`status=203/EXEC` or `PermissionError` on `web.json`**: When upgraded under a
-  restrictive `umask 077`, older installers could create `venv/` as `0700` or
-  `/etc/aoc-v2-jetson/web.json` as `0600`. `deploy/jetson/manage.py` in `0.6.2+`
-  enforces `0o022` for `venv` and explicit `os.chmod(..., mode)` in
-  `private_write()`. Ensure `venv` allows non-root read/execute (`0755`/`0644`,
-  no group/world write) and `web.json` is `0640 root:aoc-v2-jetson-web`.
+## Web Service Fails to Start (`8878` Conflict or Permissions)
 
-## Executor unavailable or USB discovery rejected
+- **Port `127.0.0.1:8878` occupied**: Run `ss -tlnp | grep 8878`, stop/disable any conflicting console unit holding the port, and rerun `aoc-maintain start`.
+- **Service permission errors (`203/EXEC`)**: Confirm the installed `venv/` is readable/executable by the non-privileged service account (`0755`/`0644`, no group/world write) and `/etc/aoc-v2-jetson/web.json` has `0640 root:aoc-v2-jetson-web`.
 
-Check both units with `/usr/local/sbin/aoc-maintain status` (or `manage.py status`),
-then inspect `journalctl -u aoc-v2-jetson-device.service`. Confirm the release
-path exists, `/etc/systemd/system/aoc-v2-jetson-device.service.d` is `0755` if
-drop-ins are installed, and `device.at_interface_number` matches the active
-RM520N USB topology:
+## Device Executor Fails or USB Discovery Rejected
 
-- RNDIS (`rndis_host` at `00/01`, serials `02..05`) requires `"04"`.
-- ECM (`cdc_ether` at `04` or `0a`, serials `00..03`) requires `"02"`.
+- Run `/usr/local/sbin/aoc-maintain status` (or `manage.py status`) and inspect `journalctl -u aoc-v2-jetson-device.service`.
+- Verify `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json` matches the active RNDIS or ECM USB interface layout documented in [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-usb-interface-layouts). Update `device.json` while services are stopped, and refresh `/etc/aoc-v2-jetson/boot.json` if boot coordination is enabled.
 
-If `hardware.discover()` reports `Configured AT interface differs from USB layout; expected 02`
-or `04`, update `/etc/aoc-v2-jetson/device.json` while services are stopped and
-verify with `aoc-maintain start`. Remember to recompute `/etc/aoc-v2-jetson/boot.json`
-if `boot_connect.py` is enabled.
+## AT Serial Device Occupied
 
-## Serial device occupied
+- Enter Maintenance mode (or stop `aoc-v2-jetson-device.service`), confirm no external process holds the discovered AT port (`fuser /dev/ttyUSB*`), and verify `ModemManager.service` stays disabled and masked. Leave `/var/lib/agentic-ocudu/v2-ue/serial.lock` untouched while any process holds the port.
 
-Enter maintenance, stop the current owner and verify the process has released
-the discovered AT device (`fuser /dev/ttyUSB*`). The executor uses a process lock
-and exclusive serial open; deleting the lock without checking the process can
-create two writers. Also ensure `ModemManager.service` remains disabled/masked.
+## Registration or Data PDU Failure
 
-## Registration or PDU failure
+- Inspect Overview layers in sequence: SIM -> serving cell -> `C5GREG` registration -> context definition -> PDU activation -> interface IPv4 address.
+- If a registered modem with an active IPv4 address forwards no traffic, inspect QMAP WWAN / MPDN bindings per [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap--mpdn-firmware-check).
 
-Read SIM state, serving cell, `C5GREG`, context definitions, activation and
-address evidence in that order. A registered modem with `0.0.0.0` does not have
-a valid data session. Reconnect once only after configuration readback matches
-the network contract.
+## Data Path or Diagnostic Target Failure
 
-## Data path or diagnostic target failure
+- Verify the modem interface IPv4 address, bound host routes, and `management_protected` state (`Wi-Fi` + `tailscale0`). Always bind manual tests to the modem interface (e.g. `ping -I <modem-if> ...`); unbound pings route over Wi-Fi when cellular is not selected.
+- Check core `ext-DN` HTTP `/health` (TCP `8080`) reachability separately from registration state.
 
-Confirm the current modem interface, its IPv4 address, route to the configured
-probe target and the protected management route. Run probes bound to that
-interface; an unbound ping may have used Wi-Fi and is insufficient. Read
-registration, PDU, lab policy and management protection independently. A failed
-UPF or ext-DN ping does not mean registration was lost. The ext-DN container
-serves a fixed small `/health` response on TCP 8080; it has no throughput
-listener.
+## Boot Coordinator Stopped or Skipped
 
-## Boot coordinator stopped or skipped
-
-Inspect `journalctl -u aoc-v2-jetson-boot.service` and
-`/var/lib/aoc-v2-jetson-boot/public/status.json`. Common causes include
-`device_sha256` / `manifest_sha256` drift in `/etc/aoc-v2-jetson/boot.json`
-after an application upgrade (always refresh `boot.json` after `manage.py install`),
-an interrupted prior run that left `maintenance=true` or `uncertain-selection.json`
-for operator review, or upstream management Wi-Fi gateway ICMP rate-limiting.
-Current `boot_connect.py` tolerates transient ICMP drops by retrying a missed
-`-c 1 -W 2` probe with `ping -c 3 -i 1 -W 2` and caching positive gateway checks
-for `15.0 s` while still running `nmcli` and `inspect_management` on every call;
-if the gateway drops all packets despite a connected management interface, verify
-gateway ICMP policy or management Wi-Fi association on the host.
+- Inspect `journalctl -u aoc-v2-jetson-boot.service` and `/var/lib/aoc-v2-jetson-boot/public/status.json`.
+- **Checksum mismatch after upgrade**: Refresh `/etc/aoc-v2-jetson/boot.json` after running `manage.py install` so `device_sha256` and `manifest_sha256` match the active release.
+- **Gateway ICMP rate limiting**: Check management Wi-Fi association and upstream gateway ICMP policy if multi-probe retries fail despite an active management link.

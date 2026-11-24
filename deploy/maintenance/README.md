@@ -43,12 +43,12 @@ platform first; after an install failure, inspect status and use the saved rollb
 checkpoint when available. Rollback is limited to the checkpoint created by this
 helper's installation. New installs without existing authentication are rejected.
 
-This approval covers the exact packaged release. Future changed release code needs
-another administrator-approved bundle; a checksum by itself does not establish
-trust in arbitrary code. Existing administration access is unchanged. To revoke this permission without disturbing general administrator access,
-remove `/etc/sudoers.d/aoc-maintenance`. Existing maintenance installations
-refuse overwrites unless `--replace-approval PREVIOUS_SHA256` is passed; the
-bootstrap verifies the previous protected payload, helper, account and role,
-holds the maintenance lock, backs up the prior access files, and restores them
-if activation fails. System Wi-Fi management remains outside this allowlist and
-requires standard administrator privileges.
+This approval covers the exact packaged release; updated release artifacts
+require a new administrator-approved bundle. Existing administration access
+remains unchanged. To revoke this permission without disturbing general
+administrator access, remove `/etc/sudoers.d/aoc-maintenance`. Existing
+maintenance installations refuse overwrites unless `--replace-approval PREVIOUS_SHA256`
+is passed; the bootstrap verifies the previous protected payload, helper,
+account and role, holds the maintenance lock, backs up the prior access files,
+and restores them if activation fails. System Wi-Fi management remains outside
+this allowlist and requires standard administrator privileges.

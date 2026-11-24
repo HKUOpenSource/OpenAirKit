@@ -2,89 +2,54 @@
 
 [简体中文](ai-customization.zh-CN.md)
 
-## Current Scope and Hardware Intent
+**DGX Spark** (gNB/Core side) and **Jetson Orin** (UE side) were intentionally
+selected to reserve GPU and edge compute capacity at both ends of the 5G SA
+link. Built-in AI agents and models are planned for a future milestone; today the
+platform provides dedicated compute headroom, real-time isolation, and
+authenticated local APIs so developers and researchers can build and deploy DIY
+AI modules cleanly alongside the radio and core stack.
 
-> [!IMPORTANT]
-> **Built-in AI modules are not yet implemented in this repository.**
-> Today, Agentic-OCUDU ships the reproducible 5G SA communication stack
-> (OCUDU + Open5GS), two decoupled management platforms (**Spark Platform** and
-> **Jetson Console**), structured telemetry streams, bounded control endpoints,
-> and host-level resource isolation.
->
-> **DGX Spark** (gNB/Core side) and **Jetson Orin** (UE side) were specifically
-> chosen to reserve local compute capacity at both ends so developers and
-> researchers can DIY and deploy custom AI capabilities alongside the 5G stack.
+## Design Principles for DIY AI Modules
 
-## Design Principles for Custom AI Modules
-
-Any user-developed AI module (inference service, anomaly detector, closed-loop
-scheduler advisor, or ops agent) should preserve the platform's boundaries:
-
-1. **Local-state autonomy**:
-   - Modules on **DGX Spark** consume only base-station/core telemetry and act on Spark-local controls.
-   - Modules on **Jetson Orin** consume only UE-local telemetry and act on Jetson-local controls.
-   - Do not build a shared global control layer that tightly couples device recovery state across hosts.
-2. **Evidence freshness before action**:
-   - Both consoles attach source timestamps and evidence quality (`ok`, `stale`, `unavailable`, `unsupported`) to state snapshots. Never trigger automated changes from `stale` or `unavailable` snapshots.
-3. **Bounded execution and hardware exclusivity**:
-   - Route operational actions through authenticated console APIs (`/api/v1/control` on Spark, `/api/v1/jobs` and `/api/v1/maintenance` on Jetson) rather than bypassing serial locks or issuing raw Docker mutations.
+1. **Local-host autonomy**: Modules on **DGX Spark** consume base-station/core
+   telemetry and act on Spark controls (`127.0.0.1:8877`); modules on
+   **Jetson Orin** consume UE telemetry and act on Jetson jobs
+   (`127.0.0.1:8878`). Keep decision loops local without introducing shared
+   cross-host control coupling.
+2. **Freshness-gated inference**: Inspect source timestamps and evidence
+   quality (`ok`, `stale`, `unavailable`, `unsupported`) before acting on a
+   snapshot; trigger operational mutations only when quality is `ok`.
+3. **Bounded execution & hardware isolation**: Issue mutations exclusively
+   through authenticated REST endpoints rather than bypassing the Jetson AT
+   serial lock or mutating Open5GS containers directly.
 
 ## Compute, Port and Real-Time Isolation
 
-### gNB / Core Side (`DGX Spark`)
+- **DGX Spark (gNB / Core side)**:
+  - **Inference port headroom (`8000–8002`)**: OCUDU JSON metrics bind to `127.0.0.1:8879` behind `aoc-v2-metrics-guard.service`, leaving `127.0.0.1:8000–8002` free for co-located LLM/vLLM or ML inference containers. Unprivileged AI services consume Spark Platform (`127.0.0.1:8877`).
+  - **Real-time radio protection**: Retain `aoc-v2-cpu-latency.service` and configure CPU affinity (`realtime.conf`) when running heavy co-located inference jobs so OCUDU real-time threads never suffer USB 3.0 underflows or late frames.
+- **Jetson Orin (UE side)**:
+  - **Exclusive serial & route ownership**: Custom UE agents read telemetry and trigger workflows through Jetson Console (`127.0.0.1:8878`), preserving `/var/lib/agentic-ocudu/v2-ue/serial.lock` and protocol-186 Wi-Fi management protection.
 
-- **Inference port space (`127.0.0.1:8000–8002`) is free**:
-  OCUDU's loopback JSON remote-control metrics port was deliberately moved to `127.0.0.1:8879` so co-located inference engines (such as local LLM/vLLM containers) can occupy `8000–8002` without collision.
-- **Port `8879` guard**:
-  `aoc-v2-metrics-guard.service` applies `table inet aoc_v2_metrics_guard` to allow only `uid == 0` clients on `ws://127.0.0.1:8879`. Unprivileged AI services should subscribe to **Spark Platform** (`127.0.0.1:8877`) instead of opening `8879` directly.
-- **Protecting real-time B210/OCUDU timing**:
-  Keep `aoc-v2-cpu-latency.service` (`/dev/cpu_dma_latency=0`) enabled and configure CPU isolation (`systemd/aoc-v2-radio.service.d/realtime.conf.example` with `CPUAffinity` and `LimitRTPRIO=99`) before running heavy CPU/GPU workloads on Spark, preventing USB 3.0 underflows or late frames.
+Full port allocations, latency guards, and serial lock paths are detailed in
+[Ports & Runtime Reference](reference/ports-and-runtime.md).
 
-### UE Side (`Jetson Orin`)
-
-- **Exclusive modem serial lock**:
-  `aoc-v2-jetson-device.service` guards AT serial access with `/var/lib/agentic-ocudu/v2-ue/serial.lock`. Custom UE-side AI services must query Jetson Console APIs (`127.0.0.1:8878`) or enter maintenance mode (`POST /api/v1/maintenance`) before any external modem access.
-- **Management routing preservation**:
-  Do not alter protocol-186 defaults (Wi-Fi fallback metric `5`, cellular metric `10`) outside Jetson Console so SSH/Tailscale access remains protected even if a custom AI experiment interrupts cellular connectivity.
-
-## Telemetry and Control Integration Surfaces
-
-### gNB & Core Side — Spark Platform (`127.0.0.1:8877`)
-
-| Direction | Endpoint | Purpose for DIY AI Modules |
-| --- | --- | --- |
-| Auth | `POST /api/v1/login`, `GET /api/v1/session`, `POST /api/v1/logout` | Session cookie + CSRF token for authenticated reads and controls |
-| Live State | `GET /api/v1/snapshot`, `GET /api/v1/stream` (SSE) | Poll or subscribe in real time to host, B210, gNB, N2, Open5GS NFs, interfaces and devices |
-| Metrics & History | `GET /api/v1/devices`, `GET /api/v1/devices/{identifier}`, `GET /api/v1/devices/{identifier}/metrics`, `GET /api/v1/components/{identifier}/metrics`, `GET /api/v1/history`, `GET /api/v1/history/catalog` | Time-series KPI inputs for anomaly detection, forecasting or RL/agent context |
-| Events & Diagnostics | `GET /api/v1/events`, `GET /api/v1/events/kinds`, `GET /api/v1/diagnostics` | Structured fault history and subsystem health diagnostics |
-| Bounded Control & Audit | `GET/POST /api/v1/control`, `GET /api/v1/control/{identifier}`, `POST /api/v1/control/{identifier}/cancel`, `GET /api/v1/audit` | Execute allow-listed lifecycle tasks with concurrency locks and persistent audit trails |
-
-### UE Side — Jetson Console (`127.0.0.1:8878`)
-
-| Direction | Endpoint | Purpose for DIY AI Modules |
-| --- | --- | --- |
-| Auth | `POST /api/v1/auth/login`, `GET /api/v1/auth/session`, `POST /api/v1/auth/logout` | Session cookie + CSRF token for local UE automation |
-| Live State | `GET /api/v1/status`, `GET /api/v1/config`, `GET /api/v1/events/stream` (SSE) | Poll or subscribe to SIM, cell camping, NR SA registration, PDU, routing and recovery state |
-| Metrics & Diagnostics | `GET /api/v1/metrics`, `GET /api/v1/history`, `GET /api/v1/diagnostics` | Passive RX/TX rate history, bound probe latencies, and task execution history |
-| Bounded Actions | `GET/POST /api/v1/jobs`, `GET /api/v1/jobs/{identifier}`, `POST /api/v1/jobs/{identifier}/run`, `POST /api/v1/jobs/{identifier}/cancel`, `POST /api/v1/maintenance` | Trigger bounded Device Setup, Recover or Maintenance transitions safely |
-
-## Recommended DIY Integration Loop
+## Integration Loop & API Surface
 
 ```mermaid
 flowchart LR
-  OBS["Subscribe via REST / SSE (8877 or 8878)"] --> VAL["Check Freshness & Evidence Quality"]
-  VAL --> INF["Run Local Model / Agent on Spark or Jetson Compute"]
-  INF --> ACT["Call Bounded API (/api/v1/control or /api/v1/jobs)"]
-  ACT --> AUD["Verify Outcome in /api/v1/audit or /api/v1/history"]
+  OBS["Subscribe via REST / SSE"] --> VAL["Verify Evidence Quality"]
+  VAL --> INF["Run Local Inference on Spark / Jetson"]
+  INF --> ACT["Invoke Bounded Control / Job API"]
+  ACT --> AUD["Inspect Audit / History Outcome"]
 ```
 
-### Example DIY Directions (Not Bundled Today)
+All authenticated telemetry streams (`GET /api/v1/stream`, `GET /api/v1/snapshot`,
+`GET /api/v1/status`, `GET /api/v1/events/stream`) and bounded control actions
+(`POST /api/v1/control`, `POST /api/v1/jobs`, `POST /api/v1/maintenance`) are
+documented in the [REST & SSE API Reference](reference/api-reference.md).
 
-Once your 5G SA baseline is verified via the [Quickstart](quickstart.md), common DIY extensions you can build independently on each host include:
+### Research & Extension Directions
 
-- **On DGX Spark (gNB/Core side)**:
-  - An LLM-assisted operations diagnostic agent co-located on `8000–8002` that reads Spark SSE/history/events and explains N2/N3 anomalies or RF degradation.
-  - Custom ML telemetry pipelines consuming `/api/v1/devices/{identifier}/metrics` and `/api/v1/components/{identifier}/metrics` for multi-UE throughput/MCS trend analysis.
-- **On Jetson Orin (UE side)**:
-  - Edge AI applications that adapt inference/offloading behavior (local vs. Spark over 5G vs. Wi-Fi fallback) based on real-time `/api/v1/status` and `/api/v1/events/stream` link quality.
-  - Custom recovery policies layered cleanly on top of `/api/v1/jobs` while honoring cooldowns and management protection.
+- **On DGX Spark (gNB/Core side)**: Co-locate an LLM ops/diagnostic agent on `8000–8002` consuming Spark SSE, events, and KPI time series (`devices/{id}/metrics`, `components/{id}/metrics`), or build RAN anomaly and multi-UE scheduling analyzers.
+- **On Jetson Orin (UE side)**: Build link-aware edge inference applications that adapt local execution vs. 5G offloading to Spark using `/api/v1/status` and `/api/v1/events/stream`, or layer domain-specific recovery policies on top of `/api/v1/jobs`.

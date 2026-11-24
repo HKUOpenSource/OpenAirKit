@@ -50,7 +50,7 @@ rebranding does not break deployed hosts or systemd units:
 | Layer | Examples | Rebranding Impact |
 | --- | --- | --- |
 | **Display Brand Name & Visuals** | Hero title, SVG logo, badges, overview descriptions | Update `README.md`, `README.zh-CN.md`, `docs/README*.md`, `docs/architecture*.md`, `docs/hardware-and-topology*.md`, `docs/quickstart*.md`, `docs/ai-customization*.md`, `docs/assets/brand/` |
-| **Component Role Names** | `Spark Platform`, `Jetson Console`, `5G SA Stack` | Keep stable across prose to minimize cross-file coupling |
+| **Component Role Names** | `Spark Platform`, `Jetson Console`, `5G SA Stack` | Keep stable across prose (`L1`/`L2`/`L3` guides) to minimize cross-file coupling |
 | **Stable System Identifiers** | `aoc-v2ctl`, `aoc-maintain`, `/opt/agentic-ocudu/`, `aoc-v2-*.service`, `aoc_jetson`, `aoc_spark` | Do **not** rename silently in docs without a coordinated code + package release |
 
 ## Registered `ASSET_SLOT` Placements
