@@ -57,7 +57,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | Layer | Examples | Rebranding Impact |
 | --- | --- | --- |
 | **Display Brand Name & Visuals** | Hero title, SVG/PNG logo, badges, overview descriptions | Update `README.md`, `README.zh-CN.md`, `docs/README*.md`, `docs/architecture*.md`, `docs/hardware-and-topology*.md`, `docs/quickstart*.md`, `docs/ai-customization*.md`, `docs/assets/brand/` |
-| **Component Role Names** | `Spark Console`, `Jetson Console`, `5G SA Stack` | Keep consistent across prose (`L1`/`L2`/`L3` guides) to minimize cross-file drift |
+| **Component Role Names** | `Spark Console`, `Jetson Console`, `5G SA Stack` | Keep consistent across all guides to minimize cross-file drift |
 | **Immutable Runtime Identifiers** | `aoc-v2ctl`, `aoc-maintain`, `/opt/agentic-ocudu/`, `aoc-v2-*.service`, `aoc_jetson`, `aoc_spark` | Do **not** rename in docs without a coordinated code and package release |
 
 ## Registered Visual Assets & Remaining `ASSET_SLOT` Placements

@@ -6,14 +6,14 @@ This directory holds the canonical platform documentation, structured from
 high-level architecture down to operational procedures and single-source
 technical references.
 
-## Overview & Architecture (`L1`)
+## Overview & Architecture
 
 | Need | Guide |
 | --- | --- |
 | Understand planes, component boundaries, isolation, and evidence semantics | [Architecture](architecture.md) |
 | Review hardware BOM, Waveshare M.2 carrier, wiring topology, and OS prerequisites | [Hardware & Topology](hardware-and-topology.md) |
 
-## Setup, Operations & Extensibility Guides (`L2`)
+## Setup, Operations & Extensibility Guides
 
 | Need | Guide |
 | --- | --- |
@@ -30,7 +30,7 @@ technical references.
 | Diagnose base-station or core issues | [Spark Troubleshooting](troubleshooting-bs-spark.md) |
 | Diagnose UE, modem, or routing issues | [Jetson Troubleshooting](troubleshooting-ue-jetson.md) |
 
-## Technical Reference & Appendices (`L3`)
+## Technical Reference & Appendices
 
 | Topic | Reference |
 | --- | --- |
