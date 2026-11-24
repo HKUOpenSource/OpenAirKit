@@ -144,12 +144,7 @@ export const fieldLabel = (s: string) =>
 export const text = (s: string) =>
   labels[s] || (s.includes("_") ? fieldLabel(s) : s);
 export const when = (s?: string) =>
-  s
-    ? new Date(s).toLocaleString("en-GB", {
-        hour12: false,
-        timeZone: "Asia/Hong_Kong",
-      }) + " HKT"
-    : "—";
+  s ? new Date(s).toLocaleString() : "—";
 export const names: Record<string, string> = {
   cpu_usage: "Host CPU",
   cpu_cores: "CPU cores used",

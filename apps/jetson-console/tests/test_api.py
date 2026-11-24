@@ -61,8 +61,24 @@ class ApiTests(unittest.TestCase):
         return {"x-csrf-token": response.json()["csrf"]}
 
     def test_health_is_public_and_device_failure_does_not_fail_web_health(self):
-        self.assertEqual(self.client.get("/api/v1/health").status_code, 200)
+        health = self.client.get("/api/v1/health")
+        self.assertEqual(health.status_code, 200)
+        self.assertEqual(health.headers.get("x-frame-options"), "DENY")
         self.assertEqual(self.client.get("/api/v1/status").status_code, 401)
+
+    def test_untrusted_host_and_body_size_limits(self):
+        self.assertEqual(
+            self.client.get("/api/v1/health", headers={"host": "evil.example"}).status_code,
+            400,
+        )
+        self.assertEqual(
+            self.client.post("/api/v1/auth/login", headers={"content-length": "abc"}, content=b"").status_code,
+            400,
+        )
+        self.assertEqual(
+            self.client.post("/api/v1/auth/login", json={"password": "x" * 9000}).status_code,
+            413,
+        )
 
     def test_login_csrf_origin_and_logout(self):
         headers = self.login()
