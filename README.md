@@ -9,10 +9,11 @@
 <p><strong>Open-Source End-to-End 5G SA &amp; AI-RAN Experimental Platform</strong></p>
 
 <p>
-  <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Console: 1.0.0" src="https://img.shields.io/badge/Spark_Console-1.0.0-blue">
-  <img alt="Jetson Console: 1.0.0" src="https://img.shields.io/badge/Jetson_Console-1.0.0-blue">
-  <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
+  <a href="CHANGELOG.md"><img alt="Version: 1.0.0" src="https://img.shields.io/badge/version-1.0.0-blue"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-green"></a>
+  <a href="docs/architecture.md"><img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen"></a>
+  <a href="docs/ai-customization.md"><img alt="AI-RAN: Testbed" src="https://img.shields.io/badge/AI--RAN-Testbed-6f42c1"></a>
+  <a href="https://github.com/HKUOpenSource/OpenAirKit/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/HKUOpenSource/OpenAirKit/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
 <p>
@@ -22,7 +23,8 @@
   <a href="docs/architecture.md">Architecture</a> ·
   <a href="docs/hardware-and-topology.md">Hardware</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="docs/README.md">Docs</a>
+  <a href="docs/README.md">Docs</a> ·
+  <a href="LICENSE">License</a>
 </p>
 
 </div>
@@ -102,10 +104,11 @@ configured.
 
 | Category | Guides |
 | --- | --- |
-| **Start Here** | [Hardware & Topology](docs/hardware-and-topology.md) · [End-to-End Quickstart](docs/quickstart.md) · [Architecture](docs/architecture.md) |
+| **Start Here** | [Hardware & Topology](docs/hardware-and-topology.md) · [End-to-End Quickstart](docs/quickstart.md) · [Architecture](docs/architecture.md) · [Architecture Decisions](docs/adr/README.md) |
 | **Deployment & Provisioning** | [Spark Setup](docs/setup-bs-spark.md) · [Stack Deployment](deploy/spark/stack/README.md) · [SIM Provisioning](docs/sim-provisioning.md) · [Jetson Setup](docs/setup-ue-jetson.md) |
 | **Operations & AI Extensibility** | [Spark Operations](docs/spark-operations.md) · [Jetson Operations](docs/jetson-operations.md) · [AI Extensibility Guide](docs/ai-customization.md) |
 | **Troubleshooting** | [Spark Troubleshooting](docs/troubleshooting-bs-spark.md) · [Jetson Troubleshooting](docs/troubleshooting-ue-jetson.md) |
+| **Development & Releases** | [Developer Guide](docs/development.md) · [Releasing](docs/releasing.md) · [Changelog](CHANGELOG.md) |
 | **Technical Reference** | [Network & RF Profile](docs/reference/network-and-rf-profile.md) · [Ports & Runtime](docs/reference/ports-and-runtime.md) · [API Reference](docs/reference/api-reference.md) · [Hardware & TB01 Notes](docs/reference/hardware-notes.md) · [Glossary](docs/reference/glossary.md) |
 
 See the [full documentation index](docs/README.md) for release engineering and
@@ -131,6 +134,33 @@ make check
 ```
 
 Pass `VENV=local/dev-venv` to both targets when using a custom virtual
-environment path. Review [Contributing](CONTRIBUTING.md),
-[Security Policy](SECURITY.md), and [Releasing](docs/releasing.md) before
-submitting changes or cutting release artifacts.
+environment path. Review the [Developer Guide](docs/development.md),
+[Contributing](CONTRIBUTING.md), [Security Policy](SECURITY.md), and
+[Releasing](docs/releasing.md) before submitting changes or cutting release
+artifacts.
+
+## Citation
+
+If OpenAirKit supports your research or testbed work, please cite:
+
+> Wang, Z. (2026). OpenAirKit (Version 1.0.0) [Computer software]. https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0
+
+```bibtex
+@software{wang2026openairkit,
+  author  = {Wang, Zhaolin},
+  title   = {OpenAirKit},
+  version = {1.0.0},
+  year    = {2026},
+  url     = {https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0},
+  license = {Apache-2.0}
+}
+```
+
+Machine-readable citation metadata is available in [`CITATION.cff`](CITATION.cff).
+
+## License
+
+OpenAirKit repository code is released under the **Apache License 2.0**. See
+[`LICENSE`](LICENSE) for the full license text and
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for third-party dependency
+notices and upstream RAN/5GC component boundaries.
