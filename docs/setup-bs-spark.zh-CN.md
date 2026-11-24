@@ -2,7 +2,7 @@
 
 [English](setup-bs-spark.md)
 
-本指南说明如何在 **DGX Spark** 上安装 **Spark Platform** 与 **OCUDU + Open5GS**
+本指南说明如何在 **DGX Spark** 上安装 **Spark Console** 与 **OCUDU + Open5GS**
 基站及核心网协议栈。硬件清单、端口规划与内核兼容性说明请参阅[硬件清单与拓扑](hardware-and-topology.zh-CN.md)
 及[端口与运行时参考](reference/ports-and-runtime.zh-CN.md)。
 
@@ -17,10 +17,10 @@
 
 - **主机环境**：DGX Spark（ARM64、Ubuntu 24.04、Python 3.12、`systemd`、Docker Engine 与 Compose 插件）。
 - **射频前端**：Ettus **USRP B210** 直连原生 USB 3.0 端口。
-- **回环端口**：确认 `8877`（Spark Platform）与 `8879`（OCUDU JSON 指标）空闲；`8000–8002` 作为独立预留推理端口段保持留空。
+- **回环端口**：确认 `8877`（Spark Console）与 `8879`（OCUDU JSON 指标）空闲；`8000–8002` 作为独立预留推理端口段保持留空。
 - **锁定输入**：核验 `stacks/open5gs/artifacts.lock.json`、`stacks/open5gs/sources.lock.json`、`config/upstreams.json` 及 `config/network-contract.json`；订阅凭据须保存在 Git 之外的受保护目录中。
 
-## 1. 安装 Spark Platform
+## 1. 安装 Spark Console
 
 通过 `make build-spark-release` 构建 ARM64 离线包并传输解压至 Spark，依次运行完整性
 校验、主机预检与安装（首次安装将交互提示设置不少于 12 位的 Web 密码并经哈希后写入

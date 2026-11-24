@@ -2,7 +2,7 @@
 
 [简体中文](setup-bs-spark.zh-CN.md)
 
-This guide covers installing **Spark Platform** and the **OCUDU + Open5GS**
+This guide covers installing **Spark Console** and the **OCUDU + Open5GS**
 base-station protocol stack on **DGX Spark**. Hardware BOM items, port
 allocations, and kernel compatibility notes reside in
 [Hardware & Topology](hardware-and-topology.md) and
@@ -19,10 +19,10 @@ allocations, and kernel compatibility notes reside in
 
 - **Host**: DGX Spark (ARM64, Ubuntu 24.04, Python 3.12, `systemd`, Docker Engine with Compose).
 - **SDR**: Ettus **USRP B210** attached directly to a native USB 3.0 host port.
-- **Ports**: Confirm loopback ports `8877` (Spark Platform) and `8879` (OCUDU JSON metrics) are free; ports `8000–8002` remain reserved inference ports unallocated by the 5G stack.
+- **Ports**: Confirm loopback ports `8877` (Spark Console) and `8879` (OCUDU JSON metrics) are free; ports `8000–8002` remain reserved inference ports unallocated by the 5G stack.
 - **Locked build inputs**: Verify Open5GS digests (`stacks/open5gs/artifacts.lock.json`), Open5GS source revisions (`stacks/open5gs/sources.lock.json`), OCUDU revision (`config/upstreams.json`), and site contract (`config/network-contract.json`). Retain subscriber secrets in protected deployment storage outside Git.
 
-## 1. Install Spark Platform
+## 1. Install Spark Console
 
 Generate the ARM64 release archive via `make build-spark-release`, transfer and
 unpack it on Spark, and execute archive verification, host compatibility checks,

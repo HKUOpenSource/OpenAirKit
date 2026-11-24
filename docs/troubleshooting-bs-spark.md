@@ -25,7 +25,7 @@ Use the symptom-based checks below when diagnosing issues on **DGX Spark**.
 
 ## Stale or Disconnected UE State
 
-- Compare the active gNB process generation ID, RAN context timestamp, Open5GS PDU session, and UE probe status in Spark Platform. Sessions recorded under an earlier gNB process generation remain historical until post-restart correlation telemetry arrives.
+- Compare the active gNB process generation ID, RAN context timestamp, Open5GS PDU session, and UE probe status in Spark Console. Sessions recorded under an earlier gNB process generation remain historical until post-restart correlation telemetry arrives.
 
 ## RF Errors (`underflow` / `late`) or Low Throughput
 

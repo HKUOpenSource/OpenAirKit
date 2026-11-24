@@ -27,7 +27,7 @@
 
 ## UE 状态显示陈旧或离线
 
-- 在 Spark Platform 中对比当前 gNB 进程实例代次（Generation ID）、RAN 上下文时间戳、Open5GS 会话状态与 UE 端探测状态。gNB 重启前采集的会话属于历史记录，须待重启后生成新的关联证据方可恢复在线状态。
+- 在 Spark Console 中对比当前 gNB 进程实例代次（Generation ID）、RAN 上下文时间戳、Open5GS 会话状态与 UE 端探测状态。gNB 重启前采集的会话属于历史记录，须待重启后生成新的关联证据方可恢复在线状态。
 
 ## 射频报错（`underflow` / `late`）或吞吐偏低
 

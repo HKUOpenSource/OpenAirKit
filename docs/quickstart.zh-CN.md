@@ -3,7 +3,7 @@
 [English](quickstart.md)
 
 本指南说明如何从硬件装配到业务验通，完成跨主机全链路 **5G SA** 数据通路部署，并通过
-**Spark Platform** 与 **Jetson Console** 实现双端纳管。
+**Spark Console** 与 **Jetson Console** 实现双端纳管。
 
 ## 跨主机全链路部署流程
 
@@ -20,7 +20,7 @@ flowchart TD
 
   subgraph SPARK["DGX Spark"]
     S1A["构建并安装 5G 协议栈"]:::spark
-    S1B["安装 Spark Platform"]:::spark
+    S1B["安装 Spark Console"]:::spark
     S1C["启用指标并启动服务"]:::spark
     S2A["Open5GS 添加独立订阅"]:::spark
     S1A --> S1B --> S1C --> S2A
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## 第 1 步 — 部署 Spark 5G 协议栈与 Spark Platform
+## 第 1 步 — 部署 Spark 5G 协议栈与 Spark Console
 
 在 **DGX Spark** 上执行：
 
@@ -68,7 +68,7 @@ flowchart TD
      docker build -f stacks/open5gs/build/Dockerfile.connectivity -t aoc-open5gs-connectivity:local .
      ```
      核对镜像标签与摘要同 `stacks/open5gs/artifacts.lock.json` 一致后，按[Spark 协议栈部署](../deploy/spark/stack/README.zh-CN.md)渲染编排（`--database-auth --n6`）、初始化 MongoDB 并安装 `aoc-v2ctl`。
-2. **安装 Spark Platform**：
+2. **安装 Spark Console**：
    上传并解压 Spark 离线包，依次完成包校验、主机预检与安装（首次安装将交互提示设置不少于 12 位的 Web 密码）：
    ```sh
    python3 -I -B install.py verify --path .
@@ -124,7 +124,7 @@ flowchart TD
 
 1. **核对双端运行状态**：
    - **Jetson Overview（`127.0.0.1:8878`）**：确认 SIM 就绪、NR SA 注册成功、已分配活动 IPv4 PDU、绑定数据探测通过、蜂窝优先路由生效且 `management_protected = true`。
-   - **Spark Platform（`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`）**：确认实时无线遥测、关联 UE RNTI 上下文、活动 PDU 会话及 N3/N6 网桥计数持续更新。
+   - **Spark Console（`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`）**：确认实时无线遥测、关联 UE RNTI 上下文、活动 PDU 会话及 N3/N6 网桥计数持续更新。
 2. **可选进阶配置**：
    - 启用受限免密运维脚本（`~/aoc-ops/*/start.sh`）：参阅[维护助手指南](../deploy/maintenance/README.zh-CN.md)。
    - 启用无人值守冷重启自连（`boot_connect.py`）：参阅[Jetson Console 安装指南](setup-ue-jetson.zh-CN.md#3-可选的开机协调)。

@@ -2,7 +2,7 @@
 
 [English](api-reference.md)
 
-本文档汇总 **Spark Platform** 与 **Jetson Console** 开放的 HTTP 及 Server-Sent Events
+本文档汇总 **Spark Console** 与 **Jetson Console** 开放的 HTTP 及 Server-Sent Events
 （SSE）接口规范。两端接口均严格绑定本地回环地址（`127.0.0.1`），并采用统一的
 Session Cookie + CSRF 鉴权模型，供运维面板、自动化脚本及外部 AI 客户端集成调用。
 
@@ -15,7 +15,7 @@ Session Cookie + CSRF 鉴权模型，供运维面板、自动化脚本及外部 
 
 ---
 
-## Spark Platform 接口（`127.0.0.1:8877`）
+## Spark Console 接口（`127.0.0.1:8877`）
 
 ### 健康检查与鉴权
 

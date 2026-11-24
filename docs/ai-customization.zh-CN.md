@@ -23,7 +23,7 @@
 - **DGX Spark（基站 / 核心网侧）**：
   - **独立预留推理端口段（`8000–8002`）**：OCUDU JSON 指标绑定在 `127.0.0.1:8879`
     并受 `aoc-v2-metrics-guard.service` 防火墙守护，将 `127.0.0.1:8000–8002` 完整保留给
-    共驻本地 LLM/vLLM 或机器学习推理容器。非特权 AI 服务统一对接 **Spark Platform**
+    共驻本地 LLM/vLLM 或机器学习推理容器。非特权 AI 服务统一对接 **Spark Console**
     （`127.0.0.1:8877`）。
   - **无线实时性保护**：运行高负载推理任务时，须保持 `aoc-v2-cpu-latency.service` 处于
     激活状态，并按 `realtime.conf` 配置 CPU 核芯隔离，确保 OCUDU 实时线程不发生 USB 3.0

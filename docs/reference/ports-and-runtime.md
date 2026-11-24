@@ -13,7 +13,7 @@ are accessed remotely via SSH port forwarding (`ssh -L ...`).
 
 | Port | Owner / Service | Access Policy & Isolation |
 | --- | --- | --- |
-| `127.0.0.1:8877` | Spark Platform (`aoc-monitor-web.service`) | Authenticated Astryx Web Console, REST API, and SSE stream (`/api/v1/stream`) |
+| `127.0.0.1:8877` | Spark Console (`aoc-monitor-web.service`) | Authenticated Astryx Web Console, REST API, and SSE stream (`/api/v1/stream`) |
 | `127.0.0.1:8878` | Jetson Console (`aoc-v2-jetson-web.service`) | Authenticated Astryx Web Console, REST API, and SSE stream (`/api/v1/events/stream`) |
 | `127.0.0.1:8879` | OCUDU gNB JSON metrics (`ws://127.0.0.1:8879`) | Root-only loopback firewall guard (`aoc-v2-metrics-guard.service`) consumed by `aoc-observe.service` |
 | `127.0.0.1:8000–8002` | Reserved Inference Ports on **DGX Spark** | Unallocated by the 5G stack so co-located AI inference containers (such as vLLM) execute without port contention |

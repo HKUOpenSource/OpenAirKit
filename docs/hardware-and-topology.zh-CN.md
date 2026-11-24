@@ -9,7 +9,7 @@
 ## 端网双端异构算力设计
 
 - **gNB / 核心网侧（`DGX Spark` + `USRP B210`）**：承担 **OCUDU** RAN、**Open5GS**
-  5G 核心网与 **Spark Platform** 的运行，同时在基站侧提供**预留 AI 算力资源**与独立
+  5G 核心网与 **Spark Console** 的运行，同时在基站侧提供**预留 AI 算力资源**与独立
   预留推理端口段，支持共驻部署网侧 AI 服务与自定义推理流水线。
 - **UE 边缘侧（`Jetson Orin` + `Waveshare M.2 5G 扩展载板` + `Quectel RM520N-GL`）**：运行
   **Jetson Console** 完成模组独占监管与链路自动恢复，同时借助 Orin 预留的端侧算力资源

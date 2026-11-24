@@ -9,7 +9,7 @@
 ## 核心架构不变式
 
 - **单栈 5G SA IPv4 数据网络**：**OCUDU** RAN + **Open5GS** 5GC（具体参数见[网络与射频基线](reference/network-and-rf-profile.zh-CN.md)）。
-- **双端独立生命周期**：Spark Platform 与 Jetson Console 仅维护本机状态，支持独立安装、升级、停止与回滚。
+- **双端独立生命周期**：Spark Console 与 Jetson Console 仅维护本机状态，支持独立安装、升级、停止与回滚。
 - **时效性驱动的状态判定**：UE 在线状态须同时满足有效 USIM、NR SA 注册、活动 IPv4 PDU、RAN 上下文及绑定接口探测一致。
 
 ## 里程碑 1 — 可复现 5G SA 协议栈（`已完成`）
@@ -19,7 +19,7 @@
 - [x] 启动自动校验 N2 NG Setup 并保留失败诊断现场。
 - [x] 实机验证 5G AKA 鉴权、SQN 同步、AMF 恢复与多 UE 并发调度。
 
-## 里程碑 2 — Spark Platform（`已完成`）
+## 里程碑 2 — Spark Console（`已完成`）
 
 - [x] 非特权 FastAPI + Astryx React 控制台（`127.0.0.1:8877`），具备索引时序数据库与持久 SSE 实时流。
 - [x] 将 OCUDU JSON 指标端口隔离至 `127.0.0.1:8879` 并启用 root 守护，将 `127.0.0.1:8000–8002` 保留为共驻 AI 推理服务的独立端口段。

@@ -12,7 +12,7 @@ SSH 端口转发（`ssh -L ...`）。
 
 | 监听端点 | 归属服务 | 访问策略与隔离说明 |
 | --- | --- | --- |
-| `127.0.0.1:8877` | Spark Platform（`aoc-monitor-web.service`） | 鉴权 Astryx Web 控制台、REST API 与 SSE 流（`/api/v1/stream`） |
+| `127.0.0.1:8877` | Spark Console（`aoc-monitor-web.service`） | 鉴权 Astryx Web 控制台、REST API 与 SSE 流（`/api/v1/stream`） |
 | `127.0.0.1:8878` | Jetson Console（`aoc-v2-jetson-web.service`） | 鉴权 Astryx Web 控制台、REST API 与 SSE 流（`/api/v1/events/stream`） |
 | `127.0.0.1:8879` | OCUDU gNB JSON 指标（`ws://127.0.0.1:8879`） | 由 `aoc-v2-metrics-guard.service` 防火墙守护，仅限本机 root（`aoc-observe.service`）连接 |
 | `127.0.0.1:8000–8002` | **DGX Spark** 独立预留推理端口段 | 5G 协议栈不占用此端口段，专供共驻 AI 推理容器（如 vLLM）无冲突部署 |

@@ -2,7 +2,7 @@
 
 [简体中文](releasing.zh-CN.md)
 
-**Jetson Console** (`0.6.2`) and **Spark Platform** (`0.2.1`) maintain
+**Jetson Console** (`0.6.2`) and **Spark Console** (`0.2.1`) maintain
 independent semantic versions, source boundaries, and release archives. Cut and
 audit one platform release at a time.
 

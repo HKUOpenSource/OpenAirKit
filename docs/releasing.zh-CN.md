@@ -2,7 +2,7 @@
 
 [English](releasing.md)
 
-**Jetson Console**（`0.6.2`）与 **Spark Platform**（`0.2.1`）采用独立版本号、
+**Jetson Console**（`0.6.2`）与 **Spark Console**（`0.2.1`）采用独立版本号、
 源码隔离边界与离线发布产物，每次发布流程仅针对单一平台执行。
 
 ## 发布边界约束

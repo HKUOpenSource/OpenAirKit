@@ -1,6 +1,6 @@
-# Spark Platform
+# Spark Console
 
-The Spark Platform owns host, RAN and Open5GS observation plus bounded stack
+The Spark Console owns host, RAN and Open5GS observation plus bounded stack
 operations at `127.0.0.1:8877`. Its backend is `backend/aoc_spark`, the React
 frontend is in `frontend`, contracts are in `contracts`, and deployment units
 are in `/deploy/spark/platform`. It keeps evidence-based state and has no

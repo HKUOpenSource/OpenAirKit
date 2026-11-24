@@ -3,7 +3,7 @@
 [简体中文](api-reference.zh-CN.md)
 
 This reference specifies the supported HTTP and Server-Sent Events (SSE)
-endpoints for **Spark Platform** and **Jetson Console**. Both services bind
+endpoints for **Spark Console** and **Jetson Console**. Both services bind
 exclusively to loopback (`127.0.0.1`) and enforce a shared session-cookie +
 CSRF security model for Web UI clients, automation scripts, and external AI
 clients.
@@ -17,7 +17,7 @@ clients.
 
 ---
 
-## Spark Platform API (`127.0.0.1:8877`)
+## Spark Console API (`127.0.0.1:8877`)
 
 ### Health & Authentication
 

@@ -1,16 +1,16 @@
-# Spark Platform 运维指南
+# Spark Console 运维指南
 
 [English](spark-operations.md)
 
-本指南说明 **DGX Spark** 上 **Spark Platform** Web 控制台日常操作、全栈统一启停控制、
+本指南说明 **DGX Spark** 上 **Spark Console** Web 控制台日常操作、全栈统一启停控制、
 遥测状态语义以及平台独立升级/回滚流程。
 
 ## Web 控制台导览
 
-Spark Platform 仅监听本地回环 `127.0.0.1:8877`，从工作站通过 SSH 端口转发访问
+Spark Console 仅监听本地回环 `127.0.0.1:8877`，从工作站通过 SSH 端口转发访问
 （`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`）：
 
-<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 脱敏后的 Spark Platform Overview / Devices 页面截图（须遮蔽 IMSI、主机名与 Tailnet IP） -->
+<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 脱敏后的 Spark Console Overview / Devices 页面截图（须遮蔽 IMSI、主机名与 Tailnet IP） -->
 
 | 页面 | 路由 | 核心能力 |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Spark Platform 仅监听本地回环 `127.0.0.1:8877`，从工作站通过 SSH �
 | Diagnostics | `/diagnostics` | 子系统探测、采集时间戳与网桥/接口诊断明细 |
 
 供自定义监控面板与外部 AI 客户端调用的 REST 与 SSE 接口规范，请参阅
-[REST 与 SSE 接口参考](reference/api-reference.zh-CN.md#spark-platform-接口1270018877)。
+[REST 与 SSE 接口参考](reference/api-reference.zh-CN.md#spark-console-接口1270018877)。
 
 ## 全栈统一启停控制
 
@@ -58,7 +58,7 @@ Spark Platform 仅监听本地回环 `127.0.0.1:8877`，从工作站通过 SSH �
 
 ## 独立升级与回滚
 
-Spark Platform 可在 5G 协议栈不断网的情况下单独升级或回滚：
+Spark Console 可在 5G 协议栈不断网的情况下单独升级或回滚：
 
 1. 仅停止三项平台服务（`aoc-control`、`aoc-observe`、`aoc-monitor-web`）。
 2. 校验并安装目标版本离线包（`install.py verify` -> `check-host` -> `install`，或使用 `aoc-maintain install`）。

@@ -1,4 +1,4 @@
-# Spark Platform Operations
+# Spark Console Operations
 
 [简体中文](spark-operations.zh-CN.md)
 
@@ -8,10 +8,10 @@ procedures on **DGX Spark**.
 
 ## Web Console Overview
 
-Spark Platform binds strictly to `127.0.0.1:8877`. Access it from your
+Spark Console binds strictly to `127.0.0.1:8877`. Access it from your
 workstation over an SSH tunnel (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`):
 
-<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 redacted screenshot of Spark Platform Overview / Devices pages (redact IMSI, hostnames, Tailnet IPs) -->
+<!-- ASSET_SLOT: docs/assets/screenshots/spark-console-overview.png | 16:9 redacted screenshot of Spark Console Overview / Devices pages (redact IMSI, hostnames, Tailnet IPs) -->
 
 | Page | Route | Capabilities |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ workstation over an SSH tunnel (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`
 
 Authenticated REST and SSE endpoints for custom dashboards and external AI
 clients are specified in
-[REST & SSE API Reference](reference/api-reference.md#spark-platform-api-1270018877).
+[REST & SSE API Reference](reference/api-reference.md#spark-console-api-1270018877).
 
 ## Unified Full-Stack Lifecycle Control
 
@@ -69,7 +69,7 @@ Timeouts, exit codes, and listener guard behavior are documented in
 
 Platform software upgrades independently while Open5GS and OCUDU stay online:
 
-1. Stop only the three Spark Platform services (`aoc-control`, `aoc-observe`, `aoc-monitor-web`).
+1. Stop only the three Spark Console services (`aoc-control`, `aoc-observe`, `aoc-monitor-web`).
 2. Verify and install the target release (`install.py verify` -> `check-host` -> `install`, or via `aoc-maintain install`).
 3. Start the three platform services and confirm `/api/v1/health` and live SSE telemetry resume.
 4. If radio configuration or telemetry scripts (`enable_radio_json_metrics.py`) changed alongside a platform upgrade, restart `aoc-observe.service` after restarting the radio unit so the collector reattaches to the refreshed WebSocket stream.

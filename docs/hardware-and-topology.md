@@ -10,7 +10,7 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
 ## Dual-End Compute Architecture
 
 - **gNB / 5G Core node (`DGX Spark` + `USRP B210`)**: Runs the **OCUDU** RAN,
-  **Open5GS** 5GC, and **Spark Platform** while reserving local GPU/CPU
+  **Open5GS** 5GC, and **Spark Console** while reserving local GPU/CPU
   compute capacity and dedicated inference ports for co-located base-station AI
   services and user-defined AI pipelines.
 - **UE edge node (`Jetson Orin` + `Waveshare M.2 5G Carrier` + `Quectel RM520N-GL`)**:

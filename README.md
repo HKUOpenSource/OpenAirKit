@@ -10,7 +10,7 @@
 
 <p>
   <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Platform: 0.2.1" src="https://img.shields.io/badge/Spark_Platform-0.2.1-blue">
+  <img alt="Spark Console: 0.2.1" src="https://img.shields.io/badge/Spark_Console-0.2.1-blue">
   <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-blue">
   <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
 </p>
@@ -43,7 +43,7 @@ both endpoints.
   cabling and Open5GS container builds to 5G USIM provisioning and verified UE
   user-plane connectivity.
 - **Decoupled local-first management**: Operate the base station (**Spark
-  Platform**) and UE (**Jetson Console**) independently with live SSE
+  Console**) and UE (**Jetson Console**) independently with live SSE
   telemetry, telemetry freshness gating, automated Wi-Fi/cellular route
   failover, and bounded self-recovery.
 - **Programmable AI extensibility at both ends**: Selecting **DGX Spark** and
@@ -71,7 +71,7 @@ flowchart TB
   subgraph MGMT["Local-First Management Plane"]
     direction LR
     JC["Jetson Console"]:::mgmt
-    SP["Spark Platform"]:::mgmt
+    SP["Spark Console"]:::mgmt
   end
 
   subgraph STACK["5G SA Protocol Plane"]
@@ -111,7 +111,7 @@ flowchart TB
 | Component | Hardware / Software Role | Local Access | Reference |
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |
-| **Spark Platform** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
+| **Spark Console** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
 | **UE Host & Modem** | **Jetson Orin** + **Waveshare M.2 5G Carrier** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
 | **Jetson Console** | UE modem supervision, route failover & bounded recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
 

@@ -8,7 +8,7 @@
 network paired with two decoupled, local-first operations consoles:
 
 - **Base-station & core node (`DGX Spark` + `USRP B210`)**: hosts the
-  **OCUDU** RAN, **Open5GS** 5G Core, and **Spark Platform** for real-time
+  **OCUDU** RAN, **Open5GS** 5G Core, and **Spark Console** for real-time
   telemetry aggregation and bounded lifecycle control.
 - **UE edge node (`Jetson Orin` + `Quectel RM520N-GL`)**: hosts **Jetson
   Console** for exclusive modem supervision, dual-path Wi-Fi/cellular route
@@ -35,7 +35,7 @@ flowchart TB
   subgraph MGMT["2. Local Management & Self-Recovery Plane"]
     direction LR
     JC["Jetson Console"]:::mgmt
-    SP["Spark Platform"]:::mgmt
+    SP["Spark Console"]:::mgmt
   end
 
   subgraph STACK["1. 5G SA Radio & Core Plane"]
@@ -74,7 +74,7 @@ flowchart TB
 | Component | Primary Responsibility | Isolation Boundary |
 | --- | --- | --- |
 | **Jetson Console** | Exclusive modem serial lock, bounded AT state machine, dual-path IPv4 routing, UE state (`127.0.0.1:8878`) | Decoupled from base-station/core lifecycle and unrestricted administrator shell access |
-| **Spark Platform** | Host, RAN, and core telemetry ingestion, SQLite metric history/events, bounded stack operations (`127.0.0.1:8877`) | Passive RAN/core telemetry observer; decoupled from UE modem state |
+| **Spark Console** | Host, RAN, and core telemetry ingestion, SQLite metric history/events, bounded stack operations (`127.0.0.1:8877`) | Passive RAN/core telemetry observer; decoupled from UE modem state |
 | **OCUDU Stack** | USRP B210 SDR pipeline, NR SA cell scheduling, NGAP signaling, guarded JSON metrics (`127.0.0.1:8879`) | Runs independently of web console sessions and platform SQLite stores |
 | **Open5GS Stack** | Subscriber repository, 5G AKA authentication, PDU sessions, N3/N4/N6 forwarding, `ext-DN` probe responder | Owns an isolated Compose project, Docker bridge, and MongoDB volume |
 

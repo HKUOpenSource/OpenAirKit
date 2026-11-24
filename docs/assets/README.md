@@ -25,7 +25,7 @@ docs/assets/
 │   ├── spark-b210-wiring.jpg       # DGX Spark + USRP B210 USB 3.0 & RF wiring close-up
 │   └── jetson-waveshare-rm520n.jpg # Jetson Orin + Waveshare carrier + RM520N-GL + SIM
 ├── screenshots/
-│   ├── spark-console-overview.png  # Redacted Spark Platform (8877) Overview/Devices
+│   ├── spark-console-overview.png  # Redacted Spark Console (8877) Overview/Devices
 │   └── jetson-console-overview.png # Redacted Jetson Console (8878) Overview/Setup
 └── diagrams/                 # Optional exported .svg / .excalidraw / .drawio sources
 ```
@@ -57,7 +57,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | Layer | Examples | Rebranding Impact |
 | --- | --- | --- |
 | **Display Brand Name & Visuals** | Hero title, SVG/PNG logo, badges, overview descriptions | Update `README.md`, `README.zh-CN.md`, `docs/README*.md`, `docs/architecture*.md`, `docs/hardware-and-topology*.md`, `docs/quickstart*.md`, `docs/ai-customization*.md`, `docs/assets/brand/` |
-| **Component Role Names** | `Spark Platform`, `Jetson Console`, `5G SA Stack` | Keep consistent across prose (`L1`/`L2`/`L3` guides) to minimize cross-file drift |
+| **Component Role Names** | `Spark Console`, `Jetson Console`, `5G SA Stack` | Keep consistent across prose (`L1`/`L2`/`L3` guides) to minimize cross-file drift |
 | **Immutable Runtime Identifiers** | `aoc-v2ctl`, `aoc-maintain`, `/opt/agentic-ocudu/`, `aoc-v2-*.service`, `aoc_jetson`, `aoc_spark` | Do **not** rename in docs without a coordinated code and package release |
 
 ## Registered Visual Assets & Remaining `ASSET_SLOT` Placements
@@ -66,7 +66,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | --- | --- | --- |
 | `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`887x180`), legible in both light & dark GitHub themes |
 | `docs/assets/hardware/*.webp` (`5` files) | `README*`, `hardware-and-topology*`, `setup-bs-spark*`, `setup-ue-jetson*` (active) | Standardized WebP hardware visuals (`dgx-spark`, `usrp-b210`, `jetson-orin-nano`, `waveshare-m2-5g-carrier`, `quectel-rm520n-gl`) rendered in proportional bounding boxes |
-| `docs/assets/hardware/kit-overview.webp` | `README*` & `hardware-and-topology*` (active) | `16:9` Benchtop Hardware Topology Overview (`1024x576`) showing Jetson Orin + Waveshare M.2 carrier + RM520N-GL, DGX Spark + USRP B210, and live Spark Platform console |
+| `docs/assets/hardware/kit-overview.webp` | `README*` & `hardware-and-topology*` (active) | `16:9` Benchtop Hardware Topology Overview (`1024x576`) showing Jetson Orin + Waveshare M.2 carrier + RM520N-GL, DGX Spark + USRP B210, and live Spark Console |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology*` | Close-up showing direct USB 3.0 connection and Band `n78` antennas / SMA attenuators |
 | `docs/assets/hardware/jetson-waveshare-rm520n.jpg` | `hardware-and-topology*` | Close-up showing RM520N-GL seated in Waveshare M.2 carrier, Nano-SIM orientation, and 4x SMA RF pigtails |
 | `docs/assets/screenshots/spark-console-overview.png` | `spark-operations*` | Light/neutral UI capture showing Overview / Devices state with live `8879` telemetry (`<= 1440px` wide) |

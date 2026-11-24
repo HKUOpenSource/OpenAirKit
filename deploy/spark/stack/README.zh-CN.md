@@ -3,7 +3,7 @@
 [English](README.md)
 
 `runtime.py`、`package.py`、`libexec/` 与 `systemd/` 是独立 OCUDU/Open5GS 生命周期的现行源码，
-与 Spark Platform 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
+与 Spark Console 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
 `aoc-v2ctl`。旧模板与安装器已经归档，不参与打包。
 
 ## 准备私有候选包

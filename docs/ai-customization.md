@@ -31,7 +31,7 @@ cleanly alongside the 5G stack.
   - **Reserved inference ports (`8000–8002`)**: OCUDU JSON metrics bind to
     `127.0.0.1:8879` behind `aoc-v2-metrics-guard.service`, leaving
     `127.0.0.1:8000–8002` unallocated for co-located LLM/vLLM or ML inference
-    containers. Unprivileged AI services integrate with **Spark Platform** via
+    containers. Unprivileged AI services integrate with **Spark Console** via
     `127.0.0.1:8877`.
   - **Real-time radio protection**: Retain `aoc-v2-cpu-latency.service` and
     apply CPU core pinning (`realtime.conf`) when scheduling compute-intensive

@@ -10,7 +10,7 @@
 
 <p>
   <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Platform: 0.2.1" src="https://img.shields.io/badge/Spark_Platform-0.2.1-blue">
+  <img alt="Spark Console: 0.2.1" src="https://img.shields.io/badge/Spark_Console-0.2.1-blue">
   <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-blue">
   <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
 </p>
@@ -39,7 +39,7 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 ## 核心能力
 
 - **端到端标准化部署**：打通从物理连线、Open5GS 镜像构建、5G USIM 开户与烧录到 UE 用户面连通性验证的完整链路。
-- **双端解耦的本地管控**：**Spark Platform** 与 **Jetson Console** 分别纳管基站与终端侧设备，具备 SSE 实时遥测、数据时效性判定、Wi-Fi/蜂窝路由自动切换与有界自愈能力。
+- **双端解耦的本地管控**：**Spark Console** 与 **Jetson Console** 分别纳管基站与终端侧设备，具备 SSE 实时遥测、数据时效性判定、Wi-Fi/蜂窝路由自动切换与有界自愈能力。
 - **端网侧可编程 AI 能力扩展**：基站与核心网侧采用 **DGX Spark**，终端侧采用 **Jetson Orin**，在链路两端分别提供**预留 AI 算力资源**、独立预留推理端口段及鉴权 REST/SSE 接口，便于开展**端网协同 AI 算法二次开发**与部署**自定义 AI 服务**。*（双端内置 AI 模块规划于后续阶段交付，详见[端网侧 AI 扩展指南](docs/ai-customization.zh-CN.md)。）*
 
 ## 系统架构
@@ -60,7 +60,7 @@ flowchart TB
   subgraph MGMT["本地优先管理平面"]
     direction LR
     JC["Jetson Console"]:::mgmt
-    SP["Spark Platform"]:::mgmt
+    SP["Spark Console"]:::mgmt
   end
 
   subgraph STACK["5G SA 协议栈平面"]
@@ -100,7 +100,7 @@ flowchart TB
 | 组件层级 | 软硬件角色 | 本地访问入口 | 技术参考 |
 | --- | --- | --- | --- |
 | **基站与核心网** | **DGX Spark** + **USRP B210** 运行 **OCUDU** 与 **Open5GS** | `aoc-v2ctl` / `systemctl` | [网络契约与射频基线](docs/reference/network-and-rf-profile.zh-CN.md) |
-| **Spark Platform** | 基站侧采集器、Web 控制台与受限执行器（`apps/spark-platform/`） | `127.0.0.1:8877` | [Spark 运维](docs/spark-operations.zh-CN.md) |
+| **Spark Console** | 基站侧采集器、Web 控制台与受限执行器（`apps/spark-platform/`） | `127.0.0.1:8877` | [Spark 运维](docs/spark-operations.zh-CN.md) |
 | **UE 主机与模组** | **Jetson Orin** + **Waveshare M.2 5G 扩展载板** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi 管理网 | [硬件清单与拓扑](docs/hardware-and-topology.zh-CN.md) |
 | **Jetson Console** | UE 模组监管、路由自动切换与有界恢复（`apps/jetson-console/`） | `127.0.0.1:8878` | [Jetson 运维](docs/jetson-operations.zh-CN.md) |
 

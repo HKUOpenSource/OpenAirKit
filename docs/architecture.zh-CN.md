@@ -8,7 +8,7 @@
 并在通信两端配套两个彼此解耦、仅基于本机状态运行的管控控制台：
 
 - **基站与核心网侧（`DGX Spark` + `USRP B210`）**：运行 **OCUDU** RAN、**Open5GS**
-  5G 核心网及 **Spark Platform**，提供实时遥测聚合与受限生命周期运维能力。
+  5G 核心网及 **Spark Console**，提供实时遥测聚合与受限生命周期运维能力。
 - **UE 边缘侧（`Jetson Orin` + `Quectel RM520N-GL`）**：运行 **Jetson Console**，
   负责模组串口独占监管、Wi-Fi/蜂窝双路径路由自动切换与有界链路自愈。
 
@@ -31,7 +31,7 @@ flowchart TB
   subgraph MGMT["2. 本地管理与自愈平面"]
     direction LR
     JC["Jetson Console"]:::mgmt
-    SP["Spark Platform"]:::mgmt
+    SP["Spark Console"]:::mgmt
   end
 
   subgraph STACK["1. 5G SA 无线与核心网平面"]
@@ -65,7 +65,7 @@ flowchart TB
 | 组件 | 核心职责 | 隔离边界 |
 | --- | --- | --- |
 | **Jetson Console** | 模组串口独占锁、受限 AT 状态机、双路径 IPv4 路由与 UE 状态（`127.0.0.1:8878`） | 与基站/核心网生命周期及通用管理员 shell 权限完全解耦 |
-| **Spark Platform** | 主机、RAN 与核心网遥测采集、时序历史事件与受限栈操作（`127.0.0.1:8877`） | 仅观测基站侧数据，独立于终端模组状态 |
+| **Spark Console** | 主机、RAN 与核心网遥测采集、时序历史事件与受限栈操作（`127.0.0.1:8877`） | 仅观测基站侧数据，独立于终端模组状态 |
 | **OCUDU 栈** | USRP B210 射频流水线、NR SA 小区调度、NGAP 信令与受守护 JSON 指标（`127.0.0.1:8879`） | 独立于 Web 会话与平台数据库运行 |
 | **Open5GS 栈** | 用户订阅库、5G AKA 鉴权、PDU 会话、N3/N4/N6 转发及 `ext-DN` 探测端点 | 独占自身 Compose 项目、Docker 网桥与 MongoDB 数据卷 |
 

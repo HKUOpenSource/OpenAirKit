@@ -4,7 +4,7 @@
 
 This guide walks through the end-to-end multi-host deployment workflow—from
 assembled hardware to a verified **5G SA** IPv4 data connection supervised by
-**Spark Platform** and **Jetson Console**.
+**Spark Console** and **Jetson Console**.
 
 ## Deployment Flow Across Hosts
 
@@ -21,7 +21,7 @@ flowchart TD
 
   subgraph SPARK["DGX Spark"]
     S1A["Build & Install 5G Stack"]:::spark
-    S1B["Install Spark Platform"]:::spark
+    S1B["Install Spark Console"]:::spark
     S1C["Enable Telemetry & Start"]:::spark
     S2A["Add Open5GS Subscriber"]:::spark
     S1A --> S1B --> S1C --> S2A
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## Step 1 — Deploy Spark 5G Stack & Spark Platform
+## Step 1 — Deploy Spark 5G Stack & Spark Console
 
 Execute on **DGX Spark**:
 
@@ -71,7 +71,7 @@ Execute on **DGX Spark**:
      docker build -f stacks/open5gs/build/Dockerfile.connectivity -t aoc-open5gs-connectivity:local .
      ```
      Verify image tags and digests against `stacks/open5gs/artifacts.lock.json`, then render (`--database-auth --n6`), initialize MongoDB, and install `aoc-v2ctl` per [Spark Stack Deployment](../deploy/spark/stack/README.md).
-2. **Install Spark Platform**:
+2. **Install Spark Console**:
    Transfer and unpack the Spark release archive, then run verification, host checks, and installation (initial install prompts for a Web Console password of at least 12 characters):
    ```sh
    python3 -I -B install.py verify --path .
@@ -125,7 +125,7 @@ Execute on **Jetson Orin**:
 
 1. **Verify dual-end connectivity state**:
    - **Jetson Overview (`127.0.0.1:8878`)**: reports `SIM` ready, NR SA registration, active IPv4 PDU, verified bound data probes, cellular preferred egress, and `management_protected = true`.
-   - **Spark Platform (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`)**: reports live gNB telemetry, correlated UE RNTI context, active PDU session, and N3/N6 bridge traffic counters.
+   - **Spark Console (`ssh -L 8877:127.0.0.1:8877 <user>@<spark-host>`)**: reports live gNB telemetry, correlated UE RNTI context, active PDU session, and N3/N6 bridge traffic counters.
 2. **Optional post-deployment enhancements**:
    - Configure passwordless operator wrappers (`~/aoc-ops/*/start.sh`) via [Maintenance Helper](../deploy/maintenance/README.md).
    - Enable unattended cold-boot attachment (`boot_connect.py`) via [Jetson Setup](setup-ue-jetson.md#3-opt-in-boot-coordination).

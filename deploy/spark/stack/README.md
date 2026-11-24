@@ -4,7 +4,7 @@
 
 `runtime.py`, `package.py`, `libexec/` and `systemd/` are the supported source for
 the independent OCUDU/Open5GS lifecycle. They install separately from Spark
-Platform. The source CLI is `python3 scripts/aocctl --help`; the installed CLI
+Console. The source CLI is `python3 scripts/aocctl --help`; the installed CLI
 is `aoc-v2ctl`. Retired templates and installers are archived and are not package
 inputs.
 

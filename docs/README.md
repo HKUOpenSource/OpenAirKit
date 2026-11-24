@@ -18,7 +18,7 @@ technical references.
 | Need | Guide |
 | --- | --- |
 | Execute the end-to-end multi-host deployment workflow | [End-to-End Quickstart](quickstart.md) |
-| Install Spark Platform and the base-station stack | [Spark Setup](setup-bs-spark.md) |
+| Install Spark Console and the base-station stack | [Spark Setup](setup-bs-spark.md) |
 | Build and deploy the OCUDU + Open5GS stack bundle | [Spark Stack Deployment](../deploy/spark/stack/README.md) |
 | Build and verify Open5GS ARM64 container images | [Open5GS ARM64 Build](../stacks/open5gs/build/README.md) |
 | Provision an Open5GS subscriber and program 5G USIM cards | [SIM Provisioning & USIM Setup](sim-provisioning.md) |
@@ -36,7 +36,7 @@ technical references.
 | --- | --- |
 | RF baseline (`n78`), Open5GS data profile (`DNN`/`PLMN`/`5QI`), and access policy | [Network & RF Profile](reference/network-and-rf-profile.md) |
 | Loopback ports, real-time guards, routing metrics, recovery budgets, and exit codes | [Ports & Runtime](reference/ports-and-runtime.md) |
-| Authenticated REST and SSE endpoints for Spark Platform & Jetson Console | [REST & SSE API Reference](reference/api-reference.md) |
+| Authenticated REST and SSE endpoints for Spark Console & Jetson Console | [REST & SSE API Reference](reference/api-reference.md) |
 | RM520N-GL USB layouts, QMAP checks, kernel compatibility, and TB01 APDU tables | [Hardware & TB01 Notes](reference/hardware-notes.md) |
 | Core 5G SA and platform terminology | [Glossary](reference/glossary.md) |
 

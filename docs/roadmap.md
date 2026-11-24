@@ -11,7 +11,7 @@ automated test suites, and hardware acceptance baselines (see
 ## Architectural Invariants
 
 - **Single-stack 5G SA IPv4 data network**: **OCUDU** RAN + **Open5GS** 5GC (see [Network & RF Profile](reference/network-and-rf-profile.md)).
-- **Independent lifecycle**: Spark Platform and Jetson Console install, upgrade, stop, and roll back separately on strictly local host state.
+- **Independent lifecycle**: Spark Console and Jetson Console install, upgrade, stop, and roll back separately on strictly local host state.
 - **Freshness-validated connectivity**: Connected status requires consistency across valid USIM readiness, NR SA registration, active IPv4 PDU, RAN context, and bound user-plane probes.
 
 ## Milestone 1 — Reproducible 5G SA Stack (`Completed`)
@@ -21,7 +21,7 @@ automated test suites, and hardware acceptance baselines (see
 - [x] Automated N2 NG Setup readiness check on startup with failure-preserving diagnostics.
 - [x] Hardware-verified multi-UE 5G AKA authentication, SQN resynchronization, AMF recovery, and concurrent multi-UE scheduling.
 
-## Milestone 2 — Spark Platform (`Completed`)
+## Milestone 2 — Spark Console (`Completed`)
 
 - [x] Unprivileged FastAPI + Astryx React console on `127.0.0.1:8877` with indexed SQLite metric history and persistent SSE telemetry streams.
 - [x] Guarded OCUDU JSON telemetry on `127.0.0.1:8879`, keeping `127.0.0.1:8000–8002` unallocated for co-located AI inference workloads.
