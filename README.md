@@ -93,6 +93,16 @@ flowchart TB
 
 ## Platform Overview
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/assets/hardware/dgx-spark.webp" height="72" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/usrp-b210.webp" height="72" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/jetson-orin-nano.webp" height="72" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>M.2 5G Carrier</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+  </tr>
+</table>
+
 | Component | Hardware / Software Role | Local Access | Reference |
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |

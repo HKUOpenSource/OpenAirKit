@@ -8,6 +8,14 @@
 
 ## 前置条件
 
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/jetson-orin-nano.webp" height="95" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin Nano</b></sub></td>
+    <td align="center"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="95" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>Waveshare M.2 载板（拨码 C for RM5XX）</b></sub></td>
+    <td align="center"><img src="assets/hardware/quectel-rm520n-gl.webp" height="95" alt="Quectel RM520N-GL" /><br/><sub><b>Quectel RM520N-GL</b></sub></td>
+  </tr>
+</table>
+
 - **主机与系统**：Jetson Orin（ARM64、Ubuntu 22.04、Python 3.10、`systemd`、`NetworkManager`）。
 - **模组与 USB**：Quectel RM520N-GL 装入 Waveshare 载板并接入 USB 3.0；停用并屏蔽 `ModemManager.service`；确保 `127.0.0.1:8878` 空闲。按[硬件与 TB01 附录](reference/hardware-notes.zh-CN.md)核对 `/etc/aoc-v2-jetson/device.json` 中的 `device.at_interface_number` 与当前 RNDIS/ECM 布局一致。
 - **管理网络**：Wi-Fi 具备独立 IPv4 回退网关，且 `tailscale0` 可路由到达 Spark 管理地址。外部或管理员默认路由 metric 须严格大于 `10`，使 Jetson Console 的协议 `186` 路由策略（Wi-Fi `metric 5` / 蜂窝 `metric 10`）正常运行而不改变外部配置。

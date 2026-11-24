@@ -84,6 +84,16 @@ flowchart TB
 
 ## 平台组成总览
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/assets/hardware/dgx-spark.webp" height="72" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/usrp-b210.webp" height="72" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/jetson-orin-nano.webp" height="72" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>M.2 5G 载板</b></sub></td>
+    <td align="center"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+  </tr>
+</table>
+
 | 组件层级 | 软硬件角色 | 本地访问入口 | 技术参考 |
 | --- | --- | --- | --- |
 | **基站与核心网** | **DGX Spark** + **USRP B210** 运行 **OCUDU** 与 **Open5GS** | `aoc-v2ctl` / `systemctl` | [网络契约与射频基线](docs/reference/network-and-rf-profile.zh-CN.md) |

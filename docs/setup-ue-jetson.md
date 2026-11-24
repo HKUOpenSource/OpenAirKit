@@ -10,6 +10,14 @@ expansion board.
 
 ## Prerequisites
 
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/jetson-orin-nano.webp" height="95" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin Nano</b></sub></td>
+    <td align="center"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="95" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>Waveshare M.2 Carrier (C for RM5XX)</b></sub></td>
+    <td align="center"><img src="assets/hardware/quectel-rm520n-gl.webp" height="95" alt="Quectel RM520N-GL" /><br/><sub><b>Quectel RM520N-GL</b></sub></td>
+  </tr>
+</table>
+
 - **Host & OS**: Jetson Orin (ARM64, Ubuntu 22.04, Python 3.10, `systemd`, `NetworkManager`).
 - **Modem & USB**: Quectel RM520N-GL seated in the Waveshare carrier over USB 3.0; `ModemManager.service` stopped and disabled; port `127.0.0.1:8878` free. Verify `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json` matches your RNDIS/ECM USB layout per [Hardware Notes](reference/hardware-notes.md).
 - **Management network**: An active Wi-Fi uplink with an IPv4 fallback gateway and a `tailscale0` route reaching Spark's management IP. Keep any administrator-owned default route metrics strictly above `10` so Jetson Console's protocol-186 routing (`metric 5` Wi-Fi / `metric 10` cellular) operates cleanly without altering external NetworkManager profiles.

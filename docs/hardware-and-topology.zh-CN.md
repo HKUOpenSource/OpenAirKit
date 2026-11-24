@@ -18,6 +18,21 @@
 
 ## 硬件清单（BOM）
 
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/dgx-spark.webp" height="105" alt="DGX Spark" /><br/><sub><b>基站/核心网主机：DGX Spark</b></sub></td>
+    <td align="center"><img src="assets/hardware/usrp-b210.webp" height="105" alt="USRP B210" /><br/><sub><b>SDR 射频前端：Ettus USRP B210</b></sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/jetson-orin-nano.webp" height="105" alt="Jetson Orin Nano" /><br/><sub><b>UE 主机：Jetson Orin Nano</b></sub></td>
+    <td align="center"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="105" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>扩展载板：Waveshare M.2 5G</b></sub></td>
+    <td align="center"><img src="assets/hardware/quectel-rm520n-gl.webp" height="105" alt="Quectel RM520N-GL" /><br/><sub><b>5G 模组：Quectel RM520N-GL</b></sub></td>
+  </tr>
+</table>
+
 | 角色 | 硬件组件 | 关键说明 |
 | --- | --- | --- |
 | 基站与核心网主机 | **DGX Spark**（ARM64） | Ubuntu 24.04 ARM64、原生 USB 3.0 接口（接 B210）、Docker Engine + Compose |

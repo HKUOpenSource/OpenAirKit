@@ -8,6 +8,13 @@
 
 ## 前置条件
 
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/dgx-spark.webp" height="95" alt="DGX Spark" /><br/><sub><b>DGX Spark（ARM64 主机）</b></sub></td>
+    <td align="center"><img src="assets/hardware/usrp-b210.webp" height="95" alt="USRP B210" /><br/><sub><b>Ettus USRP B210（USB 3.0）</b></sub></td>
+  </tr>
+</table>
+
 - **主机**：DGX Spark（ARM64、Ubuntu 24.04、Python 3.12、`systemd`、Docker Engine 与 Compose）。
 - **射频前端**：Ettus **USRP B210** 直连原生 USB 3.0 端口。
 - **回环端口**：确认 `8877`（Spark Platform）与 `8879`（OCUDU JSON 指标）空闲；`8000–8002` 区间保持留空，供共驻 AI 推理服务使用。

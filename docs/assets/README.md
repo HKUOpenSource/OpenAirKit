@@ -16,8 +16,13 @@ docs/assets/
 │   ├── logo-dark.png         # Horizontal OpenAirKit logo for dark GitHub theme (active)
 │   └── hero-banner.png       # Optional 16:9 project header visual
 ├── hardware/
-│   ├── kit-overview.jpg      # Full hardware stack overview (16:9, <=1200px wide)
-│   ├── spark-b210-wiring.jpg # DGX Spark + USRP B210 USB 3.0 & RF wiring close-up
+│   ├── dgx-spark.webp              # DGX Spark base-station & core host (active)
+│   ├── usrp-b210.webp              # Ettus USRP B210 SDR board (active)
+│   ├── jetson-orin-nano.webp       # NVIDIA Jetson Orin Nano UE host (active)
+│   ├── waveshare-m2-5g-carrier.webp # Waveshare M.2 5G expansion board for Jetson Orin (active)
+│   ├── quectel-rm520n-gl.webp      # Quectel RM520N-GL 5G NR module (active)
+│   ├── kit-overview.jpg            # Full hardware stack overview (16:9, <=1200px wide)
+│   ├── spark-b210-wiring.jpg       # DGX Spark + USRP B210 USB 3.0 & RF wiring close-up
 │   └── jetson-waveshare-rm520n.jpg # Jetson Orin + Waveshare carrier + RM520N-GL + SIM
 ├── screenshots/
 │   ├── spark-console-overview.png  # Redacted Spark Platform (8877) Overview/Devices
@@ -54,11 +59,12 @@ identifiers** so visual updates do not break deployed hosts or systemd units:
 | **Component Role Names** | `Spark Platform`, `Jetson Console`, `5G SA Stack` | Keep stable across prose (`L1`/`L2`/`L3` guides) to minimize cross-file coupling |
 | **Stable System Identifiers** | `aoc-v2ctl`, `aoc-maintain`, `/opt/agentic-ocudu/`, `aoc-v2-*.service`, `aoc_jetson`, `aoc_spark` | Do **not** rename silently in docs without a coordinated code + package release |
 
-## Registered `ASSET_SLOT` Placements
+## Registered Visual Assets & Remaining `ASSET_SLOT` Placements
 
-| Slot File | Document Location | Composition & Guidelines |
+| Asset / Slot File | Document Location | Composition & Guidelines |
 | --- | --- | --- |
 | `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`887x180`), legible in both light & dark GitHub themes |
+| `docs/assets/hardware/*.webp` (`5` files) | `README*`, `hardware-and-topology*`, `setup-bs-spark*`, `setup-ue-jetson*` (active) | Standardized WebP hardware visuals (`dgx-spark`, `usrp-b210`, `jetson-orin-nano`, `waveshare-m2-5g-carrier`, `quectel-rm520n-gl`) |
 | `docs/assets/hardware/kit-overview.jpg` | `README` & `hardware-and-topology` | `16:9` flat-lay or benchtop shot showing DGX Spark, B210, Jetson Orin, Waveshare M.2 carrier + RM520N-GL, antennas and SIM reader (`<= 1200px` wide, `< 400 KB`) |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology` | Close-up showing direct USB 3.0 connection and `n78` antennas / SMA attenuators |
 | `docs/assets/hardware/jetson-waveshare-rm520n.jpg` | `hardware-and-topology` | Close-up showing RM520N-GL seated in Waveshare M.2 carrier, Nano-SIM orientation, and 4x SMA RF pigtails |

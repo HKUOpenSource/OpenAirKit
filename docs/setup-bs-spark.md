@@ -9,6 +9,13 @@ notes, see [Hardware & Topology](hardware-and-topology.md) and
 
 ## Prerequisites
 
+<table>
+  <tr>
+    <td align="center"><img src="assets/hardware/dgx-spark.webp" height="95" alt="DGX Spark" /><br/><sub><b>DGX Spark (ARM64 Host)</b></sub></td>
+    <td align="center"><img src="assets/hardware/usrp-b210.webp" height="95" alt="USRP B210" /><br/><sub><b>Ettus USRP B210 (USB 3.0)</b></sub></td>
+  </tr>
+</table>
+
 - **Host**: DGX Spark (ARM64, Ubuntu 24.04, Python 3.12, `systemd`, Docker Engine with Compose).
 - **SDR**: Ettus **USRP B210** connected directly to a native USB 3.0 port.
 - **Ports**: Ensure loopback ports `8877` (Spark Platform) and `8879` (OCUDU JSON metrics) are free; ports `8000–8002` remain untouched for co-located AI inference workloads.
