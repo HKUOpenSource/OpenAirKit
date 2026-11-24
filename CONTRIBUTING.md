@@ -12,7 +12,7 @@ behavior, validation and rollback impact.
 ## Ownership boundaries
 
 - Jetson application changes belong in `apps/jetson-console` and `deploy/jetson`.
-- Spark application changes belong in `apps/spark-platform` and `deploy/spark`.
+- Spark application changes belong in `apps/spark-console` and `deploy/spark`.
 - Protocol-stack changes belong in `stacks/ocudu` or `stacks/open5gs`.
 - Shared UI code in `packages/console-ui` must contain no platform logic.
 - Files under `archive/` stay outside imports, builds, and releases.

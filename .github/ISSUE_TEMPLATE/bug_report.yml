@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible Agentic-OCUDU problem
+description: Report a reproducible OpenAirKit problem
 title: "[bug] "
 labels: [bug]
 body:

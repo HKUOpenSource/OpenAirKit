@@ -12,8 +12,8 @@ import time
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
-FRONTEND = ROOT / "apps/spark-platform/frontend"
-sys.path.insert(0, str(ROOT / "apps/spark-platform/backend"))
+FRONTEND = ROOT / "apps/spark-console/frontend"
+sys.path.insert(0, str(ROOT / "apps/spark-console/backend"))
 from aoc_spark.domain import SCHEMA_VERSION, utc
 from aoc_spark.web import password_hash
 
@@ -50,7 +50,7 @@ def main():
             code = ("import json,sys,uvicorn; from aoc_spark.web import create_app; "
                     "uvicorn.run(create_app(json.load(open(sys.argv[1]))),fd=int(sys.argv[2]),"
                     "access_log=False,timeout_graceful_shutdown=2)")
-            environment = {**os.environ, "PYTHONPATH": str(ROOT / "apps/spark-platform/backend")}
+            environment = {**os.environ, "PYTHONPATH": str(ROOT / "apps/spark-console/backend")}
             with (state / "server.log").open("w+") as log:
                 process = subprocess.Popen([sys.executable, "-c", code, str(config_path), str(listener.fileno())],
                                            pass_fds=(listener.fileno(),), env=environment, stdout=log, stderr=log)

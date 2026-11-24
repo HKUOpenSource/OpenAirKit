@@ -10,8 +10,8 @@
 
 <p>
   <img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen">
-  <img alt="Spark Console: 0.2.1" src="https://img.shields.io/badge/Spark_Console-0.2.1-blue">
-  <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-blue">
+  <img alt="Spark Console: 1.0.0" src="https://img.shields.io/badge/Spark_Console-1.0.0-blue">
+  <img alt="Jetson Console: 1.0.0" src="https://img.shields.io/badge/Jetson_Console-1.0.0-blue">
   <img alt="Host: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-green">
 </p>
 
@@ -90,11 +90,11 @@ both endpoints.
 | Component | Hardware / Software Role | Local Access | Reference |
 | --- | --- | --- | --- |
 | **Base Station & Core** | **DGX Spark** + **USRP B210** running **OCUDU** & **Open5GS** | `aoc-v2ctl` / `systemctl` | [Network & RF Profile](docs/reference/network-and-rf-profile.md) |
-| **Spark Console** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-platform/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
+| **Spark Console** | Base-station telemetry collector, Web UI & bounded executor (`apps/spark-console/`) | `127.0.0.1:8877` | [Spark Operations](docs/spark-operations.md) |
 | **UE Host & Modem** | **Jetson Orin** + **Waveshare M.2 5G Carrier** + **Quectel RM520N-GL** + 5G USIM | USB 3.0 + Wi-Fi management | [Hardware & Topology](docs/hardware-and-topology.md) |
 | **Jetson Console** | UE modem supervision, route failover & bounded recovery (`apps/jetson-console/`) | `127.0.0.1:8878` | [Jetson Operations](docs/jetson-operations.md) |
 
-Both consoles share `@aoc/console-ui` (`packages/console-ui/`), maintain
+Both consoles share `@agentic-ocudu/console-ui` (`packages/console-ui/`), maintain
 strictly local host state, and remain disabled at boot unless explicitly
 configured.
 
@@ -113,7 +113,7 @@ roadmap milestones.
 
 ## Repository Layout
 
-- `apps/spark-platform/`: Spark telemetry collector, FastAPI backend, and React UI.
+- `apps/spark-console/`: Spark telemetry collector, FastAPI backend, and React UI.
 - `apps/jetson-console/`: Jetson device executor, FastAPI backend, and React UI.
 - `packages/console-ui/`: Shared Astryx Core, Charts, and Neutral theme components.
 - `stacks/ocudu/` & `stacks/open5gs/`: RAN build inputs, Open5GS container builds, Compose rendering, and subscriber provisioning CLI.

@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 PUBLIC_ENDPOINTS = frozenset({"/api/v1/health", "/api/v1/auth/login"})
@@ -134,6 +135,12 @@ def create_app(config, transport=None):
     @app.middleware("http")
     async def protect(request, handler):
         try:
+            length = request.headers.get("content-length")
+            if length is not None:
+                if not length.isdigit():
+                    raise HTTPException(400, "Invalid content-length")
+                if int(length) > 8192:
+                    raise HTTPException(413, "Request too large")
             if request.url.path.startswith("/api/v1/") and request.url.path not in PUBLIC_ENDPOINTS:
                 row = session(request)
                 if request.method not in {"GET", "HEAD"} and not hmac.compare_digest(
@@ -148,11 +155,17 @@ def create_app(config, transport=None):
             response = JSONResponse({"detail": error.detail}, status_code=error.status_code)
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = ("default-src 'self'; style-src 'self'; "
                                                        "img-src 'self' data:; connect-src 'self'; "
                                                        "frame-ancestors 'none'; base-uri 'none'")
         return response
+
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost", "[::1]", "testserver"],
+    )
 
     @app.post("/api/v1/auth/login")
     async def login(body: Login, request: Request, response: Response):
@@ -289,7 +302,7 @@ def main():
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text())
     uvicorn.run(create_app(config), host="127.0.0.1", port=args.port, proxy_headers=False,
-                timeout_graceful_shutdown=5)
+                access_log=False, timeout_graceful_shutdown=5)
 
 
 if __name__ == "__main__":

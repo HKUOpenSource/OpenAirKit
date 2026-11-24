@@ -94,7 +94,7 @@ a clean current checkout. Manifest SHA-256 values:
 `ModuleNotFoundError: No module named 'scripts.v2.runtime'`.
 [scripts/aocctl](../../scripts/aocctl) line 6 imports that missing implementation.
 The application path is Web → executor →
-[control.run_step](../../apps/spark-platform/backend/aoc_spark/control.py) lines
+[control.run_step](../../apps/spark-console/backend/aoc_spark/control.py) lines
 36–45 → installed `/usr/local/bin/aoc-v2ctl`. The lifecycle controller requires
 V2 core/radio units, but their definitions are absent from the current tree.
 `scripts/install_radio.py` (review-time path; subsequently archived) line 21 instead installs old
@@ -161,7 +161,7 @@ concurrent serial access and no automatic recovery during manual work verified.
 ### P2 — Concurrent Spark cancellation can strand the operation reservation
 
 Path: `ControlHandler` threads → `execute` / `request_cancel` → `persist`.
-[control.py](../../apps/spark-platform/backend/aoc_spark/control.py) lines 68–78
+[control.py](../../apps/spark-console/backend/aoc_spark/control.py) lines 68–78
 uses one task-specific temporary filename, but `emit` does not hold the lock used
 by cancellation at lines 119–128. A deterministic two-thread interleaving let
 cancellation replace that file first; the initial execution emit then raised
@@ -185,7 +185,7 @@ concurrent cancellation/progress with a terminal result and a subsequent operati
 ### P2 — Spark diagnostic redaction misses observation values
 
 Path: Diagnostics → `/api/v1/diagnostics` → `redacted_diagnostics(snapshot())`.
-[web.py](../../apps/spark-platform/backend/aoc_spark/web.py) lines 33–43 filters
+[web.py](../../apps/spark-console/backend/aoc_spark/web.py) lines 33–43 filters
 dictionary keys, while collector observations put `b210_serial`, `radio_pid` and
 `b210_holder_pids` in `name` and their contents in `value`. `InvocationID` also
 differs from the filter's `invocation_id`. Real login and the authenticated
@@ -202,7 +202,7 @@ diagnostic export or credential disclosure was performed in this review.
 ### P2 — One idle UE hides aggregate radio throughput
 
 Path: scheduler → `parse_ocudu` → collector → gNB charts.
-[telemetry.py](../../apps/spark-platform/backend/aoc_spark/telemetry.py) lines
+[telemetry.py](../../apps/spark-console/backend/aoc_spark/telemetry.py) lines
 52–53 replaces explicit zero bitrate with null when transport-block counts are
 zero; lines 73–77 require every UE bitrate to be non-null. A synthetic active UE
 reported 23 Mbps downlink / 5 Mbps uplink. Adding a UE explicitly reporting zero

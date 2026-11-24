@@ -2,8 +2,9 @@
 
 [English](releasing.md)
 
-**Jetson Console**（`0.6.2`）与 **Spark Console**（`0.2.1`）采用独立版本号、
-源码隔离边界与离线发布产物，每次发布流程仅针对单一平台执行。
+**Jetson Console** 与 **Spark Console** 共用仓库统一版本号（`1.0.0`，定义于根目录
+`VERSION` 文件），同时保持各自独立的源码边界与离线发布产物，每次发布流程仅针对
+单一平台执行。
 
 ## 发布边界约束
 
@@ -18,7 +19,8 @@
 
 ## 构建前检查清单
 
-1. 同步更新后端 `__version__`、前端包描述文件、`CHANGELOG.md` 与 `RELEASE-VERSION` 源码版本。
+1. 同步更新根目录 `VERSION`、两端后端 `__version__`、前端包描述文件、`README*.md` 版本徽章、
+   `docs/releasing*.md` 与 `CHANGELOG.md`（由 `make version-audit` 自动校验一致性）。
 2. 核对 Python 依赖锁文件、npm lockfile、上游源码提交哈希及容器镜像摘要。
 3. 执行 `make ci`，完整覆盖后端单元测试、前端生产构建与仓库合规审计。
 4. 对候选发布版本手动触发 `Extended checks` 工作流（覆盖 Jetson Python 3.10、

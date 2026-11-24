@@ -136,18 +136,15 @@ class Resources:
 
 def radio_config(path, stack):
     """Explicit configuration fields only; never serialize credentials or entire config files."""
+    if stack != 'ocudu':
+        return {}
     try:
-        if stack == 'ocudu':
-            raw = json.loads(Path(path).read_text())
-            cell, ru = raw.get('cell_cfg', {}), raw.get('ru_sdr', {})
-            result = {k: cell[k] for k in ('plmn', 'tac', 'pci', 'band', 'dl_arfcn', 'channel_bandwidth_MHz',
-                                           'common_scs', 'nof_antennas_dl', 'nof_antennas_ul') if k in cell}
-            result.update({k: ru[k] for k in ('srate', 'clock', 'tx_gain', 'rx_gain') if k in ru})
-            result['tdd'] = cell.get('tdd_ul_dl_cfg')
-            return result
-        raw = Path(path).read_text()
-        keys = ('mcc', 'mnc', 'tracking_area_code', 'physCellId', 'absoluteFrequencySSB', 'dl_absoluteFrequencyPointA',
-                'dl_frequencyBand', 'dl_carrierBandwidth', 'dl_subcarrierSpacing', 'tx_gain', 'rx_gain')
-        return {k: int(m[1]) for k in keys if (m := re.search(r'\b' + k + r'\s*=\s*(\d+)', raw))}
+        raw = json.loads(Path(path).read_text())
+        cell, ru = raw.get('cell_cfg', {}), raw.get('ru_sdr', {})
+        result = {k: cell[k] for k in ('plmn', 'tac', 'pci', 'band', 'dl_arfcn', 'channel_bandwidth_MHz',
+                                       'common_scs', 'nof_antennas_dl', 'nof_antennas_ul') if k in cell}
+        result.update({k: ru[k] for k in ('srate', 'clock', 'tx_gain', 'rx_gain') if k in ru})
+        result['tdd'] = cell.get('tdd_ul_dl_cfg')
+        return result
     except (OSError, ValueError, TypeError):
         return {}

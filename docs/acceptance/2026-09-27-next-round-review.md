@@ -96,11 +96,11 @@ ownership and independent management protection throughout.
 ### P1 — Spark control EOF leaves an unfinished task blocking later operations
 
 The path is `POST /control → run_control → control_messages → reader.readline`,
-at [web.py](../../apps/spark-platform/backend/aoc_spark/web.py) lines 83–85 and
+at [web.py](../../apps/spark-console/backend/aoc_spark/web.py) lines 83–85 and
 118–130. EOF after a `running` response ends iteration normally, bypassing the
 exception handler that calls `poll_control`. The persisted task stays running,
 and the next operation is rejected by
-[storage.py](../../apps/spark-platform/backend/aoc_spark/storage.py) line 132.
+[storage.py](../../apps/spark-console/backend/aoc_spark/storage.py) line 132.
 An isolated `running → EOF` reproduction returned `operation_in_progress` on
 the next task. Web startup reconciliation can recover it; the live process does
 not reconcile this normal EOF path.
@@ -124,7 +124,7 @@ service. Review the equivalent Jetson boundary when implementing this guard.
 ### P2 — Spark diagnostic redaction misses observation values
 
 The path is `Collector.host → snapshot → diagnostics → redacted_diagnostics`,
-at [web.py](../../apps/spark-platform/backend/aoc_spark/web.py) lines 25–43.
+at [web.py](../../apps/spark-console/backend/aoc_spark/web.py) lines 25–43.
 The filter compares dictionary keys, but an observation stores a sensitive field
 as `name=b210_serial` and its content under `value`. Synthetic serial/PID values
 survived export; `details.InvocationID` also bypasses `invocation_id` matching.
@@ -136,7 +136,7 @@ observations, nested component metrics and systemd details with synthetic data.
 ### P2 — One idle UE hides aggregate radio throughput
 
 The path is `SchedulerFeed.receive → parse_ocudu → Collector.collect → UI`,
-at [telemetry.py](../../apps/spark-platform/backend/aoc_spark/telemetry.py)
+at [telemetry.py](../../apps/spark-console/backend/aoc_spark/telemetry.py)
 lines 52–77. A UE with explicitly zero transport blocks gets a null bitrate;
 aggregation requires every UE value to be non-null. A synthetic active UE at
 23 Mbps downlink / 5 Mbps uplink plus an idle UE produced unavailable totals.
@@ -151,8 +151,8 @@ semantics when no blocks exist.
 ### P2 — Active-device views count inactive or unknown PDU state
 
 The path is `Open5GS.parse_info → fresh_snapshot → Overview/Devices filters`,
-at [OverviewPage.tsx](../../apps/spark-platform/frontend/src/pages/OverviewPage.tsx)
-lines 98–104 and [DevicesPage.tsx](../../apps/spark-platform/frontend/src/pages/DevicesPage.tsx)
+at [OverviewPage.tsx](../../apps/spark-console/frontend/src/pages/OverviewPage.tsx)
+lines 98–104 and [DevicesPage.tsx](../../apps/spark-console/frontend/src/pages/DevicesPage.tsx)
 lines 78–84. Both filters require session evidence quality `status=ok` but ignore
 `session.state`. Synthetic inactive/unknown sessions yielded backend
 `active_pdu_count=0` while satisfying the UI's Active predicate.

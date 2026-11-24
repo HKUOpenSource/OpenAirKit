@@ -1,5 +1,5 @@
 {
   "policy": "locked-platform-wheelhouse",
   "jetson": {"lock": "apps/jetson-console/requirements-jetson.lock", "python": "3.10"},
-  "spark": {"lock": "apps/spark-platform/requirements-spark.lock", "python": "3.12"}
+  "spark": {"lock": "apps/spark-console/requirements-spark.lock", "python": "3.12"}
 }
