@@ -21,7 +21,7 @@ docs/assets/
 │   ├── jetson-orin-nano.webp       # NVIDIA Jetson Orin Nano UE host (active)
 │   ├── waveshare-m2-5g-carrier.webp # Waveshare M.2 5G expansion board for Jetson Orin (active)
 │   ├── quectel-rm520n-gl.webp      # Quectel RM520N-GL 5G NR module (active)
-│   ├── kit-overview.jpg            # Benchtop Hardware Topology Overview (16:9, <=1200px wide)
+│   ├── kit-overview.webp           # Benchtop Hardware Topology Overview (16:9, 1024x576, active)
 │   ├── spark-b210-wiring.jpg       # DGX Spark + USRP B210 USB 3.0 & RF wiring close-up
 │   └── jetson-waveshare-rm520n.jpg # Jetson Orin + Waveshare carrier + RM520N-GL + SIM
 ├── screenshots/
@@ -66,7 +66,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | --- | --- | --- |
 | `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`887x180`), legible in both light & dark GitHub themes |
 | `docs/assets/hardware/*.webp` (`5` files) | `README*`, `hardware-and-topology*`, `setup-bs-spark*`, `setup-ue-jetson*` (active) | Standardized WebP hardware visuals (`dgx-spark`, `usrp-b210`, `jetson-orin-nano`, `waveshare-m2-5g-carrier`, `quectel-rm520n-gl`) rendered in proportional bounding boxes |
-| `docs/assets/hardware/kit-overview.jpg` | `README*` & `hardware-and-topology*` | `16:9` Benchtop Hardware Topology Overview photograph showing DGX Spark, B210, Jetson Orin, Waveshare M.2 carrier + RM520N-GL, antennas and SIM reader (`<= 1200px` wide, `< 400 KB`) |
+| `docs/assets/hardware/kit-overview.webp` | `README*` & `hardware-and-topology*` (active) | `16:9` Benchtop Hardware Topology Overview (`1024x576`) showing Jetson Orin + Waveshare M.2 carrier + RM520N-GL, DGX Spark + USRP B210, and live Spark Platform console |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology*` | Close-up showing direct USB 3.0 connection and Band `n78` antennas / SMA attenuators |
 | `docs/assets/hardware/jetson-waveshare-rm520n.jpg` | `hardware-and-topology*` | Close-up showing RM520N-GL seated in Waveshare M.2 carrier, Nano-SIM orientation, and 4x SMA RF pigtails |
 | `docs/assets/screenshots/spark-console-overview.png` | `spark-operations*` | Light/neutral UI capture showing Overview / Devices state with live `8879` telemetry (`<= 1440px` wide) |

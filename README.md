@@ -33,7 +33,9 @@ reproducible **5G Standalone (SA)** IPv4 data network powered by **OCUDU**
 (RAN) and **Open5GS** (5GC), paired with decoupled local management consoles at
 both endpoints.
 
-<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 Benchtop Hardware Topology Overview photo -->
+<p align="center">
+  <img src="docs/assets/hardware/kit-overview.webp" alt="OpenAirKit 5G SA and AI-RAN hardware testbed" width="100%">
+</p>
 
 ## Core Capabilities
 

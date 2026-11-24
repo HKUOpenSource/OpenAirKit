@@ -18,7 +18,9 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
   while reserving edge AI compute resources on Orin for on-device inference
   workloads.
 
-<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 Benchtop Hardware Topology Overview photo showing Spark, B210, Jetson Orin, Waveshare carrier + RM520N-GL, antennas and SIM reader -->
+<p align="center">
+  <img src="assets/hardware/kit-overview.webp" alt="OpenAirKit benchtop hardware topology overview" width="100%">
+</p>
 
 ## Hardware Bill of Materials (BOM)
 

@@ -32,7 +32,9 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 硬件平台构建为可稳定复现的 **5G 独立组网（SA）** IPv4 数据网络，并在基站与终端两侧
 分别提供解耦的本地管控控制台。
 
-<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 全套实验平台桌面部署实拍图 -->
+<p align="center">
+  <img src="docs/assets/hardware/kit-overview.webp" alt="OpenAirKit 5G SA 与 AI-RAN 端网硬件实验平台" width="100%">
+</p>
 
 ## 核心能力
 

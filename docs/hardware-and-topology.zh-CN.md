@@ -15,7 +15,9 @@
   **Jetson Console** 完成模组独占监管与链路自动恢复，同时借助 Orin 预留的端侧算力资源
   承载边缘 AI 推理任务。
 
-<!-- ASSET_SLOT: docs/assets/hardware/kit-overview.jpg | 16:9 全套实验平台桌面部署实拍图 -->
+<p align="center">
+  <img src="assets/hardware/kit-overview.webp" alt="OpenAirKit 端网一体硬件实验平台实拍" width="100%">
+</p>
 
 ## 硬件物料清单（BOM）
 
