@@ -1,15 +1,29 @@
-<!-- ASSET_SLOT: docs/assets/brand/logo-light.svg & docs/assets/brand/logo-dark.svg (<picture> dark/light hero banner) -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.png" />
+    <img alt="OpenAirKit" src="docs/assets/brand/logo-light.png" width="420" />
+  </picture>
+</p>
 
-# OpenAirKit
+<p align="center">
+  <strong>Open-Source End-to-End 5G SA &amp; AI-RAN Hardware-Software Platform</strong>
+</p>
 
-**Open-Source End-to-End 5G SA & AI-RAN Hardware-Software Platform**
+<p align="center">
+  <a href="README.md">English</a> ·
+  <a href="README.zh-CN.md">简体中文</a> ·
+  <a href="docs/quickstart.md">Quickstart</a> ·
+  <a href="docs/hardware-and-topology.md">Hardware &amp; Topology</a> ·
+  <a href="docs/README.md">Documentation Map</a>
+</p>
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [Quickstart](docs/quickstart.md) | [Hardware & Topology](docs/hardware-and-topology.md) | [Documentation Map](docs/README.md)
-
-![Stack: OCUDU + Open5GS](https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-0f766e)
-![Spark Platform: 0.2.1](https://img.shields.io/badge/Spark_Platform-0.2.1-1d4ed8)
-![Jetson Console: 0.6.2](https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8)
-![Target: ARM64 Linux](https://img.shields.io/badge/Host-ARM64_Linux-334155)
+<p align="center">
+  <img alt="Stack: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-0f766e" />
+  <img alt="Spark Platform: 0.2.1" src="https://img.shields.io/badge/Spark_Platform-0.2.1-1d4ed8" />
+  <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8" />
+  <img alt="Target: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-334155" />
+</p>
 
 **OpenAirKit** turns a standardized hardware kit—**DGX Spark + USRP B210 +
 Jetson Orin + Waveshare M.2 5G Carrier + Quectel RM520N-GL**—into a

@@ -12,8 +12,8 @@ binary assets are captured.
 docs/assets/
 ├── README.md
 ├── brand/
-│   ├── logo-light.svg        # Horizontal logo for light GitHub theme
-│   ├── logo-dark.svg         # Horizontal logo for dark GitHub theme
+│   ├── logo-light.png        # Horizontal OpenAirKit logo for light GitHub theme (active)
+│   ├── logo-dark.png         # Horizontal OpenAirKit logo for dark GitHub theme (active)
 │   └── hero-banner.png       # Optional 16:9 project header visual
 ├── hardware/
 │   ├── kit-overview.jpg      # Full hardware stack overview (16:9, <=1200px wide)
@@ -25,19 +25,18 @@ docs/assets/
 └── diagrams/                 # Optional exported .svg / .excalidraw / .drawio sources
 ```
 
-## Replacing the Project Name & Hero Logo
+## Project Name & Hero Logo (`docs/assets/brand/`)
 
-When the final public project name and logos are ready, drop `logo-light.svg`
-and `logo-dark.svg` into `docs/assets/brand/` and replace the hero `ASSET_SLOT`
-comment in [README.md](../../README.md) and [README.zh-CN.md](../../README.zh-CN.md)
-with a centered `<picture>` block:
+Both root READMEs render the light/dark transparent PNG logos from
+`docs/assets/brand/` via a centered `<picture>` block (optional `.svg` vector
+upgrades can drop into the same paths):
 
 ```html
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.svg" />
-    <img alt="OpenAirKit Logo" src="docs/assets/brand/logo-light.svg" width="420" />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.png" />
+    <img alt="OpenAirKit" src="docs/assets/brand/logo-light.png" width="420" />
   </picture>
 </p>
 ```
@@ -57,7 +56,7 @@ identifiers** so visual updates do not break deployed hosts or systemd units:
 
 | Slot File | Document Location | Composition & Guidelines |
 | --- | --- | --- |
-| `docs/assets/brand/logo-{light,dark}.svg` | Top of `README.md` / `README.zh-CN.md` | Vector SVG, transparent background, legible in both light & dark themes |
+| `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`1024x265`), legible in both light & dark GitHub themes |
 | `docs/assets/hardware/kit-overview.jpg` | `README` & `hardware-and-topology` | `16:9` flat-lay or benchtop shot showing DGX Spark, B210, Jetson Orin, Waveshare M.2 carrier + RM520N-GL, antennas and SIM reader (`<= 1200px` wide, `< 400 KB`) |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology` | Close-up showing direct USB 3.0 connection and `n78` antennas / SMA attenuators |
 | `docs/assets/hardware/jetson-waveshare-rm520n.jpg` | `hardware-and-topology` | Close-up showing RM520N-GL seated in Waveshare M.2 carrier, Nano-SIM orientation, and 4x SMA RF pigtails |

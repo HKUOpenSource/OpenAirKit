@@ -1,15 +1,29 @@
-<!-- ASSET_SLOT: docs/assets/brand/logo-light.svg & docs/assets/brand/logo-dark.svg (<picture> dark/light hero banner) -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.png" />
+    <img alt="OpenAirKit" src="docs/assets/brand/logo-light.png" width="420" />
+  </picture>
+</p>
 
-# OpenAirKit
+<p align="center">
+  <strong>面向 AI-RAN 的开源端到端 5G SA 通信搭建与双端管理平台</strong>
+</p>
 
-**面向 AI-RAN 的开源端到端 5G SA 通信搭建与双端管理平台**
+<p align="center">
+  <a href="README.md">English</a> ·
+  <a href="README.zh-CN.md">简体中文</a> ·
+  <a href="docs/quickstart.zh-CN.md">快速搭建</a> ·
+  <a href="docs/hardware-and-topology.zh-CN.md">硬件清单与拓扑</a> ·
+  <a href="docs/README.zh-CN.md">文档导航</a>
+</p>
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [快速搭建](docs/quickstart.zh-CN.md) | [硬件清单与拓扑](docs/hardware-and-topology.zh-CN.md) | [文档导航](docs/README.zh-CN.md)
-
-![Stack: OCUDU + Open5GS](https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-0f766e)
-![Spark Platform: 0.2.1](https://img.shields.io/badge/Spark_Platform-0.2.1-1d4ed8)
-![Jetson Console: 0.6.2](https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8)
-![Target: ARM64 Linux](https://img.shields.io/badge/Host-ARM64_Linux-334155)
+<p align="center">
+  <img alt="Stack: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-0f766e" />
+  <img alt="Spark Platform: 0.2.1" src="https://img.shields.io/badge/Spark_Platform-0.2.1-1d4ed8" />
+  <img alt="Jetson Console: 0.6.2" src="https://img.shields.io/badge/Jetson_Console-0.6.2-1d4ed8" />
+  <img alt="Target: ARM64 Linux" src="https://img.shields.io/badge/Host-ARM64_Linux-334155" />
+</p>
 
 **OpenAirKit** 基于 **OCUDU**（RAN）与 **Open5GS**（5GC），将 **DGX Spark +
 USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** 标准化
