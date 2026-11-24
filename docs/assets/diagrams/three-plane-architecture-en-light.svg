@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 432" width="920" height="432" role="img" aria-label="Three-Plane Architecture">
+  <defs>
+    <marker id="arrow-solid" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#475569" /></marker>
+    <marker id="arrow-dashed" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#64748b" /></marker>
+    <marker id="arrow-rf-end" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M 1 1.5 L 9 5 L 1 8.5 Z" fill="#0f766e" /></marker>
+    <marker id="arrow-rf-start" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="3" refY="5" orient="auto"><path d="M 9 1.5 L 1 5 L 9 8.5 Z" fill="#0f766e" /></marker>
+    <clipPath id="band-clip-1"><rect x="16" y="16" width="888" height="96" rx="10" ry="10" /></clipPath>
+    <clipPath id="band-clip-2"><rect x="16" y="168" width="888" height="96" rx="10" ry="10" /></clipPath>
+    <clipPath id="band-clip-3"><rect x="16" y="320" width="888" height="96" rx="10" ry="10" /></clipPath>
+  </defs>
+  <!-- Layers -->
+  <rect x="16" y="16" width="888" height="96" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="16" width="208" height="96" fill="#f1f5f9" clip-path="url(#band-clip-1)" />
+  <line x1="224" y1="16" x2="224" y2="112" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="16" width="888" height="96" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="120.0" y="59.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">1. 5G SA Radio &amp;</text>
+  <text x="120.0" y="76.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">Core Plane</text>
+  <rect x="16" y="168" width="888" height="96" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="168" width="208" height="96" fill="#f1f5f9" clip-path="url(#band-clip-2)" />
+  <line x1="224" y1="168" x2="224" y2="264" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="168" width="888" height="96" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="120.0" y="211.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">2. Local Management</text>
+  <text x="120.0" y="228.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">&amp; Self-Recovery Plane</text>
+  <rect x="16" y="320" width="888" height="96" rx="10" ry="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+  <rect x="16" y="320" width="208" height="96" fill="#f1f5f9" clip-path="url(#band-clip-3)" />
+  <line x1="224" y1="320" x2="224" y2="416" stroke="#cbd5e1" stroke-width="1" />
+  <rect x="16" y="320" width="888" height="96" rx="10" ry="10" fill="none" stroke="#cbd5e1" stroke-width="1.2" />
+  <text x="120.0" y="355.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">3. Programmable AI</text>
+  <text x="120.0" y="372.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e293b">Extension Layer</text>
+  <text x="120.0" y="389.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11" font-weight="400" fill="#475569">(User-Defined Pipelines)</text>
+  <!-- Edges -->
+  <line x1="418.0" y1="64.0" x2="510.0" y2="64.0" stroke="#0f766e" stroke-width="2.6" stroke-linecap="butt" marker-start="url(#arrow-rf-start)" marker-end="url(#arrow-rf-end)" />
+  <line x1="658.0" y1="64.0" x2="752.0" y2="64.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" marker-end="url(#arrow-solid)" />
+  <line x1="327.0" y1="90.0" x2="327.0" y2="190.0" stroke="#475569" stroke-width="1.6" stroke-linecap="butt" />
+  <line x1="585.0" y1="90.0" x2="585.0" y2="188.0" stroke="#64748b" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="5 4" marker-end="url(#arrow-dashed)" />
+  <line x1="822.0" y1="90.0" x2="822.0" y2="188.0" stroke="#64748b" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="5 4" marker-end="url(#arrow-dashed)" />
+  <line x1="327.0" y1="242.0" x2="327.0" y2="342.0" stroke="#64748b" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="5 4" />
+  <line x1="701.0" y1="242.0" x2="701.0" y2="342.0" stroke="#64748b" stroke-width="1.6" stroke-linecap="butt" stroke-dasharray="5 4" />
+  <!-- Nodes -->
+  <rect x="238" y="38" width="178" height="52" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="327.0" y="60.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Quectel RM520N-GL</text>
+  <text x="327.0" y="77.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">+ USIM</text>
+  <rect x="512" y="38" width="146" height="52" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="585.0" y="60.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">OCUDU gNB</text>
+  <text x="585.0" y="77.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">+ USRP B210</text>
+  <rect x="754" y="38" width="136" height="52" rx="8" ry="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.6" />
+  <text x="822.0" y="68.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#064e3b">Open5GS 5GC</text>
+  <rect x="238" y="190" width="178" height="52" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="327.0" y="220.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">Jetson Console</text>
+  <rect x="512" y="190" width="378" height="52" rx="8" ry="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6" />
+  <text x="701.0" y="220.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">Spark Console</text>
+  <rect x="238" y="342" width="178" height="52" rx="8" ry="8" fill="#fefce8" stroke="#a16207" stroke-width="1.6" stroke-dasharray="6 4" />
+  <text x="327.0" y="364.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#713f12">Jetson Edge</text>
+  <text x="327.0" y="381.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#713f12">AI Runtime</text>
+  <rect x="512" y="342" width="378" height="52" rx="8" ry="8" fill="#fefce8" stroke="#a16207" stroke-width="1.6" stroke-dasharray="6 4" />
+  <text x="701.0" y="372.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#713f12">DGX Spark RAN-Side AI Runtime</text>
+  <!-- Edge Labels -->
+  <rect x="427.9" y="53.0" width="72.2" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="464.0" y="68.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">5G NR SA</text>
+  <rect x="674.9" y="53.0" width="62.3" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="706.0" y="68.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">N2 / N3</text>
+  <rect x="527.3" y="129.0" width="115.4" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="585.0" y="144.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">JSON Telemetry</text>
+  <rect x="758.6" y="129.0" width="126.7" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="822.0" y="144.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">Docker &amp; infoAPI</text>
+  <rect x="261.4" y="281.0" width="131.2" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="327.0" y="296.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">REST / SSE &amp; Jobs</text>
+  <rect x="626.0" y="281.0" width="150.1" height="22.0" rx="11" ry="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="701.0" y="296.0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="11.5" font-weight="500" fill="#334155">REST / SSE &amp; Control</text>
+</svg>

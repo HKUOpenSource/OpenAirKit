@@ -8,44 +8,15 @@ assembled hardware to a verified **5G SA** IPv4 data connection supervised by
 
 ## Deployment Flow Across Hosts
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef ws fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef spark fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef jetson fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+<div align="center">
 
-  subgraph WS1["1. Workstation"]
-    direction LR
-    S0["Build ARM64<br/>Release Archives"]:::ws
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagrams/deployment-flow-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagrams/deployment-flow-en-light.svg">
+  <img src="assets/diagrams/deployment-flow-en-light.svg" alt="OpenAirKit Deployment Flow Across Hosts" width="860">
+</picture>
 
-  subgraph SPARK["2. DGX Spark"]
-    direction LR
-    S1["Deploy 5G Stack &<br/>Spark Console"]:::spark
-    S2A["Add Open5GS<br/>Subscriber"]:::spark
-    S1 --> S2A
-  end
-
-  subgraph WS2["3. Workstation"]
-    direction LR
-    S2B["Program & Verify<br/>5G USIM"]:::ws
-  end
-
-  subgraph JETSON["4. Jetson Orin"]
-    direction LR
-    S3["Install & Commission<br/>Jetson Console"]:::jetson
-    S4["Run Device Setup<br/>& Verify E2E"]:::jetson
-    S3 --> S4
-  end
-
-  S0 --> S1
-  S0 -. "Jetson archive" .-> S3
-  S2A --> S2B --> S3
-```
+</div>
 
 ## Prerequisites
 

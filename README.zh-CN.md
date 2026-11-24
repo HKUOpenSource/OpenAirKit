@@ -44,50 +44,15 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 
 ## 系统架构
 
-```mermaid
----
-config:
-  layout: elk
----
-flowchart TB
-  classDef hw fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
-  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
-  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+<div align="center">
 
-  subgraph HW["ARM64 硬件栈"]
-    direction LR
-    UEHW["Jetson Orin +<br/>RM520N-GL"]:::hw
-    BSHW["DGX Spark +<br/>USRP B210"]:::hw
-    UEHW <== "5G NR SA" ==> BSHW
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/diagrams/system-architecture-zh-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/diagrams/system-architecture-zh-light.svg">
+  <img src="docs/assets/diagrams/system-architecture-zh-light.svg" alt="OpenAirKit 系统架构" width="840">
+</picture>
 
-  subgraph STACK["5G SA 协议栈平面"]
-    direction LR
-    RAN["OCUDU gNB"]:::stack
-    CORE["Open5GS 5GC"]:::stack
-    RAN -- "N2 / N3" --> CORE
-  end
-
-  subgraph MGMT["本地优先管理平面"]
-    direction LR
-    JC["Jetson Console"]:::mgmt
-    SP["Spark Console"]:::mgmt
-  end
-
-  subgraph AI["可编程 AI 扩展层（自定义算法与推理流水线）"]
-    direction LR
-    JAI["Jetson 端侧 AI 运行环境"]:::ai
-    SAI["DGX Spark 网侧 AI 运行环境"]:::ai
-  end
-
-  UEHW --- JC
-  BSHW --- RAN
-  RAN -. "无线指标" .-> SP
-  CORE -. "网元与会话状态" .-> SP
-  JC -. "REST / SSE" .- JAI
-  SP -. "REST / SSE" .- SAI
-```
+</div>
 
 ## 平台组成总览
 
