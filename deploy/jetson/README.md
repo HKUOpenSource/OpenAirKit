@@ -9,6 +9,6 @@ services remain disabled at boot.
 
 Start prepares the configured data routes and resumes observation with recovery
 paused. Stop releases services before journal-aware owned-route cleanup. The
-0.6.0 release includes the operator scripts; the installed manager also works
+release includes the operator scripts; the installed manager also works
 directly with administrator sudo. See the paired [setup guide](../../docs/setup-ue-jetson.md)
 and [operations guide](../../docs/jetson-operations.md).

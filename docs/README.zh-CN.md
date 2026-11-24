@@ -1,36 +1,51 @@
 # 文档导航
 
-本目录是 Agentic-OCUDU 当前实现的唯一文档事实来源，只描述仍受支持的代码、
-发布边界和已经观测到的行为。退役计划与工具保存在本目录之外，不定义当前产品。
+[English](README.md)
 
-## 核心指南
+本目录按照 **架构概览 → 部署与运维指南 → 技术参考与附录**
+三层结构组织全库文档；所有参数契约、接口规范与硬件附录均统一收口于 `docs/reference/`。
 
-| 目标 | 文档 |
+## 架构概览
+
+| 查阅目标 | 文档 |
 | --- | --- |
-| 理解组件、端口与信任边界 | [架构](architecture.zh-CN.md) |
-| 安装与初始化 Jetson Console（0.6.2） | [Jetson 安装](setup-ue-jetson.zh-CN.md) |
-| 安装 Spark Platform（0.2.1）与 V2 协议栈 | [Spark 安装](setup-bs-spark.zh-CN.md) |
-| 查阅 UE 接入、策略与路由语义 | [UE 接入与实验室策略](ue-access-policy.zh-CN.md) |
-| 查阅已验证的 TB01 SIM 烧录方法 | [TB01 SIM 烧录](sim-programming-tb01.zh-CN.md) |
-| 操作或恢复 Jetson | [Jetson 运维](jetson-operations.zh-CN.md) |
-| 操作 RAN、核心网和监测平台 | [Spark 运维](spark-operations.zh-CN.md) |
-| 排查 UE 侧故障 | [Jetson 故障排查](troubleshooting-ue-jetson.zh-CN.md) |
-| 排查基站侧故障 | [Spark 故障排查](troubleshooting-bs-spark.zh-CN.md) |
-| 构建和审计发布 | [发布指南](releasing.zh-CN.md) |
-| 配置受限免密维护助手 | [维护助手指南](../deploy/maintenance/README.zh-CN.md) |
-| 使用仓库代码图 | [CodeGraph 指南](coding-agent-codegraph.zh-CN.md) |
-| 查看交付状态 | [路线图](roadmap.md) |
+| 理解三平面架构、组件归属、隔离边界与证据语义 | [系统架构](architecture.zh-CN.md) |
+| 查看硬件 BOM（含 Waveshare M.2 载板）、物理拓扑与主机前置条件 | [硬件清单与拓扑](hardware-and-topology.zh-CN.md) |
 
-## 近期里程碑与验收记录
+## 部署、运维与 AI 扩展指南
 
-| 主题 | 记录 |
+| 查阅目标 | 文档 |
 | --- | --- |
-| 验收规范与早期归档索引 | [验收记录](acceptance/README.md) |
-| Spark 0.2.1 与 Jetson 0.6.2 实机对齐（`8879`、ECM、`boot_connect`） | [2026-11-23 对齐验收](acceptance/2026-11-23-spark-ue-alignment.zh-CN.md) |
-| Jetson RM520N RNDIS AT 接口发现 | [2026-10-16 RNDIS 发现](acceptance/2026-10-16-jetson-rndis-at.zh-CN.md) |
-| Jetson 蜂窝/Wi-Fi 自动切换验收 | [2026-10-16 切换验收](acceptance/2026-10-16-jetson-cellular-failover.zh-CN.md) |
-| Jetson 蜂窝性能观测 | [2026-10-16 性能观测](acceptance/2026-10-16-jetson-cellular-performance.zh-CN.md) |
-| 多设备 0.6.1 / 0.2.1 部署与回滚 | [2026-09-28 部署记录](acceptance/2026-09-28-review-deployment.zh-CN.md) |
-| 0.6.2 蜂窝恢复自动切回修复 | [2026-09-28 路由修复](acceptance/2026-09-28-cellular-failback.zh-CN.md) |
+| 按跨主机全链路流程完成系统部署与联调 | [端到端快速搭建指南](quickstart.zh-CN.md) |
+| 安装 Spark Console 与基站协议栈 | [Spark 安装指南](setup-bs-spark.zh-CN.md) |
+| 编译并部署独立的 OCUDU + Open5GS 协议栈发布包 | [Spark 协议栈部署](../deploy/spark/stack/README.zh-CN.md) |
+| 构建并核验 Open5GS ARM64 运行镜像 | [Open5GS ARM64 构建](../stacks/open5gs/build/README.md) |
+| 创建 Open5GS 订阅并烧录 5G USIM 卡 | [Open5GS 开户与 USIM 烧录指南](sim-provisioning.zh-CN.md) |
+| 安装、初始化并配置 Jetson Console 开机自连 | [Jetson Console 安装指南](setup-ue-jetson.zh-CN.md) |
+| 使用 Spark Web 控制台并执行全栈生命周期管理 | [Spark Console 运维指南](spark-operations.zh-CN.md) |
+| 使用 Jetson Web 控制台、双路径路由与有界自愈 | [Jetson Console 运维指南](jetson-operations.zh-CN.md) |
+| 配置可选受限免密维护助手（`aoc-maintain`） | [维护助手指南](../deploy/maintenance/README.zh-CN.md) |
+| 基于端网预留算力与接口开发自定义 AI 服务与流水线 | [端网侧 AI 扩展指南](ai-customization.zh-CN.md) |
+| 排查基站侧与核心网异常 | [Spark 故障排查](troubleshooting-bs-spark.zh-CN.md) |
+| 排查 UE 侧、模组或路由异常 | [Jetson 故障排查](troubleshooting-ue-jetson.zh-CN.md) |
 
-命令和界面名称以英文文档为准，`.zh-CN.md` 文件提供对应的简体中文说明。
+## 技术参考与附录
+
+| 专题 | 参考文档 |
+| --- | --- |
+| 射频基线（`n78`）、Open5GS 数据契约与 UE 接入策略语义 | [网络契约与射频基线](reference/network-and-rf-profile.zh-CN.md) |
+| 回环端口分配、低时延保护、路由阈值、恢复预算与退出码 | [端口与运行时参考](reference/ports-and-runtime.zh-CN.md) |
+| Spark Console 与 Jetson Console 全量 REST / SSE 接口规范 | [REST 与 SSE 接口参考](reference/api-reference.zh-CN.md) |
+| RM520N-GL USB 布局、QMAP 核查、内核兼容性与 TB01 APDU 附录 | [硬件与 TB01 附录](reference/hardware-notes.zh-CN.md) |
+| 5G SA 与平台核心术语定义 | [核心术语表](reference/glossary.zh-CN.md) |
+
+## 发布维护、视觉素材与实机基线
+
+| 查阅目标 | 文档 |
+| --- | --- |
+| 构建、校验并打包 ARM64 离线发布包 | [发布指南](releasing.zh-CN.md) |
+| 查看品牌解耦矩阵、Logo 规范、硬件图示与脱敏要求 | [视觉素材与品牌替换规范](assets/README.md) |
+| 查看产品能力里程碑 | [产品路线图](roadmap.zh-CN.md) |
+| 查阅脱敏后的硬件实机验收基线 | [硬件验收基线索引](acceptance/README.md) |
+
+命令行参数与界面英文标签以英文文档为规范基准，`.zh-CN.md` 提供等价的简体中文工程说明。

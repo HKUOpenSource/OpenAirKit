@@ -1,5 +1,7 @@
 # Contributing
 
+[简体中文](CONTRIBUTING.zh-CN.md)
+
 ## Workflow
 
 Create changes on `feature/*`, `fix/*`, `release/*` or `hotfix/*` branches and
@@ -27,30 +29,32 @@ use relative links for repository files, and mark unverified behavior clearly.
 
 ## Validation
 
-Run the narrowest useful target while developing and `make ci` before review.
-This runs both backend suites, shared stack/release tests once, both production
-frontend builds (including TypeScript) and repository audits. Install backend
-development dependencies first; the frontend builds run `npm ci` themselves.
-Use Python 3.12 and Node.js 22 to match automatic CI. The existing `make check`
-remains useful for checking an already prepared development environment.
+Run the narrowest useful target while developing (`make docs-audit`,
+`make test-jetson-backend`, `make test-spark-backend`, or `make test-stack`) and
+run `make ci` before opening a pull request. `make ci` runs both backend test
+suites, shared stack/release tests, both production frontend builds (including
+TypeScript checks), and repository audits.
 
-Each PR runs one `Quick checks` job on Ubuntu 24.04. Merging does not trigger
-another identical run; direct pushes to main are not automatically checked.
-The `CI` workflow can also be run manually. Browser E2E and the Jetson Python
-3.10/Spark Python 3.12 matrix move to the manual `Extended checks` workflow.
-Run it for browser behavior changes or before releasing; it uses synthetic
-services and does not operate hardware. Reduced automatic CI does not certify
-browser behavior or Jetson Python 3.10 compatibility. Known E2E timing issues
-remain visible in manual runs; this workflow change does not fix them.
+Install backend development dependencies first (`make install-dev`); frontend
+builds invoke `npm ci` automatically. CI targets Python 3.12 and Node.js 22.
+Use `make check` to run all local checks against an already prepared environment
+(pass `VENV=local/dev-venv` if your virtual environment lives in a custom path).
 
-The question is which checks are needed on every change. No CodeGraph index is
-present. The path is `pull_request → CI → make ci`; optional validation is
-`workflow_dispatch → Extended checks → backend tests / e2e-*`. Automatic checks
-retain code, build and repository validation while removing browser startup,
-duplicate shared tests and the post-merge rerun. Validate workflow syntax and
-`make ci` when changing this contract. Hardware evidence belongs in
-`docs/acceptance/` as a redacted summary; release validation is described in
-[Releasing](docs/releasing.md).
+- **Automatic PR gate (`Quick checks`)**: Runs `make ci` on Ubuntu 24.04 for
+  pull requests.
+- **Manual verification (`Extended checks`)**: Runs the multi-version matrix
+  (Jetson Python 3.10, Spark Python 3.12) and synthetic browser E2E suites via
+  `workflow_dispatch`. Run this workflow before releases or after frontend
+  behavior changes; synthetic E2E runs do not operate physical hardware.
+
+Hardware acceptance summaries belong in `docs/acceptance/` only after strict
+redaction; release packaging rules are documented in [Releasing](docs/releasing.md).
+
+## Optional Developer Tools
+
+When `.codegraph/` exists at the repository root, contributors can follow the
+[CodeGraph workflow](docs/coding-agent-codegraph.md) to trace symbols and call
+paths before editing.
 
 Never commit credentials, subscriber identities, production addresses,
 databases, logs, packet captures, generated releases or unredacted screenshots.

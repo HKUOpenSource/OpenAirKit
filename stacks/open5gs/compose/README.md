@@ -4,8 +4,9 @@
 `compose.json`, per-NF JSON configurations accepted by Open5GS's YAML parser,
 the container runtime, and a SHA256 manifest. It uses the exact ARM64 image IDs
 from `artifacts.lock.json` with `pull_policy: never`; arbitrary image variables
-and tags are not accepted. The Open5GS image contains iperf3 and is also used by
-ext-DN, so no OAI traffic-generator image is needed.
+and tags are not accepted. `ext-DN` uses the minimal connectivity derivative built
+from `Dockerfile.connectivity` (which removes `iperf3` and exposes only a fixed
+`/health` endpoint on TCP port `8080`, without host-published throughput servers).
 
 The 12 services are MongoDB, NRF, AMF, SMF, UPF, AUSF, UDM, UDR, PCF, BSF,
 NSSF and ext-DN. SBI uses direct NRF discovery; SCP is not needed in this configuration.
@@ -35,8 +36,8 @@ PFCP association. Healthy sockets are not session or radio evidence.
 The test checks bounded stop, clean exits and MongoDB persistence across Compose
 down/recreation. It then deletes only the disposable project and its newly
 created, owner-labelled test volume. Normal deployment must retain the database
-volume. iperf3 exit 1 is normalized only after an explicit orderly stop;
-unexpected exit and forced termination remain failures and are logged.
+volume. Any unexpected container exit or forced termination is treated as a
+verification failure and logged.
 
 The default bundle is `production_ready: false` and is only for empty-core
 validation. `--database-auth` generates private MongoDB credentials on the
@@ -50,9 +51,8 @@ identity files. It starts only MongoDB and leaves its volume retained and stoppe
 It refuses an existing volume; later deployment must reuse the same credentials
 and volume, not regenerate a new bundle/password over it. Keys never go in command
 arguments, output or Git. Duplicate subscriber insertion is refused without SQN
-changes. Radio authorization/installation and actual PDU tests remain pending.
+changes. Live radio installation and end-to-end PDU verification are covered in
+the [Spark stack deployment guide](../../../deploy/spark/stack/README.md).
 
 N6 tests bind source `10.0.0.1` inside UPF. They verify NAT and ext-DN traffic only;
 they do not traverse GTP-U, an RAN, a Jetson or a real UE session.
-
-See the [Spark acceptance record](../../../docs/acceptance/2026-09-09-v2-p1-04-compose.md).

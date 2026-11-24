@@ -1,39 +1,53 @@
 # Documentation
 
-This directory is the source of truth for the current Agentic-OCUDU system.
-Documents describe only supported code, release boundaries and observed
-behavior. Retired plans and tools live outside this directory and do not define
-the product.
+[简体中文](README.zh-CN.md)
 
-## Core guides
+This directory holds the canonical platform documentation, structured from
+high-level architecture down to operational procedures and single-source
+technical references.
+
+## Overview & Architecture
 
 | Need | Guide |
 | --- | --- |
-| Understand components, ports and trust boundaries | [Architecture](architecture.md) |
-| Install and commission the Jetson Console (0.6.2) | [Jetson setup](setup-ue-jetson.md) |
-| Install the Spark Platform (0.2.1) and V2 stack | [Spark setup](setup-bs-spark.md) |
-| Review UE access, policy and routing rules | [UE access and lab policy](ue-access-policy.md) |
-| Review the validated TB01 SIM programming method | [TB01 SIM programming](sim-programming-tb01.md) |
-| Operate or recover the Jetson side | [Jetson operations](jetson-operations.md) |
-| Operate the RAN, core and monitor | [Spark operations](spark-operations.md) |
-| Diagnose a UE-side fault | [Jetson troubleshooting](troubleshooting-ue-jetson.md) |
-| Diagnose a base-station-side fault | [Spark troubleshooting](troubleshooting-bs-spark.md) |
-| Build and audit a release | [Releasing](releasing.md) |
-| Configure passwordless restricted maintenance | [Maintenance helper](../deploy/maintenance/README.md) |
-| Use the repository graph | [CodeGraph guide](coding-agent-codegraph.md) |
-| Check delivery status | [Roadmap](roadmap.md) |
+| Understand planes, component boundaries, isolation, and evidence semantics | [Architecture](architecture.md) |
+| Review hardware BOM, Waveshare M.2 carrier, wiring topology, and OS prerequisites | [Hardware & Topology](hardware-and-topology.md) |
 
-## Recent milestones & acceptance records
+## Setup, Operations & Extensibility Guides
 
-| Focus | Record |
+| Need | Guide |
 | --- | --- |
-| Full acceptance rules & older records | [Acceptance index](acceptance/README.md) |
-| Spark 0.2.1 + Jetson 0.6.2 runtime alignment (`8879`, ECM, `boot_connect`) | [2026-11-23 alignment](acceptance/2026-11-23-spark-ue-alignment.md) |
-| Jetson RM520N RNDIS AT interface discovery | [2026-10-16 RNDIS discovery](acceptance/2026-10-16-jetson-rndis-at.md) |
-| Jetson cellular/Wi-Fi failover acceptance | [2026-10-16 cellular failover](acceptance/2026-10-16-jetson-cellular-failover.md) |
-| Jetson cellular performance observations | [2026-10-16 cellular performance](acceptance/2026-10-16-jetson-cellular-performance.md) |
-| Multi-device 0.6.1 / 0.2.1 deployment & rollback | [2026-09-28 review deployment](acceptance/2026-09-28-review-deployment.md) |
-| 0.6.2 automatic cellular failback repair | [2026-09-28 cellular failback](acceptance/2026-09-28-cellular-failback.md) |
+| Execute the end-to-end multi-host deployment workflow | [End-to-End Quickstart](quickstart.md) |
+| Install Spark Console and the base-station stack | [Spark Setup](setup-bs-spark.md) |
+| Build and deploy the OCUDU + Open5GS stack bundle | [Spark Stack Deployment](../deploy/spark/stack/README.md) |
+| Build and verify Open5GS ARM64 container images | [Open5GS ARM64 Build](../stacks/open5gs/build/README.md) |
+| Provision an Open5GS subscriber and program 5G USIM cards | [SIM Provisioning & USIM Setup](sim-provisioning.md) |
+| Install, commission, and configure boot connect on Jetson Console | [Jetson Setup](setup-ue-jetson.md) |
+| Operate Spark Web Console and full-stack lifecycle controls | [Spark Operations](spark-operations.md) |
+| Operate Jetson Web Console, route failover, and bounded recovery | [Jetson Operations](jetson-operations.md) |
+| Configure optional passwordless restricted maintenance (`aoc-maintain`) | [Maintenance Helper](../deploy/maintenance/README.md) |
+| Integrate user-defined AI pipelines on reserved Spark & Jetson compute resources | [AI Extensibility Guide](ai-customization.md) |
+| Diagnose base-station or core issues | [Spark Troubleshooting](troubleshooting-bs-spark.md) |
+| Diagnose UE, modem, or routing issues | [Jetson Troubleshooting](troubleshooting-ue-jetson.md) |
 
-English is the normative documentation language for commands and interface
-names. The matching `.zh-CN.md` files provide Simplified Chinese guidance.
+## Technical Reference & Appendices
+
+| Topic | Reference |
+| --- | --- |
+| RF baseline (`n78`), Open5GS data profile (`DNN`/`PLMN`/`5QI`), and access policy | [Network & RF Profile](reference/network-and-rf-profile.md) |
+| Loopback ports, real-time guards, routing metrics, recovery budgets, and exit codes | [Ports & Runtime](reference/ports-and-runtime.md) |
+| Authenticated REST and SSE endpoints for Spark Console & Jetson Console | [REST & SSE API Reference](reference/api-reference.md) |
+| RM520N-GL USB layouts, QMAP checks, kernel compatibility, and TB01 APDU tables | [Hardware & TB01 Notes](reference/hardware-notes.md) |
+| Core 5G SA and platform terminology | [Glossary](reference/glossary.md) |
+
+## Maintainer, Assets & Verification Baselines
+
+| Need | Document |
+| --- | --- |
+| Build, package, and audit offline ARM64 releases | [Releasing](releasing.md) |
+| Review brand naming decoupling, logo assets, hardware photos, and redaction rules | [Visual Assets & Brand Guide](assets/README.md) |
+| Track product capability milestones | [Product Roadmap](roadmap.md) |
+| Review redacted hardware verification baselines | [Verified Hardware Baselines](acceptance/README.md) |
+
+English is the normative reference for CLI flags and Web UI labels;
+`.zh-CN.md` documents provide equivalent Simplified Chinese guidance.

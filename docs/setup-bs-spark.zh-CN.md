@@ -1,26 +1,30 @@
-# Spark 系统安装
+# Spark 安装指南
 
-## 前提
+[English](setup-bs-spark.md)
 
-目标机应为 ARM64、Ubuntu 24.04、Python 3.12，并提供 systemd、Docker Compose 和通过 USB 3
-连接的受支持 B210。确认 `127.0.0.1:8877`（Monitor Web）与 `127.0.0.1:8879`（OCUDU 回环
-JSON 指标）空闲。端口 `8879` 用于避开共驻服务常占用的 `8000–8002` 区间（例如 DGX Spark 上的
-本地 vLLM 容器）。监测平台、无线栈和核心网具有不同的发布与生命周期边界。
+本指南说明如何在 **DGX Spark** 上安装 **Spark Console** 与 **OCUDU + Open5GS**
+基站及核心网协议栈。硬件清单、端口规划与内核兼容性说明请参阅[硬件清单与拓扑](hardware-and-topology.zh-CN.md)
+及[端口与运行时参考](reference/ports-and-runtime.zh-CN.md)。
 
-安装前核验 `stacks/open5gs/artifacts.lock.json` 的镜像摘要、
-`stacks/open5gs/sources.lock.json` 的核心网源码版本、`config/upstreams.json` 的
-OCUDU 版本，以及从 `config/network-contract.json` 派生的站点配置。生产订阅资料
-只能从受保护的部署状态加载，不能进入仓库。
+## 前置条件
 
-## 安装监测平台
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="145" alt="DGX Spark" /><br/><sub><b>DGX Spark（ARM64 主机）</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="145" alt="USRP B210" /><br/><sub><b>Ettus USRP B210（USB 3.0）</b></sub></td>
+  </tr>
+</table>
 
-使用 `make build-spark-release` 构建并传输 ARM64 发布包，再运行发布包内的
-platform installer 完成 preflight 和 install。安装位置为
-`/opt/agentic-ocudu/monitor`，三个平台服务（`aoc-control.service`、
-`aoc-observe.service`、`aoc-monitor-web.service`）默认不开机自启。安装监测平台不会
-启动或重启协议栈。
+- **主机环境**：DGX Spark（ARM64、Ubuntu 24.04、Python 3.12、`systemd`、Docker Engine 与 Compose 插件）。
+- **射频前端**：Ettus **USRP B210** 直连原生 USB 3.0 端口。
+- **回环端口**：确认 `8877`（Spark Console）与 `8879`（OCUDU JSON 指标）空闲；`8000–8002` 作为独立预留推理端口段保持留空。
+- **锁定输入**：核验 `stacks/open5gs/artifacts.lock.json`、`stacks/open5gs/sources.lock.json`、`config/upstreams.json` 及 `config/network-contract.json`；订阅凭据须保存在 Git 之外的受保护目录中。
 
-在解压后的 Spark 发布目录使用实际安装器动作：
+## 1. 安装 Spark Console
+
+通过 `make build-spark-release` 构建 ARM64 离线包并传输解压至 Spark，依次运行完整性
+校验、主机预检与安装（首次安装将交互提示设置不少于 12 位的 Web 密码并经哈希后写入
+`/etc/aoc-monitor/auth.json`）：
 
 ```sh
 python3 -I -B install.py verify --path .
@@ -28,40 +32,22 @@ python3 -I -B install.py check-host --path .
 sudo python3 -I -B install.py install --path .
 ```
 
-协议栈准备完成后，批准匹配的[维护包](../deploy/maintenance/README.zh-CN.md)
-（`/usr/local/sbin/aoc-maintain`），并安装[Spark 生命周期脚本](spark-operations.zh-CN.md)。
-完整启动和状态检查将 N2 建链与服务进程状态分开验证。
+安装程序将运行时部署至 `/opt/agentic-ocudu/monitor`，`aoc-control.service`、
+`aoc-observe.service` 与 `aoc-monitor-web.service` 默认不随开机自启；安装过程不干扰
+既有无线与核心网服务。
 
-## 准备协议栈
+## 2. 安装 5G SA 协议栈
 
-按[独立协议栈包指南](../deploy/spark/stack/README.zh-CN.md)构建固定无线产物、生成并初始化
-私有鉴权 N6 包，再用 `deploy/spark/stack/package.py` 暂存和校验。全新安装入口提供 V2
-控制器、`aoc-v2-core.service`、`aoc-v2-radio.service` 与 `/usr/local/bin/aoc-v2ctl`，
-不启动服务，也不覆盖已有安装。
+依据[Spark 协议栈部署](../deploy/spark/stack/README.zh-CN.md)编译 OCUDU、构建 Open5GS
+运行镜像并渲染初始化私有鉴权 N6 核心网部署包，随后安装 `aoc-v2-core.service`、
+`aoc-v2-radio.service`、`aoc-v2-cpu-latency.service` 与 `/usr/local/bin/aoc-v2ctl`。
 
-当前维护基线包含已通过实机验证的配置保障：
+建议同步启用指标守护与无线实时性隔离：
 
-- **MongoDB 内核兼容**：`stacks/open5gs/compose/render.py` 为 `mongo` 服务注入
-  `GLIBC_TUNABLES=glibc.pthread.rseq=1`，用于兼容 Linux 7.0+ 内核（已在 `7.0.0-1019-nvidia`
-  与 MongoDB `8.0.30` 验证）。
-- **射频基线参数**：`deploy/spark/stack/runtime.py` 默认写入 `tx_gain=80`、`rx_gain=54`
-  与 `cell_cfg.pusch.max_ue_mcs=24`。
-- **低时延与实时调度资源**：`deploy/spark/stack/libexec/aoc-v2-cpu-latency`、
-  `aoc-v2-cpu-latency.service`（`PartOf=aoc-v2-radio.service`）、`cpu-latency.conf`
-  及 `realtime.conf.example`（`CPUAffinity`、`LimitRTPRIO=99`），用于避免 CPU 深度休眠及与
-  共驻负载争抢核芯。
-- **迁移实例（schema 2）与全新实例（schema 3）差异**：全新安装采用 schema 3 布局
-  （`systemd/`，且新版 `runtime.py` 会拒绝目录内未登记文件）；若目标机属于带 schema 2 清单的
-  既有迁移实例（使用 `units/` 并含历史备份目录），升级时应就地修补其现役 `runtime.py` 并更新
-  `release.json` 哈希，不要直接用 schema 3 `runtime.py` 覆盖。
+1. 运行 `sudo python3 scripts/spark/enable_radio_json_metrics.py`，开启仅限本机 root 访问的 `127.0.0.1:8879` 无线指标守护（`aoc-v2-metrics-guard.service`）。
+2. 保持启用 `aoc-v2-cpu-latency.service`，在运行高负载 AI 推理任务时参照[端口与运行时参考](reference/ports-and-runtime.zh-CN.md)配置 `realtime.conf` CPU 核芯亲和性。
 
-`scripts/spark/enable_radio_json_metrics.py` 提供带回滚事务的指标端口切换工具，可将未启用或旧版
-`127.0.0.1:8001` 配置迁移到 `127.0.0.1:8879`，并安装 `aoc-v2-metrics-guard.service` 仅放行
-`uid == 0`。接收 UE 流量前应核验 B210 所有权、核心网、N2 与 `8879` 回环指标端点。本地打包测试不代表
-目标机安装或射频验收。
+## 3. 可选受限运维脚本与系统验收
 
-## 验证
-
-通过 SSH 隧道访问 `127.0.0.1:8877`。验证全部 12 个核心网容器、gNB 进程代次、N2、`127.0.0.1:8879`
-WebSocket 指标连接、动态解析后的核心网网桥计数器、当前 UE 上下文、活动 PDU 以及独立的 N3/N6 证据。
-端到端数据路径必须由 Jetson 侧绑定接口的探测完成验收。
+- 若需启用免密 `~/aoc-ops/spark/` 运维脚本，请先按[维护助手指南](../deploy/maintenance/README.zh-CN.md)配置 `/usr/local/sbin/aoc-maintain`，再部署[Spark 运维](spark-operations.zh-CN.md)所述的生命周期脚本。
+- 通过 SSH 端口转发访问 `127.0.0.1:8877`，核验 12 个核心网容器、gNB 进程实例代次、N2 NG Setup、`8879` 实时指标与网桥计数均正常；最终结合 Jetson UE 侧绑定探测完成端到端数据面验收。

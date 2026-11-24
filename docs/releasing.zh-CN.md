@@ -1,56 +1,72 @@
-# 发布指南
+# 发布工程指南
 
-Jetson Console 与 Spark Platform 使用独立版本和发布包，一次只发布一个平台。
+[English](releasing.md)
 
-## 构建前
+**Jetson Console**（`0.6.2`）与 **Spark Console**（`0.2.1`）采用独立版本号、
+源码隔离边界与离线发布产物，每次发布流程仅针对单一平台执行。
 
-1. 同步更新后端 `__version__`、前端 package 文件、`CHANGELOG.md` 和
-   `RELEASE-VERSION` 来源。
-2. 核验 Python 锁、npm lockfile、上游源码版本和镜像摘要。
-3. 运行 `make ci`，覆盖后端测试、前端生产构建及仓库审计。
-4. 对候选发布手动运行 `Extended checks` 工作流，覆盖 Jetson Python 3.10、
-   Spark Python 3.12 和两端浏览器测试。这些检查不属于最小自动 PR 检查；
-   发布前仍须处理失败，改为手动执行不代表可以接受失败。
+## 发布边界约束
 
-## 构建
+所有离线发布包在交付前均须通过以下仓库审计门禁：
 
-先执行开发环境初始化。构建主机可使用 macOS 或 Linux、Python 3.10–3.12 和
-Node.js 22；输出目录必须尚不存在。构建器会构建所选前端，并下载精确锁定的 Linux
-ARM64 wheel：Jetson 对应 CPython 3.10 / Ubuntu 22.04，Spark 对应 CPython 3.12 /
-Ubuntu 24.04。依赖条件按目标环境解析，因此在较新 Python 上构建 Jetson 包时也会
-包含 `exceptiongroup`。
+- **单平台严格隔离**：发布包内仅允许包含本平台的应用代码、部署工具、锁定依赖、
+  wheelhouse、版本元数据、完整性清单（Manifest）及第三方许可声明。
+- **违规内容拦截**：审计脚本将直接拒绝包含对端平台文件、`archive/` 目录、构建缓存、
+  符号链接、未锁定依赖或生产用户凭据的归档包。
+- **安全安装契约**：安装程序默认保持 systemd 服务不开机自启，且不得修改对端平台的
+  协议栈配置或数据库。
+
+## 构建前检查清单
+
+1. 同步更新后端 `__version__`、前端包描述文件、`CHANGELOG.md` 与 `RELEASE-VERSION` 源码版本。
+2. 核对 Python 依赖锁文件、npm lockfile、上游源码提交哈希及容器镜像摘要。
+3. 执行 `make ci`，完整覆盖后端单元测试、前端生产构建与仓库合规审计。
+4. 对候选发布版本手动触发 `Extended checks` 工作流（覆盖 Jetson Python 3.10、
+   Spark Python 3.12 及双端浏览器端到端套件）。手动触发并不降低质量标准，任何失败项
+   均须在正式发布前修复。
+
+## 构建离线 ARM64 发布包
+
+构建前请先完成开发环境初始化。构建可在 macOS 或 Linux 主机上执行（需具备 Python
+`3.10–3.12` 与 Node.js `22`），且每次须指定全新的输出目录。构建脚本将自动编译目标前端，
+并按目标主机运行时拉取精确锁定的 Linux ARM64 依赖包：Jetson 目标为 `CPython 3.10 /
+Ubuntu 22.04`，Spark 目标为 `CPython 3.12 / Ubuntu 24.04`。依赖标记按目标环境解析，
+因此即使在更高版本 Python 主机上打包 Jetson，也会准确包含 `exceptiongroup`。
 
 ```sh
 make build-jetson-release RELEASE_OUT=/tmp/agentic-ocudu-jetson
 make build-spark-release RELEASE_OUT=/tmp/agentic-ocudu-spark
 ```
 
-产物命名为 `agentic-ocudu-jetson-<version>-linux-arm64.tar.gz` 和
-`agentic-ocudu-spark-<version>-linux-arm64.tar.gz`。每个包只能包含自身应用、
-部署工具、锁定依赖、wheelhouse、版本、清单和第三方许可材料。
+生成的标准归档文件分别为
+`agentic-ocudu-jetson-<version>-linux-arm64.tar.gz` 与
+`agentic-ocudu-spark-<version>-linux-arm64.tar.gz`。
 
-输出目录包含 `stage/`、压缩包及对应 `.tar.gz.sha256`；Jetson 还在暂存目录外保留
-下载的 `wheels/`。清单记录源码提交、工作区改动状态、架构和 Python 目标。含未提交
-改动的构建是开发候选包，不属于干净发布。归档前校验 wheel 标签、Python 要求、
-依赖锁完整性与传递依赖。暂存只复制明确的应用/部署输入，排除另一平台和归档内容；
-校验器拒绝校验和变化、额外文件和不安全路径。生成包不进入版本控制。
+输出目录下包含 `stage/`、归档包及其 `.tar.gz.sha256` 校验文件（Jetson 同时在
+`stage/` 外保留下载的 `wheels/`）。发布清单（Manifest）记录源码提交哈希、工作区洁净度、
+目标架构及 Python 版本——凡工作区含未提交改动的产物仅视作开发候选包，不可作为正式干净
+发布。打包阶段会在归档前校验 wheel 平台标签、Python 版本约束、锁文件成员完整性与
+传递依赖，校验器亦会拦截篡改、冗余文件及非安全路径。所有发布产物均须保存于 Git 之外。
 
-Shell 构建入口同样接受 `--output <新目录>`，通过环境变量 `PYTHON` 指定开发解释器。
-底层暂存脚本仅供实现使用，不生成压缩包。
+Shell 构建入口同样支持 `--output <新目录>` 参数，可通过 `PYTHON` 环境变量指定开发解释器；
+底层暂存脚本仅用于内部构建流水线，不直接产出压缩包。
 
-## 部署与验证
+## 部署与验收
 
-传输后核验摘要，解压到新的暂存目录，并在 install 前执行包内 preflight 与 verify。
-安装不得启用开机自启，也不得改变另一个应用或协议栈。启动后检查健康、登录、SSE
-和平台关键流程。
+将离线包与 `.sha256` 传输至目标主机，校验摘要无误后解压到全新暂存目录，并在正式安装前
+运行包内 `verify` 与 `preflight`/`check-host`。安装过程须保持开机自启禁用策略，且不得
+改动对端应用与协议栈。服务启动后依次核验 `/api/v1/health`、登录鉴权、SSE 实时流及
+平台核心业务链路。
 
-在解压后的 Jetson 包内执行 `python3 deploy/manage.py verify` 和
-`python3 deploy/manage.py preflight`；Spark 包内执行
-`python3 install.py verify --path .` 和 `python3 install.py check-host --path .`。
-设备侧检查使用各平台要求的 Python 版本。这些检查不能替代安装/回滚实机 Gate。
+Jetson 包内运行 `python3 deploy/manage.py verify` 与
+`python3 deploy/manage.py preflight`；Spark 包内运行
+`python3 install.py verify --path .` 与
+`python3 install.py check-host --path .`。主机侧校验务必使用对应平台要求的 Python
+版本执行。包内预检用于辅助排错，不可替代独立的硬件实机安装/回滚验收门禁。
 
-## 回滚依据
+## 回滚验证与证据归档
 
-升级前记录当前发布、数据库 schema 和备份路径。先回滚上一版本并验证健康，再重新
-安装候选版本。脱敏验收记录需包含日期、源提交、版本、manifest 摘要、目标架构、
-命令、结果、回滚标识和未验证项。
+升级前须登记现役版本号、SQLite 数据库 Schema 版本及备份路径。发布验证周期内须实际演练
+一次完整回滚：切回上一稳定版本并验证服务健康，随后再重新安装候选版本。最终归档一份经过
+脱敏处理的验收记录，须涵盖验证日期、源码提交号、版本号、Manifest 校验和、目标架构、
+执行命令、实测结果、回滚版本标识及未覆盖项。

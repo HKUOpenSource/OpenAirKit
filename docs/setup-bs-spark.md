@@ -1,29 +1,33 @@
-# Spark system setup
+# Spark Setup
+
+[简体中文](setup-bs-spark.zh-CN.md)
+
+This guide covers installing **Spark Console** and the **OCUDU + Open5GS**
+base-station protocol stack on **DGX Spark**. Hardware BOM items, port
+allocations, and kernel compatibility notes reside in
+[Hardware & Topology](hardware-and-topology.md) and
+[Ports & Runtime](reference/ports-and-runtime.md).
 
 ## Prerequisites
 
-Use an ARM64 host with Ubuntu 24.04, Python 3.12, systemd, Docker Compose and a
-supported B210 connected over USB 3. Confirm that ports `127.0.0.1:8877`
-(Monitor Web) and `127.0.0.1:8879` (OCUDU loopback JSON metrics) are available.
-Port `8879` avoids co-located services that commonly occupy `8000–8002` (such as
-local vLLM containers on DGX Spark). The monitor, radio and core have separate
-release and lifecycle boundaries.
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="145" alt="DGX Spark" /><br/><sub><b>DGX Spark (ARM64 Host)</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="145" alt="USRP B210" /><br/><sub><b>Ettus USRP B210 (USB 3.0)</b></sub></td>
+  </tr>
+</table>
 
-Verify Open5GS image digests from `stacks/open5gs/artifacts.lock.json` and source
-revisions from `stacks/open5gs/sources.lock.json`, the OCUDU revision from
-`config/upstreams.json`, and site settings derived from
-`config/network-contract.json`. Production subscriber material must be loaded
-from the protected deployment state, never from the repository.
+- **Host**: DGX Spark (ARM64, Ubuntu 24.04, Python 3.12, `systemd`, Docker Engine with Compose).
+- **SDR**: Ettus **USRP B210** attached directly to a native USB 3.0 host port.
+- **Ports**: Confirm loopback ports `8877` (Spark Console) and `8879` (OCUDU JSON metrics) are free; ports `8000–8002` remain reserved inference ports unallocated by the 5G stack.
+- **Locked build inputs**: Verify Open5GS digests (`stacks/open5gs/artifacts.lock.json`), Open5GS source revisions (`stacks/open5gs/sources.lock.json`), OCUDU revision (`config/upstreams.json`), and site contract (`config/network-contract.json`). Retain subscriber secrets in protected deployment storage outside Git.
 
-## Install the monitoring platform
+## 1. Install Spark Console
 
-Build with `make build-spark-release`, transfer the resulting ARM64 release,
-then run its platform installer in preflight and install modes. The target is
-`/opt/agentic-ocudu/monitor`; the three platform services (`aoc-control.service`,
-`aoc-observe.service`, `aoc-monitor-web.service`) remain disabled at boot.
-Installing the monitor does not start or restart the protocol stack.
-
-From the unpacked Spark release, use the actual installer actions:
+Generate the ARM64 release archive via `make build-spark-release`, transfer and
+unpack it on Spark, and execute archive verification, host compatibility checks,
+and installation (initial installation prompts for a Web Console password of at
+least 12 characters, stored hashed in `/etc/aoc-monitor/auth.json`):
 
 ```sh
 python3 -I -B install.py verify --path .
@@ -31,47 +35,26 @@ python3 -I -B install.py check-host --path .
 sudo python3 -I -B install.py install --path .
 ```
 
-After preparing the protocol stack, approve the matching
-[maintenance bundle](../deploy/maintenance/README.md) (`/usr/local/sbin/aoc-maintain`)
-and install the [Spark lifecycle scripts](spark-operations.md). Full-stack
-startup and status check N2 independently from service process state.
+The installer places files under `/opt/agentic-ocudu/monitor` with
+`aoc-control.service`, `aoc-observe.service`, and `aoc-monitor-web.service`
+disabled at boot. Installing the management platform does not disturb any
+already-running RAN or core stack.
 
-## Prepare the protocol stack
+## 2. Install the 5G SA Protocol Stack
 
-Follow the [independent stack package guide](../deploy/spark/stack/README.md):
-build the pinned radio artifacts, render/provision a private authenticated N6
-bundle, then stage and verify with `deploy/spark/stack/package.py`. Its fresh-install
-path supplies the V2 controller, `aoc-v2-core.service`, `aoc-v2-radio.service`
-and `/usr/local/bin/aoc-v2ctl` without starting services; existing installations
-are never overwritten.
+Follow [Spark Stack Deployment](../deploy/spark/stack/README.md) to compile
+OCUDU and prepare Open5GS images, render and initialize a private authenticated
+N6 core deployment bundle, and perform a clean install of
+`aoc-v2-core.service`, `aoc-v2-radio.service`, `aoc-v2-cpu-latency.service`, and
+`/usr/local/bin/aoc-v2ctl`.
 
-The maintained runtime baseline reflects observed hardware tuning:
+To enable guarded gNB telemetry and isolate real-time scheduling from co-located
+AI inference workloads:
 
-- **MongoDB kernel compatibility**: `stacks/open5gs/compose/render.py` sets
-  `GLIBC_TUNABLES=glibc.pthread.rseq=1` on `mongo` for Linux 7.0+ kernels
-  (tested on `7.0.0-1019-nvidia` with MongoDB `8.0.30`).
-- **RF defaults**: `deploy/spark/stack/runtime.py` configures `tx_gain=80`,
-  `rx_gain=54`, and `cell_cfg.pusch.max_ue_mcs=24`.
-- **Low-latency and realtime helpers**: `deploy/spark/stack/libexec/aoc-v2-cpu-latency`,
-  `aoc-v2-cpu-latency.service` (`PartOf=aoc-v2-radio.service`), drop-in
-  `cpu-latency.conf`, and `realtime.conf.example` (`CPUAffinity`, `LimitRTPRIO=99`)
-  prevent CPU C-state wakeups and contention with co-located workloads.
-- **Migrated schema-2 vs fresh schema-3 `/opt/agentic-ocudu/v2/` layouts**:
-  fresh installs use schema-3 (`systemd/`, strict unlisted-file checks); legacy
-  migrated hosts carrying schema-2 manifests (`units/` and backup directories)
-  must patch their live `runtime.py` in place and update `release.json` hashes
-  rather than overwriting with schema-3 `runtime.py`.
+1. Execute `sudo python3 scripts/spark/enable_radio_json_metrics.py` to activate root-only loopback telemetry on `127.0.0.1:8879` (`aoc-v2-metrics-guard.service`).
+2. Keep `aoc-v2-cpu-latency.service` enabled alongside `aoc-v2-radio.service`, and configure `realtime.conf` (`CPUAffinity`, `LimitRTPRIO=99`) when sharing Spark with compute-intensive GPU/CPU workloads (see [Ports & Runtime](reference/ports-and-runtime.md)).
 
-`scripts/spark/enable_radio_json_metrics.py` supplies the guarded telemetry
-transaction, migrating disabled or legacy `127.0.0.1:8001` configurations to
-`127.0.0.1:8879` with `aoc-v2-metrics-guard.service` restricting access to
-`uid == 0`. Validate B210 ownership, the core network, N2 and the `8879` loopback
-metrics endpoint before accepting UE traffic. Local package tests do not certify
-target installation or RF operation.
+## 3. Optional Operator Wrappers & Verification
 
-## Verify
-
-Open `127.0.0.1:8877` through an SSH tunnel. Verify all 12 core containers, gNB
-generation, N2, `127.0.0.1:8879` WebSocket metrics, dynamic bridge interface
-counters, current UE context, active PDU and independent N3/N6 evidence.
-Use a Jetson-side bound probe for end-to-end data-path acceptance.
+- To enable passwordless `~/aoc-ops/spark/` wrappers, configure `/usr/local/sbin/aoc-maintain` per [Maintenance Helper](../deploy/maintenance/README.md) and deploy the lifecycle scripts described in [Spark Operations](spark-operations.md).
+- Forward `127.0.0.1:8877` over SSH and confirm all 12 core containers, active gNB process generation ID, N2 NG Setup, `8879` WebSocket metrics, and bridge counters report healthy. Complete end-to-end user-plane validation from a connected UE on Jetson.

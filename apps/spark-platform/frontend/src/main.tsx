@@ -229,7 +229,7 @@ function App() {
   if (!ready)
     return (
       <Stack className="login-screen" align="center" justify="center">
-        <Spinner label="Loading Agentic-OCUDU" />
+        <Spinner label="Loading Spark Console" />
       </Stack>
     );
   if (!csrf)
@@ -243,11 +243,11 @@ function App() {
         <Card width="100%" maxWidth={440}>
           <form onSubmit={login}>
             <Stack gap={6}>
-              <Text type="label">Agentic-OCUDU · Spark Operations</Text>
-              <Heading level={1}>Sign in to Spark</Heading>
+              <Text type="label">OpenAirKit</Text>
+              <Heading level={1}>Spark Console</Heading>
               <Text color="secondary">
-                Use the administrator password configured for this Agentic-OCUDU
-                Spark.
+                Use the administrator password configured for this OpenAirKit
+                Spark host.
               </Text>
               <TextInput
                 label="Administrator password"
@@ -285,9 +285,9 @@ function App() {
           aria-label="Primary navigation"
           header={
             <Stack padding={4} gap={1}>
-              <Text weight="semibold">Agentic-OCUDU</Text>
+              <Text weight="semibold">OpenAirKit</Text>
               <Text type="supporting" color="secondary">
-                Spark Operations
+                Spark Console
               </Text>
             </Stack>
           }

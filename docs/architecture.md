@@ -1,53 +1,108 @@
 # Architecture
 
-## Product boundary
+[简体中文](architecture.zh-CN.md)
 
-Agentic-OCUDU provides one 5G SA data network. OCUDU supplies the RAN and
-Open5GS supplies the 5G core. The Spark Platform observes and operates the base
-station. The Jetson Console observes and operates the UE modem. IMS, SIP and
-voice services are outside the current product boundary.
+## Design Overview
 
-```text
-Jetson Console (127.0.0.1:8878) -> RM520N modem -> B210 / OCUDU gNB -> Open5GS -> external DN
-                                                        |
-                                        127.0.0.1:8879 (JSON metrics, root-only nftables guard)
-                                                        |
-                                          Spark Platform (127.0.0.1:8877)
+**OpenAirKit** delivers a self-contained **5G Standalone (SA)** IPv4 data
+network paired with two decoupled, local-first operations consoles:
+
+- **Base-station & core node (`DGX Spark` + `USRP B210`)**: hosts the
+  **OCUDU** RAN, **Open5GS** 5G Core, and **Spark Console** for real-time
+  telemetry aggregation and bounded lifecycle control.
+- **UE edge node (`Jetson Orin` + `Quectel RM520N-GL`)**: hosts **Jetson
+  Console** for exclusive modem supervision, dual-path Wi-Fi/cellular route
+  failover, and bounded link recovery.
+
+Each host maintains strictly local operational state and supports independent
+installation, upgrade, rollback, and fault isolation without a central fleet
+orchestrator.
+
+## Three-Plane Model
+
+```mermaid
+flowchart TB
+  classDef stack fill:#ecfdf5,stroke:#047857,color:#064e3b
+  classDef mgmt fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef ai fill:#fefce8,stroke:#a16207,stroke-dasharray:5 5,color:#713f12
+
+  subgraph AI["3. Programmable AI Extension Layer (User-Defined Pipelines)"]
+    direction LR
+    JAI["Jetson Edge AI Runtime"]:::ai
+    SAI["DGX Spark RAN-Side AI Runtime"]:::ai
+  end
+
+  subgraph MGMT["2. Local Management & Self-Recovery Plane"]
+    direction LR
+    JC["Jetson Console"]:::mgmt
+    SP["Spark Console"]:::mgmt
+  end
+
+  subgraph STACK["1. 5G SA Radio & Core Plane"]
+    direction LR
+    RM["Quectel RM520N-GL + USIM"]:::stack
+    GNB["OCUDU gNB + USRP B210"]:::stack
+    CORE["Open5GS 5GC"]:::stack
+    RM <== "5G NR SA" ==> GNB
+    GNB -- "N2 / N3" --> CORE
+  end
+
+  RM --- JC
+  GNB -. "JSON Telemetry" .-> SP
+  CORE -. "Docker & infoAPI" .-> SP
+  JC -. "REST / SSE & Jobs" .- JAI
+  SP -. "REST / SSE & Control" .- SAI
 ```
 
-## Component ownership
+1. **5G SA Radio & Core Plane**: Carries the single-PDU IPv4 user plane between
+   the UE modem and Open5GS external data network (`ext-DN`). Authoritative RF
+   and core baseline parameters are specified in
+   [Network & RF Profile](reference/network-and-rf-profile.md).
+2. **Local Management & Self-Recovery Plane**: Unprivileged web services expose
+   loopback consoles (`8877` and `8878`) and SSE event streams while privileged
+   system or modem mutations traverse serialized local executors or
+   `/usr/local/sbin/aoc-maintain`.
+3. **Programmable AI Extension Layer**: **DGX Spark** and **Jetson Orin**
+   reserve dedicated edge and RAN-side AI compute resources at both endpoints.
+   Port allocation keeps inference ports (`8000–8002`) unallocated on Spark,
+   real-time CPU latency guards isolate gNB scheduling, and authenticated
+   REST/SSE endpoints provide clean integration boundaries for user-defined AI
+   pipelines. See [AI Extensibility Guide](ai-customization.md).
 
-| Component | Owns | Must not own |
+## Component Scope & Isolation Boundaries
+
+| Component | Primary Responsibility | Isolation Boundary |
 | --- | --- | --- |
-| Jetson Console (`0.6.2`) | Modem lock, bounded AT workflow, owned protocol-186 routes, UE state, `127.0.0.1:8878` | RAN/core lifecycle or arbitrary shell commands |
-| Spark Platform (`0.2.1`) | Host/RAN/core evidence, history, events, bounded stack tasks, `127.0.0.1:8877` | Modem control or UE-only facts |
-| OCUDU stack | B210 (`rx_gain=54`, `tx_gain=80`, `pusch.max_ue_mcs=24`), cell configuration, NGAP, `127.0.0.1:8879` metrics, `aoc-v2-cpu-latency` | Web sessions or platform data |
-| Open5GS stack | Registration, PDU session, policy, N3/N4/N6 (`aoc-v2-open5gs-core`), MongoDB (`GLIBC_TUNABLES` on 7.0+ kernels) | RAN hardware or UI state |
+| **Jetson Console** | Exclusive modem serial lock, bounded AT state machine, dual-path IPv4 routing, UE state (`127.0.0.1:8878`) | Decoupled from base-station/core lifecycle and unrestricted administrator shell access |
+| **Spark Console** | Host, RAN, and core telemetry ingestion, SQLite metric history/events, bounded stack operations (`127.0.0.1:8877`) | Passive RAN/core telemetry observer; decoupled from UE modem state |
+| **OCUDU Stack** | USRP B210 SDR pipeline, NR SA cell scheduling, NGAP signaling, guarded JSON metrics (`127.0.0.1:8879`) | Runs independently of web console sessions and platform SQLite stores |
+| **Open5GS Stack** | Subscriber repository, 5G AKA authentication, PDU sessions, N3/N4/N6 forwarding, `ext-DN` probe responder | Owns an isolated Compose project, Docker bridge, and MongoDB volume |
 
-## Runtime, UI and privilege boundaries
+## Key Architectural Guarantees
 
-- **Shared UI boundary**: Both React consoles consume [`packages/console-ui`](../packages/console-ui/README.md) (`Astryx Core`, `Charts`, `Neutral` theme, and `UIProvider`) and track only local device/session state without introducing a global fleet state layer.
-- **Privilege isolation**: Each web service (`aoc-web` on Spark, `aoc-v2-jetson-web` on Jetson) runs unprivileged without Docker socket or serial hardware access. Root-only control actions enter either through the local device socket (`aoc-control` / `aoc-v2-jetson-device`) or through `/usr/local/sbin/aoc-maintain` (`deploy/maintenance/`), which enforces SHA-256 approved archives and exact `NOPASSWD: NOSETENV` action allowlists.
-- **Loopback port isolation**: Spark uses `127.0.0.1:8877`, Jetson uses `127.0.0.1:8878`, and OCUDU JSON remote-control WebSocket uses `127.0.0.1:8879` guarded by `aoc-v2-metrics-guard.service` (`table inet aoc_v2_metrics_guard` rejecting `skuid != 0`), avoiding `127.0.0.1:8000–8002` co-located inference workloads on DGX Spark.
-- **Host/USB adaptation**: Spark's `collector.py::bridge_interface()` resolves the Docker bridge interface dynamically from `docker network inspect` (handling `br-<id12>` bridges as well as named bridges), while `deploy/spark/stack/` manages `/dev/cpu_dma_latency` (`aoc-v2-cpu-latency.service`) and kernel 7.0+ MongoDB allocator compatibility (`GLIBC_TUNABLES=glibc.pthread.rseq=1`). Jetson `hardware.py::discover()` validates Quectel RM520N USB interfaces across supported RNDIS (`00/01` -> AT `04`) and ECM `cdc_ether` (`04` or `0a` -> AT `02`) topologies before opening a serial port.
-- **Opt-in Jetson boot coordinator**: When explicitly installed, `deploy/jetson/boot_connect.py` sits outside the immutable application release, verifies pinned hashes in `/etc/aoc-v2-jetson/boot.json`, gates device startup on USB/Wi-Fi/Tailscale readiness, and schedules at most one standard setup cycle per boot without storing SIM credentials.
+- **Least-privilege isolation**: Web backends execute unprivileged without
+  direct Docker socket or serial device permissions; hardware and systemd
+  mutations pass through serialized local executors or the SHA-256 allow-listed
+  `aoc-maintain` helper.
+- **Runtime topology discovery**: Spark discovers its owned Open5GS Docker
+  bridge dynamically at runtime; Jetson Console inspects RM520N-GL USB interface
+  descriptors before opening serial ports and verifies management
+  Wi-Fi/`tailscale0` reachability prior to route updates.
+- **Shared Astryx UI foundation**: Both React frontends consume
+  [`packages/console-ui`](../packages/console-ui/README.md) (`Astryx Core`,
+  `Charts`, `Neutral` theme, `UIProvider`).
+- **Freshness-tagged telemetry**: Collectors tag every snapshot with source
+  timestamps, process generation IDs, and an independent telemetry freshness
+  state (`ok`, `stale`, `unavailable`, `unsupported`) so aged data never masks
+  live link failures.
+- **Brand vs. runtime decoupling**: Display branding (`OpenAirKit`) remains
+  isolated from immutable runtime identifiers (`aoc-v2ctl`, `aoc-maintain`,
+  `/opt/agentic-ocudu/`, `aoc-v2-*` units); see
+  [Visual Assets & Brand Guide](assets/README.md).
 
-## Network contract
+## Technical References
 
-The shared contract is versioned in `config/network-contract.json`. The current
-deployment uses PLMN `460/03`, DNN `oai`, one IPv4 data PDU and the configured
-`10.0.0.0/24` UE pool. Site-specific addresses and credentials stay outside
-the repository.
-
-## State semantics
-
-Evidence quality and business health are independent. `ok`, `stale`,
-`unavailable` and `unsupported` describe whether a value can be trusted.
-Running, healthy and connected describe operational state. A UE is connected
-only when fresh registration, PDU, address-pool, RAN-context and user-plane
-evidence agree. Historical logs, an assigned IP or one ping cannot establish
-current connectivity.
-
-Collectors preserve source time and process generation. Restarts, log rotation
-and counter resets create a new observation interval, preventing old devices,
-false zero traffic or artificial rate spikes.
+- [Network, RF Baseline & Access Policy](reference/network-and-rf-profile.md)
+- [Ports, Routing & Runtime Reference](reference/ports-and-runtime.md)
+- [REST & SSE API Reference](reference/api-reference.md)
+- [Glossary](reference/glossary.md)

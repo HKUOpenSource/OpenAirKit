@@ -3,7 +3,7 @@
 [English](README.md)
 
 `runtime.py`、`package.py`、`libexec/` 与 `systemd/` 是独立 OCUDU/Open5GS 生命周期的现行源码，
-与 Spark Platform 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
+与 Spark Console 分开安装。源码 CLI 为 `python3 scripts/aocctl --help`，安装后为
 `aoc-v2ctl`。旧模板与安装器已经归档，不参与打包。
 
 ## 准备私有候选包
@@ -16,7 +16,8 @@
 c++ -std=c++17 stacks/ocudu/scripts/probe_b210.cpp -o /path/to/private-radio/probe-b210 $(pkg-config --cflags --libs uhd)
 ```
 
-Open5GS 镜像由 `stacks/open5gs/` 的固定构建输入提供。生成带鉴权和 N6 的私有核心网包：
+Open5GS 镜像请按 [Open5GS ARM64 构建与验证](../../../stacks/open5gs/build/README.md)
+（含 `Dockerfile.n6` 与 `Dockerfile.connectivity`）准备并核验。生成带鉴权和 N6 的私有核心网包：
 
 ```sh
 python3 stacks/open5gs/compose/render.py --database-auth --n6 --output /path/to/private-core
@@ -41,16 +42,17 @@ staging 检查 ARM64 ELF 头、gNB 哈希和固定源码版本、核心网文件
 并记录探针、控制器和两个 unit 在内的全部文件。输出包含站点配置，是私有部署候选包，
 不属于可公开分发的应用压缩包，不能加入 Git。
 
-## 后续设备维护窗口安装
+## 在目标 ARM64 主机安装
 
-本次源码变更仅经过本地合成验证，目标机安装、服务校验和射频验收仍需后续执行。
+本地单元测试不替代目标主机安装校验与现场射频验证，正式接入前请结合实机完成核验。
+
 私下传输已审阅候选包，校验独立记录的摘要；从可信 checkout 执行
 `package.py verify --source CANDIDATE`，再在 ARM64 Linux 上执行
 `sudo python3 deploy/spark/stack/package.py install --source CANDIDATE`。
-安装器检查固定镜像、卷归属、资源冲突和 unit 语法，复制至 root 私有目录后再次校验，
-安装 `/opt/agentic-ocudu/v2`、两个 V2 unit 和 `/usr/local/bin/aoc-v2ctl`。
-安装不启用/启动服务，不更改订阅数据或监测平台。已有安装、unit 或 CLI 路径均拒绝覆盖；
-这是全新安装入口，不是原位升级。失败时只清理本次新建文件。
+安装器核验固定镜像、卷归属、资源冲突和 unit 语法，复制至 root 私有目录后再次校验，
+安装 `/opt/agentic-ocudu/v2`、`aoc-v2-core.service`、`aoc-v2-radio.service`、
+`aoc-v2-cpu-latency.service` 与 `/usr/local/bin/aoc-v2ctl`。全新安装后服务默认停止且
+不开启自启，不覆盖已有安装；安装失败仅清理本次新建文件。
 
 安装后使用 `preflight`、`start`、`status`、`stop`。`prepare` 会打开空闲 B210，
 核对身份/增益、写私有配置并执行 gNB dry-run；它要求核心网健康，通常作为 radio unit

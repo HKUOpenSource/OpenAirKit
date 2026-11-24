@@ -1,6 +1,6 @@
 # Open5GS core stack
 
-This module is the core-network boundary for Agentic-OCUDU. The current release carries one IPv4 data PDU only:
+This module is the core-network boundary for OpenAirKit. The current release carries one IPv4 data PDU only:
 
 - DNN `oai`
 - IPv4 UE pool `10.0.0.0/24` (subject to the live-resource check)
@@ -8,9 +8,10 @@ This module is the core-network boundary for Agentic-OCUDU. The current release 
 - PLMN `46003`, TAC `1`, SST `1`
 - Open5GS NFs and MongoDB in a project-owned Compose deployment
 
-IMS, `ims` DNN, SIP, P-CSCF and a second PDU are intentionally outside this release. A modem may retain vendor or IMS contexts; the executor does not delete them or treat their absence as a data failure.
+The stack is scoped to the single IPv4 data PDU above (excluding IMS, `ims` DNN,
+SIP, and P-CSCF). Existing vendor or IMS contexts on a UE modem are left untouched.
 
-Open5GS 2.8.0 and MongoDB 8.0.30 are pinned in the source and artifact locks. `stacks/open5gs/compose/render.py` injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` on `mongo` so MongoDB 8.0.30 avoids TCMalloc per-CPU rseq allocation failures on Linux 7.0+ kernels (`7.0.0-1019-nvidia`). Build and Compose tooling is kept in this stack directory; production data and generated images are never committed.
+Open5GS 2.8.0 and MongoDB 8.0.30 are pinned in the source and artifact locks. `stacks/open5gs/compose/render.py` injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` on `mongo` so MongoDB 8.0.30 avoids TCMalloc per-CPU rseq allocation failures on Linux 7.0+ kernels. Build and Compose tooling is kept in this stack directory; production data and generated images stay outside Git.
 
 ## Ownership
 
@@ -23,4 +24,4 @@ The module owns its Compose project, bridge, volumes, MongoDB data, UPF TUN/N6 r
 3. AMF NGAP, SMF/UPF PFCP, N3/N6 routing and one data PDU in a no-RF test.
 4. Real B210 registration, data PDU, bound-interface bidirectional probe and bounded stop/cleanup.
 
-The module must expose structured NF/session data to the independent Spark collector when the selected Open5GS build provides it. Unsupported fields remain `unsupported`; a process health check is not a UE/session proof.
+The module exposes structured NF/session data to the independent Spark collector when the selected Open5GS build provides it; unsupported fields remain marked `unsupported`, and UE connectivity requires separate live session and user-plane probes.

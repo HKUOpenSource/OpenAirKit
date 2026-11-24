@@ -1,56 +1,32 @@
-# Jetson Console setup
+# Jetson Console Setup
+
+[简体中文](setup-ue-jetson.zh-CN.md)
+
+This guide covers installing, commissioning, and optionally enabling unattended
+cold-boot attachment for **Jetson Console** on **Jetson Orin** paired with a
+**Quectel RM520N-GL** modem mounted on the
+**Waveshare SIM8262E-M2 5G for Jetson Orin** expansion board.
 
 ## Prerequisites
 
-Use Linux ARM64, Ubuntu 22.04, Python 3.10, systemd, NetworkManager and the
-supported Quectel RM520N modem. Wi-Fi must have a unique address and one
-fallback IPv4 gateway; Tailscale must route the configured Spark management
-address. The modem must obtain its own RNDIS or ECM (`cdc_ether`) DHCP address.
-OCUDU validates these prerequisites and never replaces an administrator-owned
-default route or stops an external service. Port `127.0.0.1:8878` and the
-discovered AT port must be free (stop and disable any conflicting local console
-or ModemManager service owning port `8878` or the AT serial port beforehand).
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="145" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin Nano</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="90" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>Waveshare M.2 Carrier (C for RM5XX)</b></sub></td>
+    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="90" alt="Quectel RM520N-GL" /><br/><sub><b>Quectel RM520N-GL</b></sub></td>
+  </tr>
+</table>
 
-A modem DHCP lease and an active `CGACT` context do not by themselves prove
-host-data forwarding. On verified RM520N QMAP firmware, inspect the default
-WWAN and MPDN rule/status association with the selected data profile. The current
-Console configures the data context but does not create QMAP rules or enable
-the global automatic-dial gate. Inspect `AT+QMAPWAC?` separately from each rule's
-automatic-call flag. Audit any missing association separately against the vendor
-manual; retain existing profiles and other rules. See
-[acceptance/2026-10-16-jetson-rndis-at.md](acceptance/2026-10-16-jetson-rndis-at.md)
-for the observed registered-but-no-data failure and bounded site repair.
+- **Host & OS**: Jetson Orin (ARM64, Ubuntu 22.04, Python 3.10, `systemd`, `NetworkManager`).
+- **Modem & USB**: Quectel RM520N-GL seated in the Waveshare carrier over USB 3.0; `ModemManager.service` stopped and disabled; loopback port `127.0.0.1:8878` free. Confirm `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json` matches your RNDIS/ECM USB interface layout per [Hardware Notes](reference/hardware-notes.md).
+- **Management network**: An active out-of-band Wi-Fi uplink with an IPv4 fallback gateway and a `tailscale0` route reaching Spark's management address. Keep any administrator-owned default route metrics strictly above `10` so Jetson Console's protocol-186 routing (`metric 5` Wi-Fi / `metric 10` cellular) operates without interfering with external NetworkManager profiles.
 
-Match `device.at_interface_number` in `/etc/aoc-v2-jetson/device.json` to the
-actual USB layout before commissioning or upgrading. `aoc_jetson.hardware.discover()`
-validates these three RM520N layouts before opening any serial port (Linux
-`ttyUSB` numbering alone does not identify the AT function):
+## 1. Install and Commission
 
-| USB Data Function | Data `bInterfaceNumber` | Serial `bInterfaceNumber` (`DIAG/GNSS/AT/Modem`) | Required `at_interface_number` |
-| --- | --- | --- | --- |
-| `rndis_host` (RNDIS) | `00/01` | `02`, `03`, `04`, `05` | `"04"` |
-| `cdc_ether` (ECM) | `04` | `00`, `01`, `02`, `03` | `"02"` |
-| `cdc_ether` (ECM) | `0a` | `00`, `01`, `02`, `03` | `"02"` |
-
-Configure the site's NetworkManager profiles once, if necessary. Review active
-profiles with `nmcli -f NAME,UUID,TYPE,DEVICE connection show --active`. Keep the
-management Wi-Fi default available. Existing defaults must have metrics above 10;
-metrics 5 and 10 and protocol 186 are reserved for application-owned defaults.
-The modem profile may have `ipv4.never-default` enabled or disabled. Applying a
-connection profile can interrupt that link; perform initial network setup through
-a local management terminal.
-
-The 0.6.2 release contains a verified manifest, ARM64 CPython 3.10 offline
-wheels, frontend, installer (`deploy/manage.py`), lifecycle scripts and license
-material. Production config belongs outside the unpacked release. From 0.6.2,
-`manage.py` temporarily applies `os.umask(0o022)` while building `venv/` and
-explicitly sets `os.chmod(..., mode)` in `private_write()`, keeping `venv/` and
-`web.json` (`0640 root:aoc-v2-jetson-web`) readable by the unprivileged web user
-even when invoked under `umask 077`.
-
-## Install and commission
-
-From the unpacked Jetson release, verify and install:
+Build the ARM64 release archive with `make build-jetson-release`, transfer and
+unpack it on Jetson Orin, and run archive verification, host preflight checks,
+and installation (initial installation prompts interactively for a new Console
+password):
 
 ```sh
 python3 -I -B deploy/manage.py verify
@@ -58,14 +34,12 @@ python3 -I -B deploy/manage.py preflight
 sudo bash deploy/install-jetson.sh
 ```
 
-The installer prompts for a new private Console password on a fresh installation.
-It installs under `/opt/agentic-ocudu/jetson`, starts only the loopback Web service,
-and leaves both systemd units disabled at boot. The install shell wrapper already
-selects `install`; do not append another `install` or `preflight` argument.
+The installer deploys the runtime into `/opt/agentic-ocudu/jetson`, starts the
+loopback Web UI service, and leaves both systemd units disabled at boot.
 
-Commissioning binds this installation to its own SIM and management interfaces.
-First stop OCUDU, then replace the documentation-only address below with Spark's
-actual management address:
+Next, stop Jetson Console, commission it with Spark's actual management IPv4
+address (substituting the real Tailscale address for the RFC 5737 documentation
+placeholder `192.0.2.20`), and start the services:
 
 ```sh
 sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py stop
@@ -75,81 +49,27 @@ sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py s
 sudo /usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/current/deploy/manage.py status
 ```
 
-`commission` selects the installed application Python environment automatically;
-no modem dependencies need to be installed into system Python. It refuses a busy
-AT port, preserves an existing different SIM binding, and does not start services
-or issue modem configuration writes. A failed commissioning attempt leaves the
-installed application available for inspection; correct the reported prerequisite
-and rerun commissioning, not installation.
+`commission` binds this installation to the inserted USIM identity fingerprint
+and management interfaces using the deployed application runtime.
 
-`start` prepares the configured data-probe routes and a Wi-Fi fallback default,
-starts the two services, and resumes observation with automatic modem recovery paused.
-Two fresh successful cellular samples, including Internet, select cellular as the
-IPv4 default. Two failed samples select Wi-Fi; stale evidence or loss of registration,
-PDU or data interface selects Wi-Fi immediately at the next reconciliation.
-This routing policy operates independently of the automatic modem recovery switch.
+## 2. Verify via Web Console
 
-## Operator access and verification
+1. Open an SSH tunnel to `127.0.0.1:8878` and sign in to **Overview** / **Device Setup**.
+2. Execute **Device Setup** and confirm USIM readiness, NR SA registration, active IPv4 PDU, verified bound data probes, `management_protected = true`, and automatic switching to cellular preferred egress after consecutive clean probes.
+3. Validate one complete `manage.py stop` and `manage.py start` cycle (including route cleanup) prior to routine operation.
 
-Administrators can use the installed manager directly. For passwordless operator
-shortcuts, build and approve the matching release with the repository's
-[restricted maintenance bundle](../deploy/maintenance/README.md), then install the
-three lifecycle scripts as described in [Jetson operations](jetson-operations.md).
-The maintenance helper upgrades existing installations; it is not the fresh
-installation/password setup path. Keep approval and application releases matched.
+To configure passwordless operator wrappers (`~/aoc-ops/jetson/start.sh`),
+deploy the matching maintenance package per [Maintenance Helper](../deploy/maintenance/README.md)
+and follow [Jetson Operations](jetson-operations.md).
 
-Open the UI through an SSH tunnel to `127.0.0.1:8878`. Check services, active fresh
-observation, SIM, registration, PDU and modem-bound data probes separately.
-Test a full OCUDU stop/start, including route cleanup, before enabling routine use.
-Both services remain disabled at boot until an administrator explicitly enables
-the site-specific configuration below.
+## 3. Opt-in Boot Coordination
 
-## Opt-in boot coordination
+To enable unattended cold-boot attachment (`deploy/jetson/boot_connect.py`
+installed at `/opt/agentic-ocudu/jetson/boot_connect.py`):
 
-Enabling the two platform units alone does not complete boot commissioning:
-executor shutdown deliberately pauses modem recovery, and USB enumeration/DHCP
-may not be ready when systemd first starts the executor. The optional
-[`boot_connect.py`](../deploy/jetson/boot_connect.py) coordinator supports a
-reviewed, site-specific administrator installation outside the immutable release
-(`/opt/agentic-ocudu/jetson/boot_connect.py`); the default installer does not
-enable it.
-
-To enable opt-in boot coordination on a commissioned host:
-
-1. **Prevent ModemManager ownership** and keep NetworkManager configured for
-   management Wi-Fi and modem DHCP (`ipv4.never-default=yes` on the modem profile;
-   foreign default metrics strictly above 10).
-2. **Test modem read-only compatibility while `aoc-v2-jetson-device.service` is stopped**
-   (so the AT port is free): confirm `boot_connect.Serial` + `configuration()`
-   (`AT+CGDCONT?`, `AT+QMAPWAC?`, `AT+QMAP="MPDN_rule"`, `AT+QCFG="usbnet"`,
-   `AT+QCFG="usbspeed"`, `AT+QNWPREFCFG="nr5g_band"`,
-   `AT+QNWPREFCFG="nr5g_disable_mode"`, `AT+QNWPREFCFG="mode_pref"`) and
-   `usb_speed()` succeed cleanly on the target RNDIS or ECM firmware.
-3. **Write `/etc/aoc-v2-jetson/boot.json` (`0600`, root-owned) after installing the pinned release**,
-   because `manage.py install` updates `device.json["release"]` and `revision`.
-   `boot.json` records `schema`, post-install `device_sha256`, `manifest_sha256`,
-   `sim_sha256`, `usb_speed_mbps`, and `modem_configuration` (zero SIM keys).
-   Create state directories `/var/lib/aoc-v2-jetson-boot/private` (`0700`) and
-   `/var/lib/aoc-v2-jetson-boot/public` (`0755`).
-4. **Install the systemd drop-in and oneshot boot unit**:
-   - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`
-     sets `TimeoutStartSec=360`, resets `ExecStartPre=`, and chains
-     `boot_connect.py ready` → `site_guard.py` →
-     `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback`
-     so USB topology, modem DHCP, Wi-Fi and Tailscale are ready before
-     `device_entry.py` starts.
-   - `/etc/systemd/system/aoc-v2-jetson-boot.service` (`Type=oneshot`,
-     `After=aoc-v2-jetson-device.service aoc-v2-jetson-web.service`) waits up to
-     30 s for `/run/aoc-v2-jetson/device.sock` and runs
-     `/usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/boot_connect.py connect`
-     (`TimeoutStartSec=1200`), permitting at most one explicit PLMN selection if
-     needed, running one standard Device Setup, and requiring 120 seconds of
-     fresh bound cellular proof with `recovery_paused=false`.
-
-Each boot creates a durable private journal keyed by host `boot_id` (refusing
-same-boot replay) and writes redacted status to
-`/var/lib/aoc-v2-jetson-boot/public/status.json`. Verify units and boot IDs,
-actual USB speed, lab registration/session, cellular ordinary routing and
-independent Wi-Fi access after a real cold reboot. With two UEs, configure and
-reboot only one, complete acceptance, then proceed to the other. Do not equate
-service enablement with tested cold-boot recovery.
+1. **Validate read-only AT compatibility** while `aoc-v2-jetson-device.service` is stopped, using the AT queries and USB checks documented in [Hardware Notes](reference/hardware-notes.md#quectel-rm520n-gl-qmap-and-mpdn-firmware-check).
+2. **Generate `/etc/aoc-v2-jetson/boot.json` (`0600`, root-owned)** *after* application installation so `device_sha256`, `manifest_sha256`, `sim_sha256`, `usb_speed_mbps`, and `modem_configuration` match the active installation (without storing subscriber keys). Create `/var/lib/aoc-v2-jetson-boot/private` (`0700`) and `/var/lib/aoc-v2-jetson-boot/public` (`0755`).
+3. **Install the systemd drop-in and oneshot boot unit**:
+   - `/etc/systemd/system/aoc-v2-jetson-device.service.d/boot-ready.conf`: sets `TimeoutStartSec=360`, clears `ExecStartPre=`, and chains `boot_connect.py ready` -> `site_guard.py` -> `network_entry.py --config /etc/aoc-v2-jetson/device.json --action fallback` so USB enumeration, modem DHCP, Wi-Fi, and `tailscale0` settle before `device_entry.py` starts.
+   - `/etc/systemd/system/aoc-v2-jetson-boot.service` (`Type=oneshot`, `After=aoc-v2-jetson-device.service aoc-v2-jetson-web.service`): waits up to `30 s` for `/run/aoc-v2-jetson/device.sock` and invokes `/usr/bin/python3 -I -B /opt/agentic-ocudu/jetson/boot_connect.py connect` (`TimeoutStartSec=1200`) to execute one Device Setup sequence and confirm sustained cellular connectivity with automatic recovery enabled.
+4. **Verify via an unattended cold reboot**: inspect systemd units, `boot_id`, `/var/lib/aoc-v2-jetson-boot/public/status.json`, cellular default egress, and out-of-band Wi-Fi/`tailscale0` management reachability. When provisioning multiple UEs, validate one host per cold reboot.
