@@ -36,6 +36,13 @@
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="可编程 5G USIM 卡" /><br/><sub><b>SIM 卡：可编程 5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC 智能卡读卡器" /><br/><sub><b>写卡器：PC/SC 智能卡读卡器</b></sub></td>
+  </tr>
+</table>
+
 | 角色 | 硬件组件 | 技术规格与说明 |
 | --- | --- | --- |
 | 基站与核心网主机 | **DGX Spark**（ARM64） | Ubuntu 24.04 ARM64、原生 USB 3.0 接口（连接 B210）、Docker Engine + Compose |

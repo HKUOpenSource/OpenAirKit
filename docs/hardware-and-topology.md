@@ -39,6 +39,13 @@ USB interface layouts are consolidated in [Ports & Runtime](reference/ports-and-
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="Programmable 5G USIM" /><br/><sub><b>SIM Card: Programmable 5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC Smartcard Reader" /><br/><sub><b>Programmer: PC/SC Smartcard Reader</b></sub></td>
+  </tr>
+</table>
+
 | Role | Hardware Component | Notes |
 | --- | --- | --- |
 | Base station & core host | **DGX Spark** (ARM64) | Ubuntu 24.04 ARM64, native USB 3.0 port for B210, Docker Engine + Compose |

@@ -58,11 +58,13 @@ USRP B210 + Jetson Orin + Waveshare M.2 5G 扩展载板 + Quectel RM520N-GL** �
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/dgx-spark.webp" width="112" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/usrp-b210.webp" width="112" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="112" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>M.2 5G 载板</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/dgx-spark.webp" width="96" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/usrp-b210.webp" width="96" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="96" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="62" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>M.2 5G 载板</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="62" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/programmable-5g-usim.webp" height="62" alt="可编程 5G USIM 卡" /><br/><sub><b>5G USIM 卡</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/pcsc-smartcard-reader.webp" height="62" alt="PC/SC 智能卡读卡器" /><br/><sub><b>PC/SC 读卡器</b></sub></td>
   </tr>
 </table>
 

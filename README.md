@@ -68,11 +68,13 @@ both endpoints.
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/dgx-spark.webp" width="112" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/usrp-b210.webp" width="112" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="112" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="72" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>M.2 5G Carrier</b></sub></td>
-    <td align="center" valign="bottom" width="20%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="72" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/dgx-spark.webp" width="96" alt="DGX Spark" /><br/><sub><b>DGX Spark</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/usrp-b210.webp" width="96" alt="USRP B210" /><br/><sub><b>USRP B210</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/jetson-orin-nano.webp" width="96" alt="Jetson Orin Nano" /><br/><sub><b>Jetson Orin</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/waveshare-m2-5g-carrier.webp" height="62" alt="Waveshare M.2 5G Carrier" /><br/><sub><b>M.2 5G Carrier</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/quectel-rm520n-gl.webp" height="62" alt="Quectel RM520N-GL" /><br/><sub><b>RM520N-GL</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/programmable-5g-usim.webp" height="62" alt="Programmable 5G USIM" /><br/><sub><b>5G USIM</b></sub></td>
+    <td align="center" valign="bottom" width="14%"><img src="docs/assets/hardware/pcsc-smartcard-reader.webp" height="62" alt="PC/SC Smartcard Reader" /><br/><sub><b>PC/SC Reader</b></sub></td>
   </tr>
 </table>
 

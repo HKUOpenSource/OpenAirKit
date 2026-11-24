@@ -20,6 +20,8 @@ docs/assets/
 │   ├── jetson-orin-nano.webp       # NVIDIA Jetson Orin Nano UE host (active)
 │   ├── waveshare-m2-5g-carrier.webp # Waveshare M.2 5G expansion board for Jetson Orin (active)
 │   ├── quectel-rm520n-gl.webp      # Quectel RM520N-GL 5G NR module (active)
+│   ├── programmable-5g-usim.webp   # Programmable 5G USIM test cards (active)
+│   ├── pcsc-smartcard-reader.webp  # USB CCID/PC/SC smartcard reader (active)
 │   ├── kit-overview.webp           # Benchtop Hardware Topology Overview (16:9, 1024x576, active)
 │   ├── spark-b210-wiring.jpg       # DGX Spark + USRP B210 USB 3.0 & RF wiring close-up
 │   └── jetson-waveshare-rm520n.jpg # Jetson Orin + Waveshare carrier + RM520N-GL + SIM
@@ -71,7 +73,7 @@ identifiers** so visual updates never break deployed hosts or systemd units:
 | Asset / Slot File | Document Location | Composition & Guidelines |
 | --- | --- | --- |
 | `docs/assets/brand/logo-{light,dark}.png` | Top of `README.md` / `README.zh-CN.md` (active) | Transparent PNG (`887x180`), legible in both light & dark GitHub themes |
-| `docs/assets/hardware/*.webp` (`5` files) | `README*`, `hardware-and-topology*`, `setup-bs-spark*`, `setup-ue-jetson*` (active) | Standardized WebP hardware visuals (`dgx-spark`, `usrp-b210`, `jetson-orin-nano`, `waveshare-m2-5g-carrier`, `quectel-rm520n-gl`) rendered in proportional bounding boxes |
+| `docs/assets/hardware/*.webp` (`7` files) | `README*`, `hardware-and-topology*`, `sim-provisioning*`, `setup-bs-spark*`, `setup-ue-jetson*` (active) | Standardized WebP hardware visuals (`dgx-spark`, `usrp-b210`, `jetson-orin-nano`, `waveshare-m2-5g-carrier`, `quectel-rm520n-gl`, `programmable-5g-usim`, `pcsc-smartcard-reader`) rendered in proportional bounding boxes |
 | `docs/assets/hardware/kit-overview.webp` | `README*` & `hardware-and-topology*` (active) | `16:9` Benchtop Hardware Topology Overview (`1024x576`) showing Jetson Orin + Waveshare M.2 carrier + RM520N-GL, DGX Spark + USRP B210, and live Spark Console |
 | `docs/assets/diagrams/*-{en,zh}-{light,dark}.svg` (`24` files + `generate.py`) | `README*`, `architecture*`, `quickstart*`, `hardware-and-topology*`, `ai-customization*`, `jetson-operations*` (active) | Theme-aware Light/Dark vector diagrams generated deterministically by `docs/assets/diagrams/generate.py` for System Architecture, Three-Plane Architecture, Deployment Flow, Hardware Topology, AI Closed-Loop, and Jetson Routing & Recovery State Machine |
 | `docs/assets/hardware/spark-b210-wiring.jpg` | `hardware-and-topology*` | Close-up showing direct USB 3.0 connection and Band `n78` antennas / SMA attenuators |
