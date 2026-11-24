@@ -9,8 +9,12 @@ Quectel RM520N-GL** 入网鉴权的 **可编程 5G USIM 卡** 烧录与校验。
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="90" alt="可编程 5G USIM 卡" /><br/><sub><b>可编程 5G USIM 卡</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="90" alt="USB CCID / PC/SC 读卡器" /><br/><sub><b>USB CCID / PC/SC 读卡器</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="90" alt="可编程 5G USIM 卡" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="90" alt="USB CCID / PC/SC 读卡器" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>可编程 5G USIM 卡</b></sub></td>
+    <td align="center" valign="top"><sub><b>USB CCID / PC/SC 读卡器</b></sub></td>
   </tr>
 </table>
 

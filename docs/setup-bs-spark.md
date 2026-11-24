@@ -12,8 +12,12 @@ allocations, and kernel compatibility notes reside in
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="145" alt="DGX Spark" /><br/><sub><b>DGX Spark (ARM64 Host)</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="145" alt="USRP B210" /><br/><sub><b>Ettus USRP B210 (USB 3.0)</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/dgx-spark.webp" width="145" alt="DGX Spark" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/usrp-b210.webp" width="145" alt="USRP B210" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>DGX Spark (ARM64 Host)</b></sub></td>
+    <td align="center" valign="top"><sub><b>Ettus USRP B210 (USB 3.0)</b></sub></td>
   </tr>
 </table>
 

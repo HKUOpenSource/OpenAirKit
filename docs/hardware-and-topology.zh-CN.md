@@ -23,23 +23,36 @@
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/dgx-spark.webp" width="150" alt="DGX Spark" /><br/><sub><b>基站/核心网主机：DGX Spark</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/usrp-b210.webp" width="150" alt="USRP B210" /><br/><sub><b>SDR 射频前端：Ettus USRP B210</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/dgx-spark.webp" width="150" alt="DGX Spark" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/usrp-b210.webp" width="150" alt="USRP B210" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>基站/核心网主机：DGX Spark</b></sub></td>
+    <td align="center" valign="top"><sub><b>SDR 射频前端：Ettus USRP B210</b></sub></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="150" alt="Jetson Orin Nano" /><br/><sub><b>UE 主机：Jetson Orin Nano</b></sub></td>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="96" alt="Waveshare M.2 5G 扩展载板" /><br/><sub><b>扩展载板：Waveshare M.2 5G</b></sub></td>
-    <td align="center" valign="bottom" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="96" alt="Quectel RM520N-GL" /><br/><sub><b>5G 模组：Quectel RM520N-GL</b></sub></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/jetson-orin-nano.webp" width="150" alt="Jetson Orin Nano" /></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/waveshare-m2-5g-carrier.webp" height="96" alt="Waveshare M.2 5G 扩展载板" /></td>
+    <td align="center" valign="middle" width="33%"><img src="assets/hardware/quectel-rm520n-gl.webp" height="96" alt="Quectel RM520N-GL" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>UE 主机：Jetson Orin Nano</b></sub></td>
+    <td align="center" valign="top"><sub><b>扩展载板：Waveshare M.2 5G</b></sub></td>
+    <td align="center" valign="top"><sub><b>5G 模组：Quectel RM520N-GL</b></sub></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="可编程 5G USIM 卡" /><br/><sub><b>SIM 卡：可编程 5G USIM</b></sub></td>
-    <td align="center" valign="bottom" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC 智能卡读卡器" /><br/><sub><b>写卡器：PC/SC 智能卡读卡器</b></sub></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/programmable-5g-usim.webp" height="96" alt="可编程 5G USIM 卡" /></td>
+    <td align="center" valign="middle" width="50%"><img src="assets/hardware/pcsc-smartcard-reader.webp" height="96" alt="PC/SC 智能卡读卡器" /></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><sub><b>SIM 卡：可编程 5G USIM</b></sub></td>
+    <td align="center" valign="top"><sub><b>写卡器：PC/SC 智能卡读卡器</b></sub></td>
   </tr>
 </table>
 
