@@ -139,25 +139,6 @@ environment path. Review the [Developer Guide](docs/development.md),
 [Releasing](docs/releasing.md) before submitting changes or cutting release
 artifacts.
 
-## Citation
-
-If OpenAirKit supports your research or testbed work, please cite:
-
-> Wang, Z. (2026). OpenAirKit (Version 1.0.0) [Computer software]. https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0
-
-```bibtex
-@software{wang2026openairkit,
-  author  = {Wang, Zhaolin},
-  title   = {OpenAirKit},
-  version = {1.0.0},
-  year    = {2026},
-  url     = {https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0},
-  license = {Apache-2.0}
-}
-```
-
-Machine-readable citation metadata is available in [`CITATION.cff`](CITATION.cff).
-
 ## License
 
 OpenAirKit repository code is released under the **Apache License 2.0**. See

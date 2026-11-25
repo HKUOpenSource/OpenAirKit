@@ -125,25 +125,6 @@ make check
 离线发布包前，请参阅[开发者指南](docs/development.zh-CN.md)、[贡献指南](CONTRIBUTING.zh-CN.md)、
 [安全策略](SECURITY.md)与[发布指南](docs/releasing.zh-CN.md)。
 
-## 引用说明
-
-如果 OpenAirKit 对你的研究或实验平台工作有所帮助，欢迎引用：
-
-> Wang, Z. (2026). OpenAirKit (Version 1.0.0) [Computer software]. https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0
-
-```bibtex
-@software{wang2026openairkit,
-  author  = {Wang, Zhaolin},
-  title   = {OpenAirKit},
-  version = {1.0.0},
-  year    = {2026},
-  url     = {https://github.com/HKUOpenSource/OpenAirKit/releases/tag/v1.0.0},
-  license = {Apache-2.0}
-}
-```
-
-机器可读的引用元数据位于根目录 [`CITATION.cff`](CITATION.cff)。
-
 ## 开源协议
 
 OpenAirKit 仓库自有代码基于 **Apache License 2.0** 协议开源。完整协议文本见
