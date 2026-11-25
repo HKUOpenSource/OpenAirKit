@@ -60,8 +60,8 @@ Both web consoles run locally without physical USRP or 5G modem hardware:
 | `make typecheck` | Strict `tsc --noEmit` across both React frontends | No |
 | `make docs-audit` | Paired EN/ZH docs, relative links, heading anchors, and public hygiene checks | No |
 | `make release-audit` | Single-platform release boundary, lockfile, and systemd unit checks | No |
-| `make license-audit` | Root `LICENSE`, `CITATION.cff`, `images.lock.json`, and private frontend manifest checks | No |
-| `make version-audit` | Root [`VERSION`](../VERSION) sync across backends, npm manifests/locks, badges, `CITATION.cff`, and shared dependency pins | No |
+| `make license-audit` | Root `LICENSE`, `images.lock.json`, and private frontend manifest checks | No |
+| `make version-audit` | Root [`VERSION`](../VERSION) sync across backends, npm manifests/locks, badges, and shared dependency pins | No |
 | `make shell-check` | `bash -n` syntax validation across all `deploy/` and `scripts/` shell scripts | No |
 | `make check` | Runs all fast checks against an already-prepared environment | No |
 | `make ci` | Full CI sequence including frontend `npm ci` + production builds before tests and audits | No |

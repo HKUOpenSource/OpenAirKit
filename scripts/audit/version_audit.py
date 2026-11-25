@@ -64,11 +64,6 @@ def check_versions(version: str) -> None:
             if token not in text:
                 raise SystemExit(f"missing badge {token!r} in {rel}")
 
-    citation_text = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    for token in (f"version: {version}", f"/releases/tag/v{version}"):
-        if token not in citation_text:
-            raise SystemExit(f"missing version token {token!r} in CITATION.cff")
-
     for rel in ("docs/releasing.md", "docs/releasing.zh-CN.md"):
         text = (ROOT / rel).read_text(encoding="utf-8")
         if f"`{version}`" not in text:

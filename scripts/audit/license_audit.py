@@ -9,9 +9,6 @@ if not license_path.is_file():
 license_text = license_path.read_text(encoding="utf-8")
 if "Apache License" not in license_text or "Version 2.0" not in license_text:
     raise SystemExit("root LICENSE must contain Apache License 2.0")
-citation_path = root / "CITATION.cff"
-if not citation_path.is_file() or not citation_path.read_text(encoding="utf-8").strip():
-    raise SystemExit("missing root CITATION.cff file")
 for package in (root / "apps").glob("*/frontend/package.json"):
     data = json.loads(package.read_text())
     if not data.get("private"):

@@ -40,8 +40,8 @@ make check VENV=local/dev-venv
 | `make typecheck` | 双端 TypeScript 严格类型检查（`tsc --noEmit`） | 否 |
 | `make docs-audit` | 中英文配对文档完整性、相对链接、标题锚点与公开发布卫生检查 | 否 |
 | `make release-audit` | 单平台发布边界、依赖锁文件与 systemd 单元合规检查 | 否 |
-| `make license-audit` | 根目录 `LICENSE`、`CITATION.cff`、`images.lock.json` 与前端私有包属性校验 | 否 |
-| `make version-audit` | 根目录 [`VERSION`](../VERSION) 与后端、npm、README 徽章、`CITATION.cff` 及共享依赖版本一致性校验 | 否 |
+| `make license-audit` | 根目录 `LICENSE`、`images.lock.json` 与前端私有包属性校验 | 否 |
+| `make version-audit` | 根目录 [`VERSION`](../VERSION) 与后端、npm、README 徽章及共享依赖版本一致性校验 | 否 |
 | `make shell-check` | 对 `deploy/` 与 `scripts/` 下全部 Shell 脚本执行 `bash -n` 语法检查 | 否 |
 | `make check` | 在已就绪的环境中一次性运行上述全量快速检查 | 否 |
 | `make ci` | 完整 CI 入口（先执行前端 `npm ci` + 生产构建，再执行全量测试与审计） | 否 |

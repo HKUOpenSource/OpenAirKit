@@ -5,7 +5,7 @@
 - Unified Spark Console and Jetson Console under platform version `1.0.0` (`VERSION`) with automated version and shared-dependency parity enforcement (`scripts/audit/version_audit.py` wired into `make check` and `make ci`).
 - Renamed the Spark Console application directory from `apps/spark-platform` to `apps/spark-console` across workflows, build scripts, audits, and documentation.
 - Hardened the Jetson Console HTTP API with `TrustedHostMiddleware`, `Content-Length` enforcement (`<= 8192` bytes), `X-Frame-Options: DENY`, and `access_log=False`, fixed the Jetson Vite dev proxy port to `8878`, aligned Spark frontend timestamps to browser local timezone, and removed unreachable legacy radio config parsing.
-- Added Apache License 2.0 (`LICENSE`), machine-readable citation metadata (`CITATION.cff`), Architecture Decision Records (`docs/adr/`), paired Developer Guides (`docs/development.md`), expanded `SECURITY.md`, and structured GitHub issue templates.
+- Added Apache License 2.0 (`LICENSE`), Architecture Decision Records (`docs/adr/`), paired Developer Guides (`docs/development.md`), expanded `SECURITY.md`, and structured GitHub issue templates.
 - Updated repository documentation, hardware illustrations, and release verification:
   - Added paired English and Simplified Chinese onboarding guides: [Hardware & Topology](docs/hardware-and-topology.md), [End-to-End Quickstart](docs/quickstart.md), [DIY AI Customization](docs/ai-customization.md), and [Visual Assets & Brand Guide](docs/assets/README.md).
   - Documented the **Waveshare SIM8262E-M2 5G for Jetson Orin** M.2 carrier board mounting the **Quectel RM520N-GL** module, Open5GS container build inputs, interactive Web Console password setup, and `tailscale0` management routing checks.
