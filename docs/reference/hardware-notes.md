@@ -49,6 +49,8 @@ AT+QNWPREFCFG="mode_pref"
 
 - **DGX Spark Linux 7.0+ kernels + MongoDB 8.0**: `stacks/open5gs/compose/render.py` automatically injects `GLIBC_TUNABLES=glibc.pthread.rseq=1` into the `mongo` container so TCMalloc per-CPU `rseq` allocation initializes cleanly on newer Linux kernels.
 - **Jetson `ModemManager` exclusion**: Stop, disable, and mask `ModemManager.service` to prevent AT serial contention with `aoc-v2-jetson-device.service`.
+- **RM520N-GL USB 3.0 speed negotiation (`bcdUSB 2.00` vs SuperSpeed)**: If `lsusb -d 2c7c:0801 -v` reports `bcdUSB 2.00` (`480 Mbps`) even when attached to a SuperSpeed port, stop `aoc-v2-jetson-device.service` during a maintenance window and inspect `AT+QCFG="usbspeed"`; set `AT+QCFG="usbspeed","311"` (and verify `Bus 02 / 5000M` enumeration after modem reboot) for `40 MHz`+ cellular throughput.
+- **Host sysctl throughput profiles**: Stock Jetson L4T `5.15-tegra` kernels do not include `tcp_bbr` or `sch_fq` modules; apply `deploy/jetson/sysctl/99-aoc-v2-jetson-throughput.conf` on Jetson (raising `rmem_max`/`wmem_max` to `16 MiB` and enabling `tcp_mtu_probing`) and `deploy/spark/stack/sysctl/99-aoc-v2-throughput.conf` on Spark (enabling `bbr` + `fq` and `16 MiB` socket buffers).
 
 ## TB01 Programmable USIM APDU Reference
 

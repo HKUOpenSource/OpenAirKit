@@ -74,8 +74,11 @@ removes the database volume. Do not mix CLI, Web and maintenance-helper operatio
 
 The generated `compose.json` includes `GLIBC_TUNABLES=glibc.pthread.rseq=1` on
 `mongo` for Linux 7.0+ kernels (MongoDB 8.0.30 compatibility). `runtime.py`
-generates the private `gnb.json` with B210 `tx_gain=80`, `rx_gain=54` and
-`cell_cfg.pusch.max_ue_mcs=24`.
+generates the private `gnb.json` with `40 MHz` (`srate=46.08`, `otw_format=sc16`,
+`num_recv_frames=256,num_send_frames=256`), `6D1S3U` TDD (`6 DL / 3 UL / 6 DL sym / 4 UL sym`),
+B210 `tx_gain=80`, `rx_gain=54`, `cell_cfg.pdsch.mcs_table=qam256`, and
+`cell_cfg.pusch` (`mcs_table=qam256`, `max_ue_mcs=27`). See `sysctl/99-aoc-v2-throughput.conf`
+for the recommended Spark `bbr`/`fq` and socket buffer profile.
 
 Telemetry is disabled in the initial radio configuration. Run
 `scripts/spark/enable_radio_json_metrics.py` to install the root-only nftables

@@ -12,6 +12,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 N6_RULES = '''add table ip aoc_v2
 add chain ip aoc_v2 postrouting { type nat hook postrouting priority srcnat; policy accept; }
 add rule ip aoc_v2 postrouting ip saddr 10.0.0.0/24 oifname "eth0" counter masquerade
+add chain ip aoc_v2 forward { type filter hook forward priority mangle; policy accept; }
+add rule ip aoc_v2 forward ip saddr 10.0.0.0/24 tcp flags syn tcp option maxseg size 1401-65535 counter tcp option maxseg size set 1400
+add rule ip aoc_v2 forward ip daddr 10.0.0.0/24 tcp flags syn tcp option maxseg size 1401-65535 counter tcp option maxseg size set 1400
 '''
 import urllib.request
 
@@ -91,7 +94,7 @@ def run(nf, address):
     if nf == 'upf':
         subprocess.run(['ip', 'tuntap', 'add', 'dev', 'ogstun', 'mode', 'tun'], check=True)
         subprocess.run(['ip', 'addr', 'add', '10.0.0.1/24', 'dev', 'ogstun'], check=True)
-        subprocess.run(['ip', 'link', 'set', 'ogstun', 'up'], check=True)
+        subprocess.run(['ip', 'link', 'set', 'dev', 'ogstun', 'mtu', '1440', 'up'], check=True)
         if os.environ.get('AOC_N6_ENABLED') == '1':
             subprocess.run(['nft', '-f', '-'], input=N6_RULES, text=True, check=True)
     binary = '/opt/open5gs/bin/open5gs-' + nf + 'd'

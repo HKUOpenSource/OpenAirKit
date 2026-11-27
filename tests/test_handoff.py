@@ -25,6 +25,9 @@ class RadioTests(unittest.TestCase):
         profile = dict(PROFILE, serial="AOCPARSEONLY")
         config = gnb_config(CONFIG, profile)
         self.assertEqual(config["cell_cfg"]["dl_arfcn"], 643392)
+        self.assertEqual(config["cell_cfg"]["channel_bandwidth_MHz"], 40)
+        self.assertEqual(config["ru_sdr"]["srate"], 46.08)
+        self.assertEqual(config["ru_sdr"]["otw_format"], "sc16")
         self.assertIn("serial=AOCPARSEONLY,", config["ru_sdr"]["device_args"])
         for change in ({"tx_gain": 89.75}, {"serial": "a,b"}, {"reviewed": False}):
             with self.assertRaises(ValueError):

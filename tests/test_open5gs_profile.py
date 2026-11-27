@@ -12,7 +12,23 @@ spec.loader.exec_module(config)
 
 class Open5GSProfileTests(unittest.TestCase):
     def test_reviewed_single_data_profile_loads(self):
-        self.assertEqual(config.load(ROOT / "config/network-profile.example.json")["data"]["qos_5qi"], 9)
+        loaded = config.load(ROOT / "config/network-profile.example.json")
+        self.assertEqual(loaded["data"]["qos_5qi"], 9)
+        self.assertEqual(loaded["radio"]["channel_bandwidth_mhz"], 40)
+        self.assertEqual(loaded["radio"]["tdd"]["downlink_slots"], 6)
+        self.assertEqual(loaded["radio"]["tdd"]["uplink_slots"], 3)
+
+    def test_wrong_bandwidth_or_tdd_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "profile.json"
+            value = (ROOT / "config/network-profile.example.json").read_text().replace('"channel_bandwidth_mhz": 40', '"channel_bandwidth_mhz": 20')
+            path.write_text(value)
+            with self.assertRaisesRegex(ValueError, "first-stage baseline"):
+                config.load(path)
+            value = (ROOT / "config/network-profile.example.json").read_text().replace('"uplink_slots": 3', '"uplink_slots": 2')
+            path.write_text(value)
+            with self.assertRaisesRegex(ValueError, "TDD profile"):
+                config.load(path)
 
     def test_ims_dnn_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

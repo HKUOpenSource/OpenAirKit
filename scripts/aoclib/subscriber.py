@@ -37,13 +37,13 @@ def statements(config, material):
             "sequenceNumber": {"sqn": material["sqn"], "sqnScheme": "NON_TIME_BASED", "lastIndexes": {"ausf": 0}},
             "authenticationManagementField": material["amf"], "algorithmId": "milenage", "supi": material["imsi"]}
     access = {"ueid": material["imsi"], "servingPlmnid": radio["plmn"],
-              "subscribedUeAmbr": {"uplink": "100Mbps", "downlink": "200Mbps"},
+              "subscribedUeAmbr": {"uplink": "500Mbps", "downlink": "1000Mbps"},
               "nssai": {"defaultSingleNssais": [slice_info]}}
     dnns = {dnn: {"pduSessionTypes": {"defaultSessionType": "IPV4", "allowedSessionTypes": ["IPV4"]},
                    "sscModes": {"defaultSscMode": "SSC_MODE_1", "allowedSscModes": ["SSC_MODE_1"]},
                    "5gQosProfile": {"5qi": qi, "arp": {"priorityLevel": 1, "preemptCap": "NOT_PREEMPT",
                                                         "preemptVuln": "NOT_PREEMPTABLE"}},
-                   "sessionAmbr": {"uplink": "100Mbps", "downlink": "200Mbps"}}
+                   "sessionAmbr": {"uplink": "500Mbps", "downlink": "1000Mbps"}}
             for dnn, qi in (("oai", 9), ("ims", 5))}
     session = {"ueid": material["imsi"], "servingPlmnid": radio["plmn"],
                "singleNssai": slice_info, "dnnConfigurations": dnns}

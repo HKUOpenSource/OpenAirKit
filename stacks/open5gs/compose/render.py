@@ -46,7 +46,7 @@ def configurations(subnet):
         'gtpc': {'server': [{'address': addr['smf']}]},
         'gtpu': {'server': [{'address': addr['smf']}]},
         'metrics': {'server': [{'address': addr['smf'], 'port': 9090}]},
-        'session': session, 'dns': ['1.1.1.1'], 'mtu': 1400,
+        'session': session, 'dns': ['1.1.1.1'], 'mtu': 1440,
         'info': [{'s_nssai': [{'sst': 1, 'dnn': ['oai']}]}]})
     result['upf']['upf'] = {
         'pfcp': {'server': [{'address': addr['upf']}]},

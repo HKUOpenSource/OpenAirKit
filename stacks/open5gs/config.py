@@ -24,10 +24,10 @@ def load(path: Union[str, Path]) -> dict:
         raise ValueError("V2 data QoS must be 5QI 9")
     radio = profile.get("radio", {})
     if (radio.get("band"), radio.get("channel_bandwidth_mhz"), radio.get("common_scs_khz"),
-            radio.get("carrier_arfcn"), radio.get("pci")) != (78, 20, 30, 643392, 666):
+            radio.get("carrier_arfcn"), radio.get("pci")) != (78, 40, 30, 643392, 666):
         raise ValueError("radio profile does not match the reviewed first-stage baseline")
     tdd = radio.get("tdd", {})
     if tuple(tdd.get(key) for key in ("period_ms", "downlink_slots", "uplink_slots",
-                                      "special_downlink_symbols", "special_uplink_symbols")) != (5, 7, 2, 6, 4):
+                                      "special_downlink_symbols", "special_uplink_symbols")) != (5, 6, 3, 6, 4):
         raise ValueError("unexpected TDD profile")
     return profile

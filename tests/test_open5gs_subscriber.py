@@ -20,6 +20,8 @@ class SubscriberTests(unittest.TestCase):
         self.assertEqual(doc['slice'][0]['session'][0]['name'], 'oai')
         self.assertEqual(doc['slice'][0]['session'][0]['type'], 1)
         self.assertEqual(doc['slice'][0]['session'][0]['qos']['index'], 9)
+        self.assertEqual(doc['ambr'], {'uplink': {'value': 500, 'unit': 2}, 'downlink': {'value': 1000, 'unit': 2}})
+        self.assertEqual(doc['slice'][0]['session'][0]['ambr'], doc['ambr'])
         self.assertNotIn('sd', doc['slice'][0])
         self.assertEqual(len(doc['slice'][0]['session']), 1)
 

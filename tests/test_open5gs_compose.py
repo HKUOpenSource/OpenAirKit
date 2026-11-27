@@ -47,7 +47,11 @@ class BundleTests(unittest.TestCase):
 
     def test_nat_rules_only_own_table_and_ue_source_pool(self):
         self.assertIn('ip saddr 10.0.0.0/24', runtime.N6_RULES)
+        self.assertIn('ip daddr 10.0.0.0/24', runtime.N6_RULES)
         self.assertIn('oifname "eth0"', runtime.N6_RULES)
+        self.assertIn('add chain ip aoc_v2 forward', runtime.N6_RULES)
+        self.assertIn('tcp option maxseg size 1401-65535', runtime.N6_RULES)
+        self.assertIn('tcp option maxseg size set 1400', runtime.N6_RULES)
         self.assertNotIn('flush', runtime.N6_RULES)
         self.assertIn('add table ip aoc_v2', runtime.N6_RULES)
 
@@ -113,10 +117,13 @@ class BundleTests(unittest.TestCase):
     def test_one_data_pool_direct_nrf_no_test_hnet_keys(self):
         addresses, configs = render.configurations('172.28.81.0/24')
         self.assertEqual(configs['smf']['smf']['session'], configs['upf']['upf']['session'])
+        self.assertEqual(configs['smf']['smf']['mtu'], 1440)
         self.assertEqual(configs['smf']['smf']['pfcp']['client']['upf'][0]['address'], addresses['upf'])
         self.assertNotIn('hnet', configs['udm']['udm'])
         self.assertNotIn('freeDiameter', configs['smf']['smf'])
         self.assertEqual(configs['amf']['amf']['plmn_support'][0]['s_nssai'], [{'sst': 1}])
+        runtime_source = (ROOT / 'stacks/open5gs/compose/runtime.py').read_text()
+        self.assertIn("'mtu', '1440'", runtime_source)
 
     def test_reject_overwrite_foreign_project_and_pool_overlap(self):
         with tempfile.TemporaryDirectory() as temp:

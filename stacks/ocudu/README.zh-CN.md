@@ -11,7 +11,7 @@
 ## 实现位置
 
 - `scripts/build.py`：拉取固定版本源码，以普通用户完成 ARM64 编译（配合私有 mbedTLS / GTest 包）及无射频测试，输出 `build-result.json`。
-- `deploy/spark/stack/runtime.py`：生成单 IPv4 数据 PDU 的无线配置（`n78`、`20 MHz`、`30 kHz` SCS、`1T1R`、`tx_gain=80`、`rx_gain=54`、`cell_cfg.pusch.max_ue_mcs=24`）并核对 B210 与 N2 状态。
+- `deploy/spark/stack/runtime.py`：生成单 IPv4 数据 PDU 的无线配置（`n78`、`40 MHz`、`30 kHz` SCS、`1T1R`、`6D1S3U`、`srate=46.08`、`otw_format=sc16`、`256/256` UHD 帧缓冲、`tx_gain=80`、`rx_gain=54`、`pdsch`/`pusch` `qam256` 与 `pusch.max_ue_mcs=27`）并核对 B210 与 N2 状态。
 - `scripts/probe_b210.cpp`：在 B210 空闲时探测 UHD 序列号与增益范围，不开启射频流。
 - `deploy/spark/stack/package.py`：按构建记录打包、校验并提供全新安装入口（安装时不启动服务）。
 - `deploy/spark/stack/libexec/aoc-v2-cpu-latency` 与 `deploy/spark/stack/systemd/`：提供 `LimitRTPRIO=99`、`aoc-v2-cpu-latency.service`（`PartOf=aoc-v2-radio.service`）及可选 `realtime.conf.example`；`scripts/spark/enable_radio_json_metrics.py` 负责开启受守护的 `127.0.0.1:8879` JSON 指标端点。

@@ -11,10 +11,10 @@ from .core import write_json
 
 
 PROFILE = {"schema_version": 1, "reviewed": True, "rf_accepted": False, "serial": None,
-           "dl_arfcn": 643392, "pci": 666, "band": 78, "bandwidth_mhz": 20,
-           "scs_khz": 30, "srate_msps": 23.04, "tx_gain": 80, "rx_gain": 68,
-           "clock": "internal", "tdd_period_slots": 10, "dl_slots": 7, "dl_symbols": 6,
-           "ul_slots": 2, "ul_symbols": 4}
+           "dl_arfcn": 643392, "pci": 666, "band": 78, "bandwidth_mhz": 40,
+           "scs_khz": 30, "srate_msps": 46.08, "tx_gain": 80, "rx_gain": 54,
+           "clock": "internal", "tdd_period_slots": 10, "dl_slots": 6, "dl_symbols": 6,
+           "ul_slots": 3, "ul_symbols": 4}
 
 
 def validate_profile(profile, serial_required=True):
@@ -38,13 +38,15 @@ def gnb_config(config, profile):
                 "tai_slice_support_list": [{"sst": 1}]}]}]}},
         "cu_up": {"ngu": {"socket": [{"bind_addr": addr["gnb"]}]}},
         "ru_sdr": {"device_driver": "uhd", "device_args": "type=b200,serial=" + profile["serial"] +
-                    ",num_recv_frames=64,num_send_frames=64", "srate": profile["srate_msps"], "otw_format": "sc12",
+                    ",num_recv_frames=256,num_send_frames=256", "srate": profile["srate_msps"], "otw_format": "sc16",
                     "clock": "internal", "sync": "internal", "tx_gain": profile["tx_gain"], "rx_gain": profile["rx_gain"]},
-        "cell_cfg": {"dl_arfcn": profile["dl_arfcn"], "band": 78, "channel_bandwidth_MHz": 20,
+        "cell_cfg": {"dl_arfcn": profile["dl_arfcn"], "band": 78, "channel_bandwidth_MHz": 40,
                      "common_scs": 30, "plmn": "46003", "tac": 1, "pci": profile["pci"],
                      "nof_antennas_dl": 1, "nof_antennas_ul": 1,
-                     "tdd_ul_dl_cfg": {"dl_ul_tx_period": 10, "nof_dl_slots": 7, "nof_dl_symbols": 6,
-                                       "nof_ul_slots": 2, "nof_ul_symbols": 4}},
+                     "pdsch": {"mcs_table": "qam256"},
+                     "pusch": {"mcs_table": "qam256", "max_ue_mcs": 27},
+                     "tdd_ul_dl_cfg": {"dl_ul_tx_period": 10, "nof_dl_slots": 6, "nof_dl_symbols": 6,
+                                       "nof_ul_slots": 3, "nof_ul_symbols": 4}},
         **({"remote_control": {"enabled": True, "bind_addr": "127.0.0.1", "port": 8001},
             "metrics": {"enable_json": True}} if profile.get("telemetry_enabled") is True else {"remote_control": {"enabled": False}}),
         "log": {"filename": "/var/log/agentic-ocudu/gnb.log", "all_level": "info"},

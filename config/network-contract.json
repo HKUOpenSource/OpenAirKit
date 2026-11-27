@@ -6,14 +6,14 @@
     "tac": 1,
     "sst": 1,
     "band": 78,
-    "bandwidth_mhz": 20,
+    "bandwidth_mhz": 40,
     "scs_khz": 30,
     "carrier_arfcn": 643392,
     "pci": 666,
     "tdd": {
       "period_ms": 5,
-      "downlink_slots": 7,
-      "uplink_slots": 2,
+      "downlink_slots": 6,
+      "uplink_slots": 3,
       "special_downlink_symbols": 6,
       "special_uplink_symbols": 4
     }

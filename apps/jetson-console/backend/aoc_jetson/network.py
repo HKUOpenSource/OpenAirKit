@@ -15,6 +15,7 @@ from .hardware import discover
 KINDS = frozenset({"gateway", "upf", "ext_dn", "public"})
 ACTIONS = frozenset({"protect", "prepare", "promote", "fallback", "restore"})
 HELPER_ENTRY = "/opt/agentic-ocudu/jetson/current/deploy/network_entry.py"
+CELLULAR_MTU = 1440
 
 
 def run(argv, timeout=10, cancel=None, tick=None, check=True):
@@ -366,6 +367,20 @@ def managed_defaults(config, action):
                 "mutations": mutations}
 
 
+def align_cellular_mtu(interface, mtu=CELLULAR_MTU):
+    """Cap newly enumerated cellular interfaces to the 5G PDU MTU to avoid PMTUD black holes."""
+    if not isinstance(interface, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,15}", interface):
+        raise ValueError("Invalid cellular interface name")
+    try:
+        current = int((Path("/sys/class/net") / interface / "mtu").read_text().strip())
+    except (OSError, ValueError):
+        return False
+    if current <= mtu:
+        return False
+    run(["ip", "link", "set", "dev", interface, "mtu", str(mtu)])
+    return True
+
+
 def managed_routes(config, action):
     """Serialize exact host-route ownership; never replace another owner's route."""
     directory = Path(config["state_dir"])
@@ -412,6 +427,7 @@ def managed_routes(config, action):
         gateway = targets(config)["gateway"]
         if route_to(gateway).get("dev") != interface:
             raise ValueError("Modem gateway is not reachable on the discovered data interface")
+        align_cellular_mtu(interface)
         additions = []
         for destination in sorted(destinations):
             address = destination.removesuffix("/32")

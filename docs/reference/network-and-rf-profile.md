@@ -11,15 +11,16 @@ This reference serves as the authoritative specification for the RF baseline,
 | Parameter | Default Baseline | Source |
 | --- | --- | --- |
 | Frequency band | Band `n78` | `config/network-contract.json` |
-| Channel bandwidth | `20 MHz` | `config/network-contract.json` |
+| Channel bandwidth | `40 MHz` | `config/network-contract.json` |
 | Subcarrier spacing (SCS) | `30 kHz` | `config/network-contract.json` |
 | MIMO / antenna configuration | `1T1R` | `deploy/spark/stack/runtime.py` |
 | Carrier ARFCN | `643392` | `config/network-contract.json` |
 | Physical Cell ID (PCI) | `666` | `config/network-contract.json` |
-| TDD pattern | `5 ms` period (`7 DL / 2 UL / 6 DL sym / 4 UL sym`) | `config/network-contract.json` |
+| TDD pattern | `5 ms` period (`6 DL / 3 UL / 6 DL sym / 4 UL sym`) | `config/network-contract.json` |
+| UHD sample rate & wire format | `srate=46.08` MSps, `otw_format=sc16` | `deploy/spark/stack/runtime.py` |
 | UHD B210 gains | `tx_gain=80`, `rx_gain=54` | `deploy/spark/stack/runtime.py` |
-| Maximum UL UE MCS | `cell_cfg.pusch.max_ue_mcs=24` | `deploy/spark/stack/runtime.py` |
-| UHD receive / send frames | `64 / 64` | `deploy/spark/stack/runtime.py` |
+| DL / UL MCS configuration | `pdsch.mcs_table=qam256`, `pusch.mcs_table=qam256`, `pusch.max_ue_mcs=27` | `deploy/spark/stack/runtime.py` |
+| UHD receive / send frames | `256 / 256` | `deploy/spark/stack/runtime.py` |
 
 ## 5G Core and Data PDU Profile (`Open5GS 5GC`)
 
@@ -31,6 +32,8 @@ This reference serves as the authoritative specification for the RF baseline,
 | PDU session type | Single `IPv4` data PDU | Focused 5G SA user plane |
 | Data Network Name (`DNN`) | `oai` | Shared across core UPF policy and Jetson Device Setup |
 | UE IPv4 address pool | `10.0.0.0/24` | Validated during Jetson connectivity probes |
+| PDU MTU (`SMF` & `ogstun`) | `1440` bytes | Fits within 1500-byte N3 GTP-U/UDP/IP encapsulation without fragmentation; UPF `table ip aoc_v2` clamps forwarded TCP MSS to `1400` and Jetson Console caps the RM520N data interface MTU to `<= 1440` |
+| Subscribed Session AMBR | `500 Mbps` UL / `1000 Mbps` DL | Default subscriber ceiling in `stacks/open5gs/subscriber.py` |
 | QoS `5QI` | `9` | Default non-GBR data bearer (`QFI 1` observed at core) |
 | External DN probe endpoint | `ext-DN` HTTP `/health` on TCP `8080` | Internal to `aoc-v2-open5gs`; target for bound data probes |
 

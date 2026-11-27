@@ -15,7 +15,7 @@ import time
 BASE = Path('/opt/agentic-ocudu/v2')
 LOCK = Path('/var/lib/aoc-maintenance/operation.lock')
 FILES = ('runtime.py', 'compose.json', 'bundle.json')
-RUNTIME_SHA = '6ceb5eae5b4358e586babeb6e23ec4995cd997a7b54455d565492e10abda0d55'
+RUNTIME_SHA = 'a2aa9c9deb5aafb89e961dd8ba731776f2ff4c79f2319b79fe76f561b83ab1f2'
 IMAGE = 'sha256:45fc43f140364eab399b351d5672e9501279669acf2d9420360f8d28a2f87d31'
 
 

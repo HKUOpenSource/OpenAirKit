@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from aoc_jetson.config import DEVICE, REFERENCE, SELECTION, DIAGNOSTICS, RECOVERY, migrate, validate
-from aoc_jetson.network import HELPER_ENTRY, Network, helper, inspect_management, managed_routes, managed_defaults
+from aoc_jetson.network import HELPER_ENTRY, Network, align_cellular_mtu, helper, inspect_management, managed_routes, managed_defaults
 
 
 def configuration(root):
@@ -266,6 +266,25 @@ class NetworkTests(unittest.TestCase):
         argv = run_mock.call_args.args[0]
         self.assertEqual(argv[1:3], ["-I", HELPER_ENTRY])
         self.assertNotIn("-m", argv)
+
+    def test_align_cellular_mtu_caps_oversized_interface_and_skips_lower_mtu(self):
+        with patch("aoc_jetson.network.Path.read_text", return_value="1500\n"), \
+                patch("aoc_jetson.network.run") as run_mock:
+            self.assertTrue(align_cellular_mtu("rndis0"))
+        run_mock.assert_called_once_with(["ip", "link", "set", "dev", "rndis0", "mtu", "1440"])
+
+        for existing in ("1440\n", "1400\n"):
+            with self.subTest(existing=existing.strip()), \
+                    patch("aoc_jetson.network.Path.read_text", return_value=existing), \
+                    patch("aoc_jetson.network.run") as run_mock:
+                self.assertFalse(align_cellular_mtu("rndis0"))
+                run_mock.assert_not_called()
+
+    def test_prepare_aligns_cellular_mtu(self):
+        rows = {}
+        with self.kernel(rows), patch("aoc_jetson.network.align_cellular_mtu") as align_mock:
+            managed_routes(self.config, "prepare")
+        align_mock.assert_called_once_with("rndis0")
 
 
 class DefaultRouteTests(unittest.TestCase):
