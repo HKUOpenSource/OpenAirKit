@@ -6,7 +6,7 @@
 
 - 日期：`2026-11-27`
 - 基线源码版本：`18870db`
-- 平台版本：`1.0.0`
+- 目标发布版本：`1.1.0`
 - Spark 目标环境：DGX Spark（ARM64，Ubuntu 24.04 LTS，内核 `7.0.0-1019-nvidia`，USRP B210 USB 3.0 SuperSpeed，OCUDU `26.04` commit `050a2bb`，Open5GS `2.8.0` + MongoDB `8.0`）
 - UE 目标环境：两台 Jetson Orin Nano（ARM64，L4T 内核 `5.15.148-tegra`，Quectel RM520N-GL `cdc_ether` ECM 模式，经 `AT+QCFG="usbspeed","311"` 与 `AT+CFUN=1,1` 从 USB 2.0 `480M` 切回 USB 3.0 `5000M`）
 - 脱敏说明：本记录已移除 Tailnet 地址、主机名、本地用户名、USRP 序列号、SIM 凭据、Wi-Fi SSID/BSSID 及原始日志。
@@ -47,7 +47,7 @@
 
 - **本地与干跑校验**：
   - 使用更新后 `runtime.py` 生成的 `40 MHz` 配置在 Spark 实机执行 `gnb --dryrun` 返回 `0`。
-  - `test-frontend-behavior`（`7/7`）、`test-jetson-backend`（`112/112`）、`test-spark-backend`（`72` 项运行，`1` 项 Linux peer-cred 跳过）、`test-stack`（`190/190`，其中 `test_connectivity_endpoint_serves_only_small_health_response` 在网络沙盒外执行通过）、`typecheck`、`docs-audit`（`147` 篇文档）、`release-audit`、`license-audit`、`version-audit`（`1.0.0`）与 `shell-check` 全部通过。
+  - `test-frontend-behavior`（`7/7`）、`test-jetson-backend`（`112/112`）、`test-spark-backend`（`72` 项运行，`1` 项 Linux peer-cred 跳过）、`test-stack`（`190/190`，其中 `test_connectivity_endpoint_serves_only_small_health_response` 在网络沙盒外执行通过）、`typecheck`、`docs-audit`（`147` 篇文档）、`release-audit`、`license-audit`、`version-audit`（`1.1.0`）与 `shell-check` 全部通过。
 - **回滚方式**：现网修改前已将 Spark 原 `runtime.py`、`core/config/smf.json`、`core/runtime.py`、`core/bundle.json` 与 `release.json` 完整备份至 `/var/lib/agentic-ocudu/v2/`，恢复原文件并重启 `core` 与 `radio` 即可回退；`sysctl` 为独立 `/etc/sysctl.d/` 文件，可直接删除恢复。
 - **已知限制**：
   - 第二台 UE 当前处于弱信号摆位（`CQI 5–6`），本轮未调整天线以复测双 UE 并发满载上限。

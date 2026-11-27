@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (2026-11-27)
+
+- Upgraded the 5G SA n78 (`1T1R`) RF baseline from `20 MHz` (`7 DL / 2 UL`, `23.04` MSps, `sc12`, `64/64` UHD frames, `pusch.max_ue_mcs=24`) to **`40 MHz`** (`106` PRBs, `6 DL / 3 UL` TDD, `srate=46.08` MSps, `otw_format=sc16`, `256/256` UHD frames, `pdsch`/`pusch` `qam256`, `pusch.max_ue_mcs=27`) across `deploy/spark/stack/runtime.py`, `config/network-contract.json`, `config/network-profile.example.json`, `config/jetson.example.json`, `stacks/open5gs/config.py`, and `scripts/aoclib/radio.py` (`stacks/open5gs/config.py::load()` now validates the `40 MHz / 6D1S3U` baseline).
+- Aligned Open5GS SMF and UPF `ogstun` PDU MTU to `1440`, added bidirectional `nftables` TCP MSS clamping (`1400`) in `table ip aoc_v2` (`stacks/open5gs/compose/runtime.py` + updated `RUNTIME_SHA` in `deploy/maintenance/repair-connectivity-manifest.py`), added `align_cellular_mtu()` (`<= 1440`) to `apps/jetson-console/backend/aoc_jetson/network.py`, and raised default subscriber Session AMBR from `100/200 Mbps` to `500/1000 Mbps` (`stacks/open5gs/subscriber.py`, `scripts/aoclib/core.py`, `scripts/aoclib/subscriber.py`).
+- Added platform-separated host `sysctl` throughput profiles (`deploy/spark/stack/sysctl/99-aoc-v2-throughput.conf` with `bbr` + `fq` + `16 MiB` socket buffers; `deploy/jetson/sysctl/99-aoc-v2-jetson-throughput.conf` with `16 MiB` socket buffers and `tcp_mtu_probing` for L4T `5.15`), documented RM520N-GL `AT+QCFG="usbspeed","311"` USB 3.0 recovery in `docs/reference/hardware-notes*.md`, and recorded hardware-verified throughput benchmarks (`112–119 Mbps` DL / `50.7 Mbps` UL N6 `iperf3`, `107.6 / 32.17 Mbps` browser Speedtest) in `docs/acceptance/2026-11-27-40mhz-throughput-tuning.md`.
+- Adopted **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`) in [Releasing](docs/releasing.md) and synchronized platform version `1.1.0` across `VERSION`, both console backends/frontends, `packages/console-ui`, badges, and release docs.
+
 ## 1.0.0 (2026-11-24)
 
 - Unified Spark Console and Jetson Console under platform version `1.0.0` (`VERSION`) with automated version and shared-dependency parity enforcement (`scripts/audit/version_audit.py` wired into `make check` and `make ci`).

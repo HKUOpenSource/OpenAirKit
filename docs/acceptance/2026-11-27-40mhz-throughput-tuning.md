@@ -6,7 +6,7 @@
 
 - Date: `2026-11-27`
 - Base source revision: `18870db`
-- Platform version: `1.0.0`
+- Target release version: `1.1.0`
 - Spark target: DGX Spark (ARM64, Ubuntu 24.04 LTS, kernel `7.0.0-1019-nvidia`, USRP B210 over USB 3.0 SuperSpeed, OCUDU `26.04` commit `050a2bb`, Open5GS `2.8.0` + MongoDB `8.0`)
 - UE targets: Two Jetson Orin Nano nodes (ARM64, L4T kernel `5.15.148-tegra`, Quectel RM520N-GL in `cdc_ether` ECM mode, upgraded from USB 2.0 `480M` to USB 3.0 `5000M` via `AT+QCFG="usbspeed","311"` + `AT+CFUN=1,1`)
 - Redaction: This record omits Tailnet addresses, hostnames, local usernames, USRP serials, SIM credentials, Wi-Fi SSIDs/BSSIDs, and raw logs.
@@ -47,7 +47,7 @@
 
 - **Local and dry-run checks**:
   - Live Spark `gnb --dryrun` on generated `40 MHz` `runtime.py` output exited `0`.
-  - `test-frontend-behavior` (`7/7`), `test-jetson-backend` (`112/112`), `test-spark-backend` (`72` ran, `1` Linux peer-cred skipped), `test-stack` (`190/190`, with `test_connectivity_endpoint_serves_only_small_health_response` executed outside the network sandbox), `typecheck`, `docs-audit` (`147` documents), `release-audit`, `license-audit`, `version-audit` (`1.0.0`), and `shell-check` all passed.
+  - `test-frontend-behavior` (`7/7`), `test-jetson-backend` (`112/112`), `test-spark-backend` (`72` ran, `1` Linux peer-cred skipped), `test-stack` (`190/190`, with `test_connectivity_endpoint_serves_only_small_health_response` executed outside the network sandbox), `typecheck`, `docs-audit` (`147` documents), `release-audit`, `license-audit`, `version-audit` (`1.1.0`), and `shell-check` all passed.
 - **Rollback**: Pre-patch Spark `runtime.py`, `core/config/smf.json`, `core/runtime.py`, `core/bundle.json`, and `release.json` were backed up under `/var/lib/agentic-ocudu/v2/` before updating; restoring those files and restarting `core` and `radio` reverts cleanly. Live sysctl configs reside in drop-in `/etc/sysctl.d/` files and are independently removable.
 - **Remaining limitations**:
   - The second UE remained in a lower-CQI RF position (`CQI 5–6`) and was not repositioned for concurrent dual-UE peak saturation testing.
