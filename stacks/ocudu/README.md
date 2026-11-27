@@ -15,7 +15,7 @@ UHD installations.
 ## Implementation Layout
 
 - `scripts/build.py`: Fetches pinned upstream commits, compiles OCUDU on ARM64 as an unprivileged user (using private mbedTLS / GTest tarballs), runs no-RF unit tests, and writes `build-result.json`.
-- `deploy/spark/stack/runtime.py`: Renders the single-data-PDU radio configuration (`n78`, `20 MHz`, `30 kHz` SCS, `1T1R`, `tx_gain=80`, `rx_gain=54`, `cell_cfg.pusch.max_ue_mcs=24`) and checks B210 ownership + N2 readiness.
+- `deploy/spark/stack/runtime.py`: Renders the single-data-PDU radio configuration (`n78`, `40 MHz`, `30 kHz` SCS, `1T1R`, `6D1S3U`, `srate=46.08`, `otw_format=sc16`, `256/256` UHD frames, `tx_gain=80`, `rx_gain=54`, `pdsch`/`pusch` `qam256` with `pusch.max_ue_mcs=27`) and checks B210 ownership + N2 readiness.
 - `scripts/probe_b210.cpp`: Probes UHD serial and gain ranges when the B210 is idle.
 - `deploy/spark/stack/package.py`: Stages, verifies, and fresh-installs ARM64 radio + core artifacts without starting services.
 - `deploy/spark/stack/libexec/aoc-v2-cpu-latency` & `deploy/spark/stack/systemd/`: Provides `LimitRTPRIO=99`, `aoc-v2-cpu-latency.service` (`PartOf=aoc-v2-radio.service`), and optional `realtime.conf.example`; `scripts/spark/enable_radio_json_metrics.py` enables the guarded `127.0.0.1:8879` JSON metrics endpoint.

@@ -51,7 +51,7 @@
   },
   "radio_reference": {
     "band": 78,
-    "channel_bandwidth_mhz": 20,
+    "channel_bandwidth_mhz": 40,
     "common_scs_khz": 30,
     "carrier_arfcn": 643392,
     "pci": 666,

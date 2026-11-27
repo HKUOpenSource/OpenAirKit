@@ -60,8 +60,12 @@ infoAPI 确认 NG Setup 成功。启动失败保留现场；停止先核对无�
 不删除数据库卷。不要混用 CLI、Web、维护 helper 同时操作。
 
 生成的 `compose.json` 默认为 `mongo` 服务注入 `GLIBC_TUNABLES=glibc.pthread.rseq=1`
-以适配 Linux 7.0+ 内核与 MongoDB 8.0.30；`runtime.py` 默认生成 `tx_gain=80`、`rx_gain=54`
-及 `cell_cfg.pusch.max_ue_mcs=24` 的私有 `gnb.json` 配置。
+以适配 Linux 7.0+ 内核与 MongoDB 8.0.30；`runtime.py` 默认生成 `40 MHz`
+（`srate=46.08`、`otw_format=sc16`、`num_recv_frames=256,num_send_frames=256`）、
+`6D1S3U` TDD（`6 DL / 3 UL / 6 DL sym / 4 UL sym`）、`tx_gain=80`、`rx_gain=54`、
+`cell_cfg.pdsch.mcs_table=qam256` 及 `cell_cfg.pusch`（`mcs_table=qam256`、`max_ue_mcs=27`）
+的私有 `gnb.json` 配置。Spark 端建议配合 `sysctl/99-aoc-v2-throughput.conf` 启用 `bbr`/`fq`
+与大套接字缓冲。
 
 初始无线配置禁用遥测；执行 `scripts/spark/enable_radio_json_metrics.py` 在
 `127.0.0.1:8879` 安装 root-only 回环保护并启用 JSON 指标后再验收采集，回滚时自动停止

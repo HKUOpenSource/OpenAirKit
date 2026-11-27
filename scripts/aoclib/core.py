@@ -75,7 +75,7 @@ def nf_config(config, password):
                 "smf_info": {"sNssaiSmfInfoList": slices},
                 "local_subscription_infos": [
                     {"single_nssai": snssai, "dnn": dnn,
-                     "qos_profile": {"5qi": qi, "session_ambr_ul": "100Mbps", "session_ambr_dl": "200Mbps"}}
+                     "qos_profile": {"5qi": qi, "session_ambr_ul": "500Mbps", "session_ambr_dl": "1000Mbps"}}
                     for dnn, qi in (("oai", 9), ("ims", 5))]},
         "upf": {"support_features": {"enable_bpf_datapath": False, "enable_snat": True},
                 "remote_n6_gw": "localhost", "smfs": [{"host": addr["smf"]}],

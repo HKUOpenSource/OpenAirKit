@@ -44,6 +44,8 @@ AT+QNWPREFCFG="mode_pref"
 
 - **DGX Spark Linux 7.0+ 内核 + MongoDB 8.0**：`stacks/open5gs/compose/render.py` 会自动为 `mongo` 容器注入 `GLIBC_TUNABLES=glibc.pthread.rseq=1`，确保 TCMalloc per-CPU `rseq` 分配在较新 Linux 内核上正常初始化。
 - **Jetson 排除 `ModemManager`**：须停止、禁用并屏蔽 `ModemManager.service`，防止其与 `aoc-v2-jetson-device.service` 争抢 RM520N-GL AT 串口。
+- **RM520N-GL USB 3.0 速率协商（`bcdUSB 2.00` 排查）**：若即使接入 SuperSpeed 端口，`lsusb -d 2c7c:0801 -v` 仍报告 `bcdUSB 2.00`（`480 Mbps`），请在维护窗口停止 `aoc-v2-jetson-device.service` 后检查 `AT+QCFG="usbspeed"`，按需设置为 `AT+QCFG="usbspeed","311"` 并在模组重启后确认枚举至 `5000M` USB 3.0 总线，以支撑 `40 MHz` 及以上带宽吞吐。
+- **主机 sysctl 吞吐调优基线**：Jetson 原厂 L4T `5.15-tegra` 内核未内置 `tcp_bbr` 与 `sch_fq` 模块；Jetson 端应部署 `deploy/jetson/sysctl/99-aoc-v2-jetson-throughput.conf`（提升 `rmem_max`/`wmem_max` 至 `16 MiB` 并开启 `tcp_mtu_probing`），Spark 端应部署 `deploy/spark/stack/sysctl/99-aoc-v2-throughput.conf`（启用 `bbr` + `fq` 与 `16 MiB` 缓冲）。
 
 ## TB01 可编程 USIM APDU 协议参考
 

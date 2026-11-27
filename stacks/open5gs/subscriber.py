@@ -32,7 +32,7 @@ def document(material):
             raise ValueError('Invalid static SIM field: ' + name)
     if 'sqn' in material and (not isinstance(material['sqn'], str) or not re.fullmatch(r'[a-fA-F0-9]{12}', material['sqn'])):
         raise ValueError('Invalid historical SQN format')
-    ambr = {'uplink': {'value': 100, 'unit': 2}, 'downlink': {'value': 200, 'unit': 2}}
+    ambr = {'uplink': {'value': 500, 'unit': 2}, 'downlink': {'value': 1000, 'unit': 2}}
     return {'schema_version': 1, 'imsi': material['imsi'], 'msisdn': [], 'imeisv': [],
             'mme_host': [], 'mme_realm': [], 'purge_flag': [],
             'security': {'k': material['ki'].lower(), 'op': None, 'opc': material['opc'].lower(),

@@ -12,8 +12,8 @@
     "ue_pool": "10.0.0.0/24",
     "qos_5qi": 9,
     "session_ambr": {
-      "uplink": "100Mbps",
-      "downlink": "200Mbps"
+      "uplink": "500Mbps",
+      "downlink": "1000Mbps"
     }
   },
   "user_plane": {
@@ -24,14 +24,14 @@
   },
   "radio": {
     "band": 78,
-    "channel_bandwidth_mhz": 20,
+    "channel_bandwidth_mhz": 40,
     "common_scs_khz": 30,
     "carrier_arfcn": 643392,
     "pci": 666,
     "tdd": {
       "period_ms": 5,
-      "downlink_slots": 7,
-      "uplink_slots": 2,
+      "downlink_slots": 6,
+      "uplink_slots": 3,
       "special_downlink_symbols": 6,
       "special_uplink_symbols": 4
     }

@@ -74,9 +74,17 @@ class V2RuntimeTests(unittest.TestCase):
 
     def test_config_is_single_data_radio_without_telemetry(self):
         config = runtime.radio_config('123abc')
-        self.assertEqual(config['cell_cfg']['dl_arfcn'], 643392)
+        self.assertEqual(config['ru_sdr']['srate'], 46.08)
+        self.assertEqual(config['ru_sdr']['otw_format'], 'sc16')
+        self.assertIn('num_recv_frames=256,num_send_frames=256', config['ru_sdr']['device_args'])
         self.assertEqual(config['ru_sdr']['rx_gain'], 54)
-        self.assertEqual(config['cell_cfg']['pusch'], {'max_ue_mcs': 24})
+        self.assertEqual(config['cell_cfg']['dl_arfcn'], 643392)
+        self.assertEqual(config['cell_cfg']['channel_bandwidth_MHz'], 40)
+        self.assertEqual(config['cell_cfg']['pdsch'], {'mcs_table': 'qam256'})
+        self.assertEqual(config['cell_cfg']['pusch'], {'mcs_table': 'qam256', 'max_ue_mcs': 27})
+        self.assertEqual(config['cell_cfg']['tdd_ul_dl_cfg'],
+                         {'dl_ul_tx_period': 10, 'nof_dl_slots': 6, 'nof_dl_symbols': 6,
+                          'nof_ul_slots': 3, 'nof_ul_symbols': 4})
         self.assertEqual(config['cu_cp']['amf']['addrs'], '172.28.81.12')
         self.assertEqual(config['remote_control'], {'enabled': False})
         self.assertEqual(config['log']['all_level'], 'warning')
