@@ -15,6 +15,17 @@ OpenAirKit follows **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`):
 - **`MINOR` (`1.X.0`)**: Backward-compatible new capabilities, protocol stack or RF baseline upgrades, new console/AI-RAN features, and major performance milestones.
 - **`PATCH` (`1.1.X`)**: Backward-compatible bug fixes, security hardening, installer/rollback fixes, audit refinements, and documentation corrections.
 
+### Changelog & GitHub Release Format
+
+- **`CHANGELOG.md` ([Keep a Changelog](https://keepachangelog.com/))**:
+  - Maintain an `## [Unreleased]` section at the top for ongoing PRs.
+  - Format released entries as `## [X.Y.Z] - YYYY-MM-DD` grouped under `### Added`, `### Changed`, `### Fixed`, and (when applicable) `### Compatibility` / `### Security`.
+  - Append GitHub compare/tag reference links (`[Unreleased]`, `[X.Y.Z]`) at the bottom of `CHANGELOG.md`.
+- **GitHub Releases**:
+  - Title every release **`OpenAirKit v<X.Y.Z>`** (matching tag `v<X.Y.Z>`).
+  - Structure the release body into: an opening summary, `## Highlights`, `## Offline ARM64 Installation` (Spark & Jetson archive verification and install commands), `## Verification` (40-character Git commit SHA with `dirty: false`, Spark/Jetson archive SHA-256 digests, and `main` CI run link), and a closing link to `CHANGELOG.md`.
+  - Use absolute GitHub URLs (`https://github.com/HKUOpenSource/OpenAirKit/blob/v<X.Y.Z>/...`) rather than repository-relative links inside release notes, and attach both offline `.tar.gz` bundles with their `.sha256` checksum files.
+
 ## Release Boundary Policy
 
 Every release archive must pass the following boundary checks:

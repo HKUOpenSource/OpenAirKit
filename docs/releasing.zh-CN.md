@@ -14,6 +14,17 @@ OpenAirKit 遵循 **Semantic Versioning 2.0.0**（`MAJOR.MINOR.PATCH`）：
 - **`MINOR`（`1.X.0`）**：向下兼容的新能力、协议栈或射频基线升级、控制台/AI-RAN 新特性及重要性能里程碑。
 - **`PATCH`（`1.1.X`）**：向下兼容的缺陷修复、安全加固、安装/回滚逻辑修复、CI 审计及文档勘误。
 
+### Changelog 与 GitHub Release 规范
+
+- **`CHANGELOG.md`（遵循 [Keep a Changelog](https://keepachangelog.com/)）**：
+  - 顶部保留 `## [Unreleased]` 区块，用于日常开发 PR 登记未发布改动。
+  - 正式版本使用 `## [X.Y.Z] - YYYY-MM-DD` 标题，并在其下按 `### Added`、`### Changed`、`### Fixed`（以及按需补充 `### Compatibility` / `### Security`）分类组织条目。
+  - 在 `CHANGELOG.md` 文末维护 `[Unreleased]` 与各版本 `[X.Y.Z]` 的 GitHub 对比/标签链接。
+- **GitHub Release 页面**：
+  - Release 标题统一命名为 **`OpenAirKit v<X.Y.Z>`**（与标签 `v<X.Y.Z>` 对应）。
+  - 正文固定包含：开篇导语、`## Highlights`、`## Offline ARM64 Installation`（Spark 与 Jetson 离线包校验及安装命令）、`## Verification`（完整 40 位 Commit SHA、`dirty: false`、双端离线归档 SHA-256 摘要及 `main` CI 运行链接），以及结尾的 `CHANGELOG.md` 链接。
+  - Release 正文内链接须使用基于该版本标签的 GitHub 绝对 URL（`https://github.com/HKUOpenSource/OpenAirKit/blob/v<X.Y.Z>/...`），不可使用仓库相对路径；并随 Release 附带双端 ARM64 `.tar.gz` 离线归档及其 `.sha256` 校验文件。
+
 ## 发布边界约束
 
 所有离线发布包在交付前均须通过以下仓库审计门禁：
