@@ -9,7 +9,7 @@
 <p><strong>面向 AI-RAN 的开源端到端 5G SA 实验与管控平台</strong></p>
 
 <p>
-  <a href="CHANGELOG.md"><img alt="Version: 1.0.0" src="https://img.shields.io/badge/version-1.0.0-blue"></a>
+  <a href="CHANGELOG.md"><img alt="Version: 1.1.0" src="https://img.shields.io/badge/version-1.1.0-blue"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-green"></a>
   <a href="docs/architecture.zh-CN.md"><img alt="5G SA: OCUDU + Open5GS" src="https://img.shields.io/badge/5G_SA-OCUDU_%2B_Open5GS-brightgreen"></a>
   <a href="docs/ai-customization.zh-CN.md"><img alt="AI-RAN: Testbed" src="https://img.shields.io/badge/AI--RAN-Testbed-6f42c1"></a>

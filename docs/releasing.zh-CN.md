@@ -2,9 +2,17 @@
 
 [English](releasing.md)
 
-**Jetson Console** 与 **Spark Console** 共用仓库统一版本号（`1.0.0`，定义于根目录
+**Jetson Console** 与 **Spark Console** 共用仓库统一版本号（`1.1.0`，定义于根目录
 `VERSION` 文件），同时保持各自独立的源码边界与离线发布产物，每次发布流程仅针对
 单一平台执行。
+
+## 版本号规范（语义化版本）
+
+OpenAirKit 遵循 **Semantic Versioning 2.0.0**（`MAJOR.MINOR.PATCH`）：
+
+- **`MAJOR`（`X.0.0`）**：不向下兼容的破坏性变更（如 REST/SSE 接口、配置/数据库 Schema、CLI 契约或核心部署拓扑变更）。
+- **`MINOR`（`1.X.0`）**：向下兼容的新能力、协议栈或射频基线升级、控制台/AI-RAN 新特性及重要性能里程碑。
+- **`PATCH`（`1.1.X`）**：向下兼容的缺陷修复、安全加固、安装/回滚逻辑修复、CI 审计及文档勘误。
 
 ## 发布边界约束
 

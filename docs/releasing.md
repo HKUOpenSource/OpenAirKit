@@ -3,9 +3,17 @@
 [简体中文](releasing.zh-CN.md)
 
 **Jetson Console** and **Spark Console** share the unified repository version
-(`1.0.0`, defined in the root `VERSION` file) while maintaining independent
+(`1.1.0`, defined in the root `VERSION` file) while maintaining independent
 source boundaries and offline release archives. Cut and audit one platform
 release at a time.
+
+## Versioning Policy (SemVer)
+
+OpenAirKit follows **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`):
+
+- **`MAJOR` (`X.0.0`)**: Breaking API, configuration schema, database layout, CLI, or deployment topology changes that cannot upgrade cleanly in place.
+- **`MINOR` (`1.X.0`)**: Backward-compatible new capabilities, protocol stack or RF baseline upgrades, new console/AI-RAN features, and major performance milestones.
+- **`PATCH` (`1.1.X`)**: Backward-compatible bug fixes, security hardening, installer/rollback fixes, audit refinements, and documentation corrections.
 
 ## Release Boundary Policy
 
